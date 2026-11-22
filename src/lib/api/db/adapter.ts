@@ -16,6 +16,17 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function parseJsonBody<T = Record<string, unknown>>(body: unknown): T {
+  if (!body) {
+    return {} as T
+  }
+  try {
+    return JSON.parse(String(body)) as T
+  } catch {
+    throw new ApiError(400, 'Format payload JSON tidak valid', 'INVALID_JSON_BODY')
+  }
+}
+
 export const tanstackDbAdapter = {
   async dispatch(endpoint: string, options: AdapterOptions = {}): Promise<unknown> {
     await delay(150 + Math.random() * 120)
@@ -30,7 +41,7 @@ export const tanstackDbAdapter = {
     }
 
     if (endpoint === '/api/auth/login' && method === 'POST') {
-      const body = options.body ? JSON.parse(String(options.body)) : {}
+      const body = parseJsonBody<{ email?: string }>(options.body)
       const user =
         Array.from(usersCollection.values()).find((item) => item.email === body.email) ||
         usersCollection.get('usr-pb-01')
@@ -79,7 +90,12 @@ export const tanstackDbAdapter = {
     }
 
     if (endpoint === '/api/orders' && method === 'POST') {
-      const body = options.body ? JSON.parse(String(options.body)) : {}
+      const body = parseJsonBody<{
+        offerId: string
+        quantityKg: number
+        scheduleSlotId?: string
+        notes?: string
+      }>(options.body)
       const offer = offersCollection.get(body.offerId)
       if (!offer) {
         throw new ApiError(404, 'Penawaran komoditas tidak ditemukan', 'NOT_FOUND')
@@ -160,7 +176,7 @@ export const tanstackDbAdapter = {
     ) {
       const parts = endpoint.split('/')
       const orderId = parts[3]
-      const body = options.body ? JSON.parse(String(options.body)) : {}
+      const body = parseJsonBody<{ proofUrl?: string }>(options.body)
       const order = ordersCollection.get(orderId)
       if (!order) {
         throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
@@ -198,7 +214,7 @@ export const tanstackDbAdapter = {
     ) {
       const parts = endpoint.split('/')
       const orderId = parts[3]
-      const body = options.body ? JSON.parse(String(options.body)) : {}
+      const body = parseJsonBody<{ confirmedWeightKg?: number }>(options.body)
       const order = ordersCollection.get(orderId)
       if (!order) {
         throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
@@ -255,7 +271,15 @@ export const tanstackDbAdapter = {
     }
 
     if (endpoint === '/api/needs-board' && method === 'POST') {
-      const body = options.body ? JSON.parse(String(options.body)) : {}
+      const body = parseJsonBody<{
+        commodityName?: string
+        category?: string
+        neededQuantityKg?: number
+        maxPricePerKg?: number
+        targetDate?: string
+        targetArea?: string
+        notes?: string
+      }>(options.body)
       const newNeed: NeedRequest = {
         id: 'need-' + Date.now(),
         buyerId: 'usr-pb-01',

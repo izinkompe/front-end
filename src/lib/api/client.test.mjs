@@ -44,4 +44,37 @@ describe('apiClient with TanStack DB adapter', () => {
       expect(error.status).toBe(500)
     }
   })
+
+  it('rejects endpoints not starting with slash to prevent traversal', async () => {
+    try {
+      await apiClient('api/offers')
+      expect(true).toBe(false)
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError)
+      expect(error.status).toBe(400)
+      expect(error.code).toBe('INVALID_ENDPOINT')
+    }
+  })
+
+  it('rejects protocol-relative endpoints to prevent SSRF', async () => {
+    try {
+      await apiClient('//evil.attacker.com/api/steal')
+      expect(true).toBe(false)
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError)
+      expect(error.status).toBe(400)
+      expect(error.code).toBe('INVALID_ENDPOINT')
+    }
+  })
+
+  it('rejects absolute external urls to prevent open redirect', async () => {
+    try {
+      await apiClient('https://evil.attacker.com/api/data')
+      expect(true).toBe(false)
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError)
+      expect(error.status).toBe(400)
+      expect(error.code).toBe('INVALID_ENDPOINT')
+    }
+  })
 })

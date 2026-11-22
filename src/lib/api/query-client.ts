@@ -7,7 +7,7 @@ function makeQueryClient(): QueryClient {
         staleTime: 60 * 1000,
         gcTime: 5 * 60 * 1000,
         retry: (failureCount, error) => {
-          if (error instanceof Error && 'status' in error) {
+          if (typeof error === 'object' && error !== null && 'status' in error) {
             const status = (error as { status: number }).status
             if (status >= 400 && status < 500) {
               return false
@@ -16,6 +16,9 @@ function makeQueryClient(): QueryClient {
           return failureCount < 1
         },
         refetchOnWindowFocus: false,
+      },
+      mutations: {
+        retry: false,
       },
     },
   })

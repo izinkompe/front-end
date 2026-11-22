@@ -17,11 +17,15 @@ describe('Pino logger instance', () => {
     }).not.toThrow()
   })
 
-  it('redacts sensitive fields such as password and token', () => {
+  it('redacts sensitive fields such as password, token, and pii', () => {
     const sensitivePayload = {
       user: 'john_doe',
       password: 'supersecretpassword',
       token: 'secret-bearer-token',
+      idCardNumber: '3201012345678901',
+      bankAccountNumber: '1234567890',
+      apiKey: 'sec-api-key-99',
+      secret: 'platform-secret',
     }
 
     expect(() => {

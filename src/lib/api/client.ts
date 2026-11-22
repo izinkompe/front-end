@@ -10,6 +10,26 @@ export interface FetchOptions extends RequestInit {
 
 const isMockEnabled = env.NEXT_PUBLIC_USE_MOCK
 
+function validateEndpoint(endpoint: string, baseUrl: string): URL {
+  if (!endpoint.startsWith('/') || endpoint.startsWith('//')) {
+    throw new ApiError(
+      400,
+      'Endpoint tidak valid: harus berupa path relatif yang diawali dengan satu karakter slash',
+      'INVALID_ENDPOINT'
+    )
+  }
+
+  const base = baseUrl || 'http://localhost:3000'
+  const expectedOrigin = new URL(base).origin
+  const resolvedUrl = new URL(endpoint, expectedOrigin)
+
+  if (resolvedUrl.origin !== expectedOrigin) {
+    throw new ApiError(400, 'Origin endpoint tidak diizinkan', 'INVALID_ORIGIN')
+  }
+
+  return resolvedUrl
+}
+
 export async function apiClient<T>(
   endpoint: string,
   schema?: z.ZodType<T>,
@@ -18,12 +38,12 @@ export async function apiClient<T>(
   let rawData: unknown
 
   try {
+    const url = validateEndpoint(endpoint, env.NEXT_PUBLIC_API_URL || '')
+
     if (isMockEnabled) {
       rawData = await tanstackDbAdapter.dispatch(endpoint, options)
     } else {
       const { params, headers, ...restOptions } = options
-      const baseUrl = env.NEXT_PUBLIC_API_URL || ''
-      const url = new URL(endpoint, baseUrl || 'http://localhost:3000')
 
       if (params) {
         Object.entries(params).forEach(([key, val]) => {
@@ -74,17 +94,18 @@ export async function apiClient<T>(
 
     return rawData as T
   } catch (err) {
+    const sanitizedEndpoint = endpoint.split('?')[0]
     if (err instanceof ApiError) {
       logger.error(
         {
-          endpoint,
+          endpoint: sanitizedEndpoint,
           status: err.status,
           code: err.code,
         },
         'API Error: ' + err.message
       )
     } else if (err instanceof Error) {
-      logger.error({ endpoint }, 'Unexpected Error: ' + err.message)
+      logger.error({ endpoint: sanitizedEndpoint }, 'Unexpected Error: ' + err.message)
     }
     throw err
   }

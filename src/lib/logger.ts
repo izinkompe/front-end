@@ -6,7 +6,26 @@ export const logger = pino({
   browser: {
     asObject: true,
   },
-  redact: ['password', '*.password', 'token', '*.token', 'authorization'],
+  redact: [
+    'password',
+    '*.password',
+    'token',
+    '*.token',
+    'authorization',
+    '*.authorization',
+    'headers.authorization',
+    'cookie',
+    '*.cookie',
+    'headers.cookie',
+    'idCardNumber',
+    '*.idCardNumber',
+    'bankAccountNumber',
+    '*.bankAccountNumber',
+    'secret',
+    '*.secret',
+    'apiKey',
+    '*.apiKey',
+  ],
 })
 
 export type Logger = typeof logger

@@ -1,25 +1,48 @@
 import { z } from 'zod'
 
-const serverSchema = z.object({
+const httpUrlSchema = z
+  .string()
+  .url()
+  .refine(
+    (val) => {
+      try {
+        const parsed = new URL(val)
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+      } catch {
+        return false
+      }
+    },
+    { message: 'URL harus menggunakan protokol http atau https' }
+  )
+
+const baseServerSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  API_URL: z.string().url().optional(),
+  API_URL: httpUrlSchema.optional(),
   AUTH_SECRET: z.string().min(1).optional(),
-  NEXTAUTH_URL: z.string().url().optional(),
+  NEXTAUTH_URL: httpUrlSchema.optional(),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).optional(),
 })
 
 const clientSchema = z.object({
-  NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
-  NEXT_PUBLIC_API_URL: z.string().url().optional(),
+  NEXT_PUBLIC_APP_URL: httpUrlSchema.default('http://localhost:3000'),
+  NEXT_PUBLIC_API_URL: httpUrlSchema.optional(),
   NEXT_PUBLIC_USE_MOCK: z
     .enum(['true', 'false'])
     .optional()
     .transform((val) => val !== 'false'),
 })
 
-const mergedSchema = serverSchema.merge(clientSchema)
+const mergedSchema = baseServerSchema.merge(clientSchema).superRefine((data, ctx) => {
+  if (data.NODE_ENV === 'production' && data.AUTH_SECRET && data.AUTH_SECRET.length < 32) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['AUTH_SECRET'],
+      message: 'AUTH_SECRET harus memiliki panjang minimal 32 karakter pada mode production',
+    })
+  }
+})
 
-export type ServerEnv = z.infer<typeof serverSchema>
+export type ServerEnv = z.infer<typeof baseServerSchema>
 export type ClientEnv = z.infer<typeof clientSchema>
 export type Env = z.infer<typeof mergedSchema>
 

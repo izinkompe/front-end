@@ -10,6 +10,9 @@ describe('Environment validation', () => {
 
   it('provides default values for app url', () => {
     expect(env.NEXT_PUBLIC_APP_URL).toBeDefined()
-    expect(env.NEXT_PUBLIC_APP_URL.startsWith('http')).toBe(true)
+    expect(
+      env.NEXT_PUBLIC_APP_URL.startsWith('http://') ||
+        env.NEXT_PUBLIC_APP_URL.startsWith('https://')
+    ).toBe(true)
   })
 })
