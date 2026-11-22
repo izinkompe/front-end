@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Lato, Lora, Geist_Mono } from 'next/font/google'
+import { QueryProvider } from '@/components/providers/query-provider'
 import './globals.css'
 
 const lato = Lato({
@@ -33,7 +34,9 @@ export default function RootLayout({
       lang='id'
       className={`${lato.variable} ${lora.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className='min-h-full flex flex-col font-sans text-base'>{children}</body>
+      <body className='min-h-full flex flex-col font-sans text-base'>
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   )
 }
