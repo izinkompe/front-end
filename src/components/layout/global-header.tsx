@@ -47,7 +47,7 @@ export function GlobalHeader() {
 
         <div className='hidden md:flex items-center gap-3'>
           <Link href='/dashboard'>
-            <Button variant='outline' size='sm' className='gap-1.5'>
+            <Button variant='outline' className='gap-1.5'>
               <LayoutDashboard className='size-4' />
               <span>Akses Dashboard</span>
             </Button>

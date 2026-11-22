@@ -8,8 +8,15 @@ Gunakan panduan ini setiap kali membuat atau mengubah UI. Terapkan skill dalam u
 
 ## Style bawaan shadcn
 
-- Gunakan tampilan bawaan `base-lyra` dari preset `b6G3c108Q` dengan tema Emerald dan palet grafik kuning. Pilih `variant` dan `size` bawaan sesuai kebutuhan. Pertahankan warna, ukuran teks, border, radius, dan state komponen.
+- Gunakan tampilan bawaan `base-lyra` dari preset `b6G3c108Q` dengan tema Emerald dan palet grafik kuning. Pertahankan warna, ukuran teks, border, radius, dan state komponen.
 - Gunakan `className` pada komponen shadcn untuk penempatan dan ukuran dalam layout. Untuk elemen halaman, gunakan utilitas Tailwind dan token yang sudah ada di [globals.css](src/app/globals.css), seperti `font-sans`, `font-heading`, `text-foreground`, `bg-background`, dan `border-border`. [Theming shadcn](https://ui.shadcn.com/docs/theming)
+
+## Ukuran bawaan (default size) untuk semua komponen dan layout
+
+- Gunakan `size="default"` (atau biarkan default tanpa mendefinisikan prop `size`) untuk seluruh komponen di seluruh layout, halaman dashboard, header, dan kartu (seperti `Button`, `Badge`, `Avatar`, `Input`, `Select`, `Table`).
+- Jangan mengecilkan komponen menggunakan `size="sm"` atau `size="xs"`, serta hindari memperbesar dengan `size="lg"`. Seluruh layout wajib mengikuti skala default agar hierarki, keterbacaan, dan area interaksi (click/tap targets) konsisten dan ergonomis.
+- Hindari menambahkan utilitas tinggi atau ukuran manual yang menimpa prop komponen (misalnya `h-7`, `h-8`, atau `h-9` pada tombol).
+- Khusus untuk tombol aksi yang hanya memuat ikon tunggal tanpa label teks (misalnya tombol aksi tabel, pemicu panel navigasi, atau tombol penutup modal), gunakan `size="icon"`.
 
 ## Tipografi tanpa letter-spacing tambahan
 

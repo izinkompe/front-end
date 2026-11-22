@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import * as React from 'react'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { DashboardSidebar } from './dashboard-sidebar'
 import { DashboardHeader } from './dashboard-header'
 
@@ -9,18 +10,15 @@ export function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
-
   return (
-    <div className='flex min-h-screen bg-background text-foreground'>
-      <DashboardSidebar
-        mobileOpen={mobileSidebarOpen}
-        onCloseMobile={() => setMobileSidebarOpen(false)}
-      />
-      <div className='flex flex-1 flex-col min-w-0'>
-        <DashboardHeader onOpenMobileSidebar={() => setMobileSidebarOpen(true)} />
-        <main className='flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto'>{children}</main>
-      </div>
-    </div>
+    <SidebarProvider defaultOpen>
+      <DashboardSidebar />
+      <SidebarInset>
+        <DashboardHeader />
+        <main className='flex-1 p-3.5 sm:p-5 md:p-6 lg:p-8 overflow-y-auto bg-background'>
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
