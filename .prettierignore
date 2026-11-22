@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+dist
+build
+bun.lock
+*.tsbuildinfo
+next-env.d.ts
+public
+.agents
