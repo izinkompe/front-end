@@ -118,7 +118,7 @@ bun run build
 bash scripts/smoke.sh
 ```
 
-Smoke test memeriksa halaman utama di `127.0.0.1:3100`. Atur `PORT` jika port tersebut sedang digunakan.
+Smoke test memeriksa halaman utama di `127.0.0.1:3100` (pada Windows gunakan `scripts/smoke.ps1` atau `scripts/smoke.cmd`). Atur `PORT` jika port tersebut sedang digunakan.
 
 Untuk mengaktifkan deployment otomatis, ganti langkah placeholder di `cd.yml` dengan langkah deployment untuk target produksi. Jika target memakai build CI, deklarasikan input `artifact_id` di `cd.yml` dan teruskan output job `build` dari `ci.yml`, seperti pada pemanggilan CT. Tambahkan izin dan kredensial yang dibutuhkan target, lalu hapus `if: ${{ false }}` dari job deploy.
 

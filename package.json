@@ -11,6 +11,8 @@
     "lint": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "smoke": "bash scripts/smoke.sh",
+    "smoke:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/smoke.ps1",
     "prepare": "lefthook install"
   },
   "dependencies": {

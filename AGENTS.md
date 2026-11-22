@@ -38,7 +38,7 @@ Keep environment variable schemas strictly validated using Zod in `src/lib/env.t
 
 ## Testing
 
-Run unit tests with `bun run test`. Place Bun tests next to the code they cover, following `src/components/ui/button.test.mjs`. Cover default and alternate behavior when changing a component. After building, run `bash scripts/smoke.sh` to check that the production homepage returns HTTP `200` and HTML. CT gates on passing tests. Coverage measurement is optional.
+Run unit tests with `bun run test`. Place Bun tests next to the code they cover, following `src/components/ui/button.test.mjs`. Cover default and alternate behavior when changing a component. After building, run `bash scripts/smoke.sh` (or `scripts/smoke.ps1` / `scripts/smoke.cmd` on Windows) to check that the production homepage returns HTTP `200` and HTML. CT gates on passing tests. Coverage measurement is optional.
 
 ## Commits and Pull Requests
 

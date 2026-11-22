@@ -15,6 +15,8 @@ bun run build
 bash scripts/smoke.sh
 ```
 
+Pada lingkungan Windows, gunakan `scripts/smoke.ps1` atau `scripts/smoke.cmd` (atau `bun run smoke:windows`).
+
 - Tambahkan tes regresi di dekat perilaku yang diubah, terutama untuk input tidak valid dan kegagalan yang bisa dialami pengguna. Pertimbangkan tes browser saat repo memiliki alur penting bertahap.
 - Pertimbangkan menjalankan Oxlint dan pemeriksaan format di CI agar kode dari luar setup Lefthook tetap diperiksa. Saat ini CI menjalankan type check dan build, sedangkan CT menjalankan unit test dan smoke test. [Alur CI, CT, dan CD](../README.md#ci-ct-dan-cd)
 - Pertimbangkan `next/font/local` untuk build yang harus berjalan tanpa akses ke Google Fonts. Gunakan file font dengan lisensi distribusi yang sesuai. [Optimasi font Next.js](https://nextjs.org/docs/app/getting-started/fonts)

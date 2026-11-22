@@ -17,13 +17,17 @@ server_pid=$!
 
 cleanup() {
   local status=$?
-  kill "$server_pid" 2>/dev/null || true
-  wait "$server_pid" 2>/dev/null || true
+  if [[ "${OSTYPE:-}" == "msys" || "${OSTYPE:-}" == "cygwin" || "${OSTYPE:-}" == "win32" ]]; then
+    taskkill //F //T //PID "$server_pid" 2>/dev/null || true
+  else
+    kill "$server_pid" 2>/dev/null || true
+    wait "$server_pid" 2>/dev/null || true
+  fi
   if (( status != 0 )); then
     cat "$server_log" >&2
   fi
   rm -f "$server_log" "$response_body"
-  rmdir "$smoke_files"
+  rmdir "$smoke_files" 2>/dev/null || true
 }
 trap cleanup EXIT
 trap 'exit 130' INT
