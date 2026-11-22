@@ -2,12 +2,13 @@ import type { z } from 'zod'
 import { ApiError } from './errors'
 import { tanstackDbAdapter } from './db/adapter'
 import { logger } from '@/lib/logger'
+import { env } from '@/lib/env'
 
 export interface FetchOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>
 }
 
-const isMockEnabled = process.env.NEXT_PUBLIC_USE_MOCK !== 'false'
+const isMockEnabled = env.NEXT_PUBLIC_USE_MOCK
 
 export async function apiClient<T>(
   endpoint: string,
@@ -21,7 +22,7 @@ export async function apiClient<T>(
       rawData = await tanstackDbAdapter.dispatch(endpoint, options)
     } else {
       const { params, headers, ...restOptions } = options
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || ''
+      const baseUrl = env.NEXT_PUBLIC_API_URL || ''
       const url = new URL(endpoint, baseUrl || 'http://localhost:3000')
 
       if (params) {

@@ -25,7 +25,16 @@ The `logs/` directory (ignored in `.gitignore`) serves as the core information b
 
 - `logs/plan/`: Planning files. Every new feature or architectural refactor must have a dedicated markdown plan created here first before code implementation starts. Implement all planned steps sequentially and systematically.
 - `logs/notes/`: Implementation notes, architectural decisions, technical considerations, or background context captured during work.
-- `logs/checkpoints/`: Implementation outcome records, completed milestone summaries, and verification checkpoints after finishing execution phases.
+- `logs/checkpoints/`: Implementation outcome records, completed milestone summaries, and verification checkpoints. You MUST create or update a checkpoint file here for every single change without exception, including minor bug fixes, small refactors, styling tweaks, config adjustments, or small additions. Every implementation phase, fix, or update must record a dedicated checkpoint documenting changes, files touched, and verification results before completing the task.
+
+## Environment Variables and Validation
+
+Keep environment variable schemas strictly validated using Zod in `src/lib/env.ts`.
+
+- Whenever any new environment variable is introduced or referenced (in `.env`, `.env.example`, Server Components, Client Components, API client, or build scripts), you MUST immediately update the Zod schema in `src/lib/env.ts` with appropriate types, defaults, and constraints, and update `.env.example` with safe placeholder values.
+- Separate server-side and client-side (prefixed with `NEXT_PUBLIC_`) variables. Never expose private server secrets or credentials to the client bundle.
+- Validate environment variables at build and startup time by importing `src/lib/env.ts` in `next.config.ts`.
+- Consume environment variables via `import { env } from '@/lib/env'` for type safety and autocomplete instead of raw `process.env`.
 
 ## Testing
 
