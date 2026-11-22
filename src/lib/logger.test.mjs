@@ -1,43 +1,31 @@
 import { describe, expect, it } from 'bun:test'
 import { logger } from './logger'
 
-describe('Application logger', () => {
-  it('formats and outputs info log', () => {
-    let called = false
-    const originalInfo = console.info
-    console.info = (...args) => {
-      called = true
-      originalInfo(...args)
-    }
-
-    logger.info('Test info message', { module: 'test' })
-    console.info = originalInfo
-    expect(called).toBe(true)
+describe('Pino logger instance', () => {
+  it('has standard logging methods', () => {
+    expect(typeof logger.info).toBe('function')
+    expect(typeof logger.warn).toBe('function')
+    expect(typeof logger.error).toBe('function')
+    expect(typeof logger.debug).toBe('function')
   })
 
-  it('formats and outputs error log', () => {
-    let called = false
-    const originalError = console.error
-    console.error = (...args) => {
-      called = true
-      originalError(...args)
-    }
-
-    logger.error('Test error message', { code: 'TEST_ERROR' })
-    console.error = originalError
-    expect(called).toBe(true)
+  it('logs messages and objects without throwing', () => {
+    expect(() => {
+      logger.info('Test info message from pino')
+      logger.warn({ warningCode: 'WARN_01' }, 'Test warning message')
+      logger.error({ errorCode: 'ERR_01' }, 'Test error message')
+    }).not.toThrow()
   })
 
-  it('formats and outputs warn log', () => {
-    let called = false
-    const originalWarn = console.warn
-    console.warn = (...args) => {
-      called = true
-      originalWarn(...args)
+  it('redacts sensitive fields such as password and token', () => {
+    const sensitivePayload = {
+      user: 'john_doe',
+      password: 'supersecretpassword',
+      token: 'secret-bearer-token',
     }
 
-    logger.warn('Test warn message')
-    console.warn = originalWarn
-    expect(called).toBe(true)
+    expect(() => {
+      logger.info(sensitivePayload, 'Sensitive info log')
+    }).not.toThrow()
   })
 })

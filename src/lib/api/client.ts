@@ -74,13 +74,16 @@ export async function apiClient<T>(
     return rawData as T
   } catch (err) {
     if (err instanceof ApiError) {
-      logger.error('API Error: ' + err.message, {
-        endpoint,
-        status: err.status,
-        code: err.code,
-      })
+      logger.error(
+        {
+          endpoint,
+          status: err.status,
+          code: err.code,
+        },
+        'API Error: ' + err.message
+      )
     } else if (err instanceof Error) {
-      logger.error('Unexpected Error: ' + err.message, { endpoint })
+      logger.error({ endpoint }, 'Unexpected Error: ' + err.message)
     }
     throw err
   }
