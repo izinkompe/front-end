@@ -1,0 +1,6 @@
+export { offersCollection } from './collections/offers'
+export { ordersCollection } from './collections/orders'
+export { usersCollection } from './collections/users'
+export { notificationsCollection } from './collections/notifications'
+export { needsBoardCollection } from './collections/needs-board'
+export { tanstackDbAdapter } from './adapter'
