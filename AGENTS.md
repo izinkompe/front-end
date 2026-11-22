@@ -44,6 +44,14 @@ Run unit tests with `bun run test`. Place Bun tests next to the code they cover,
 
 Branch from `main` with a descriptive name such as `fix/price-input`. Commitlint enforces Conventional Commits, for example `fix(cart): correct subtotal`. Target `main`, summarize the change and how you verified it, and link related issues when available. Include screenshots when they help reviewers assess a visual change. Wait for CI, CT, and at least one team approval before merging. See the [commit convention](docs/COMMIT-CONVENTION.md) and [contributor guide](CONTRIBUTING.md).
 
+## Pre-Commit Security Audit
+
+AI agents MUST perform a targeted security audit using the `security-audit` skill before committing any changes:
+
+- **Scoped to Staged Changes Only**: To maintain speed and keep checks focused, review only the files and diffs being committed (`git diff --staged` or staged file changes) rather than executing a full repository-wide scan.
+- **Immediate Remediation**: If any security issues or vulnerabilities are identified (e.g., SSRF, unsanitized input, injection, data leakage, insecure secret validation, unredacted PII in logs, missing headers, or improper trust boundaries), resolve them immediately before making the commit.
+- **Strict Invariant - Preserve Context & Flow**: Any security remediation MUST NEVER alter the feature context, business logic, existing code intent, or application flow that has already been designed and implemented. Fixes must be surgical, defensive, and strictly preserve intended functional behavior.
+
 ## Security and Operations
 
 Keep secrets server-side and out of Git, logs, and build artifacts. Report vulnerabilities privately through the core team. Follow the [security guide](docs/SECURITY.md).
