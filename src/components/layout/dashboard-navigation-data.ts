@@ -8,7 +8,6 @@ import {
   AlertTriangle,
   Leaf,
   FileDown,
-  Settings,
   BadgeCheck,
 } from 'lucide-react'
 import type { NavMainItem } from './dashboard-sidebar-nav-main'
@@ -86,11 +85,6 @@ export const farmerNavItems: NavMainItem[] = [
     url: '/dashboard/verifikasi',
     icon: BadgeCheck,
   },
-  {
-    title: 'Pengaturan Profil',
-    url: '/dashboard/pengaturan',
-    icon: Settings,
-  },
 ]
 
 export const adminNavItems: NavMainItem[] = [
@@ -146,36 +140,39 @@ export const adminNavItems: NavMainItem[] = [
   },
 ]
 
-export function getDashboardActor(pathname: string): DashboardActor {
-  if (pathname.startsWith('/dashboard/admin')) {
+export function getDashboardActor(pathname?: string | null): DashboardActor {
+  if (pathname && pathname.startsWith('/dashboard/admin')) {
     return 'admin'
   }
   return 'farmer'
 }
 
-export function getBreadcrumbTrail(pathname: string): Array<{ label: string; href?: string }> {
-  if (pathname.startsWith('/dashboard/admin')) {
+export function getBreadcrumbTrail(
+  pathname?: string | null
+): Array<{ label: string; href?: string }> {
+  const safePath = pathname || ''
+  if (safePath.startsWith('/dashboard/admin')) {
     const base = [
       { label: 'Dashboard', href: '/dashboard/admin' },
       { label: 'Admin', href: '/dashboard/admin' },
     ]
 
-    if (pathname === '/dashboard/admin') {
+    if (safePath === '/dashboard/admin') {
       return [...base, { label: 'Ringkasan' }]
     }
-    if (pathname.startsWith('/dashboard/admin/verifikasi-pembayaran')) {
+    if (safePath.startsWith('/dashboard/admin/verifikasi-pembayaran')) {
       return [...base, { label: 'Verifikasi Pembayaran' }]
     }
-    if (pathname.startsWith('/dashboard/admin/verifikasi-petani')) {
+    if (safePath.startsWith('/dashboard/admin/verifikasi-petani')) {
       return [...base, { label: 'Verifikasi Petani' }]
     }
-    if (pathname.startsWith('/dashboard/admin/pengaduan')) {
+    if (safePath.startsWith('/dashboard/admin/pengaduan')) {
       return [...base, { label: 'Pengaduan & Masalah' }]
     }
-    if (pathname.startsWith('/dashboard/admin/emisi-karbon')) {
+    if (safePath.startsWith('/dashboard/admin/emisi-karbon')) {
       return [...base, { label: 'Faktor Emisi Karbon' }]
     }
-    if (pathname.startsWith('/dashboard/admin/laporan')) {
+    if (safePath.startsWith('/dashboard/admin/laporan')) {
       return [...base, { label: 'Ekspor Laporan' }]
     }
     return base
@@ -183,22 +180,22 @@ export function getBreadcrumbTrail(pathname: string): Array<{ label: string; hre
 
   const base = [{ label: 'Dashboard', href: '/dashboard' }]
 
-  if (pathname === '/dashboard') {
+  if (safePath === '/dashboard') {
     return [...base, { label: 'Ringkasan Tani' }]
   }
-  if (pathname.startsWith('/dashboard/komoditas')) {
+  if (safePath.startsWith('/dashboard/komoditas')) {
     return [...base, { label: 'Komoditas & Panen' }]
   }
-  if (pathname.startsWith('/dashboard/pesanan')) {
+  if (safePath.startsWith('/dashboard/pesanan')) {
     return [...base, { label: 'Pesanan Masuk' }]
   }
-  if (pathname.startsWith('/dashboard/kebutuhan')) {
+  if (safePath.startsWith('/dashboard/kebutuhan')) {
     return [...base, { label: 'Papan Kebutuhan' }]
   }
-  if (pathname.startsWith('/dashboard/verifikasi')) {
+  if (safePath.startsWith('/dashboard/verifikasi')) {
     return [...base, { label: 'Verifikasi Akun' }]
   }
-  if (pathname.startsWith('/dashboard/pengaturan')) {
+  if (safePath.startsWith('/dashboard/pengaturan')) {
     return [...base, { label: 'Pengaturan' }]
   }
   return base

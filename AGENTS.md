@@ -27,6 +27,16 @@ The `logs/` directory (ignored in `.gitignore`) serves as the core information b
 - `logs/notes/`: Implementation notes, architectural decisions, technical considerations, or background context captured during work.
 - `logs/checkpoints/`: Implementation outcome records, completed milestone summaries, and verification checkpoints. You MUST create or update a checkpoint file here for every single change without exception, including minor bug fixes, small refactors, styling tweaks, config adjustments, or small additions. Every implementation phase, fix, or update must record a dedicated checkpoint documenting changes, files touched, and verification results before completing the task.
 
+## Form Management with TanStack Form
+
+Always use TanStack Form (`@tanstack/react-form`) for all interactive forms throughout the application. Never use raw state (`useState` per input) or uncontrolled form hacks for application forms.
+
+- Initialize forms using `useForm` from `@tanstack/react-form` with typed `defaultValues` and an `onSubmit` handler.
+- Bind form controls using `<form.Field name="...">` and connect field state (`field.state.value`, `field.handleChange`, `field.handleBlur`) to form primitives like `Input`, `Textarea`, `Select`, and `Checkbox`.
+- Implement validation using validators (or Zod schemas) for field-level and form-level rules. Display descriptive error feedback (`field.state.meta.errors`) and set `aria-invalid` when errors exist.
+- Use `<form.Subscribe>` to reactively read form state such as `canSubmit` and `isSubmitting` to disable submit buttons or show pending progress indicators.
+- Respect default sizing: always use `size="default"` (or omit `size` prop) for all form inputs, labels, and action buttons per `DESIGN.md`.
+
 ## Environment Variables and Validation
 
 Keep environment variable schemas strictly validated using Zod in `src/lib/env.ts`.

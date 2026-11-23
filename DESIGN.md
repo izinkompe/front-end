@@ -22,6 +22,16 @@ Gunakan panduan ini setiap kali membuat atau mengubah UI. Terapkan skill dalam u
 
 Gunakan Lato untuk `font-sans` dan `font-heading`, serta Lora untuk `font-serif`. Gunakan jarak huruf bawaan font. Jangan menambahkan `letter-spacing`, `letterSpacing`, atau utilitas `tracking-*` pada judul, heading, label, tombol, maupun teks lainnya. Atur hierarki dengan ukuran font, ketebalan, dan tinggi baris dari skala Tailwind. [Referensi letter-spacing Tailwind](https://tailwindcss.com/docs/letter-spacing)
 
+## Penggunaan border dan larangan separator mikro
+
+- **Komponen struktural (Sidebar, Header, dan Card) tetap memiliki border**:
+  - `Header`: Gunakan `border-b border-border` untuk batas struktural bawah yang menyatu secara horizontal dengan header sidebar.
+  - `Sidebar`: Pertahankan batas struktural `border-r border-sidebar-border` serta pembatas pada header (`border-b`) dan footer (`border-t`) sidebar agar layout presisi dan terbingkai rapi.
+  - `Card`: Pertahankan border bawaan shadcn (`border border-border` atau `border`) untuk membingkai kartu metrik, kartu konten, dan formulir.
+- **Komponen mikro dan inline (Breadcrumb, item daftar, teks) dilarang menggunakan separator**:
+  - Dilarang menambahkan komponen `<Separator />` maupun garis pembatas vertikal/horizontal mikro (seperti garis divider vertikal antara `SidebarTrigger` dan `Breadcrumb`, antar item breadcrumb, atau antar label teks).
+  - Bangun hierarki dan ritme elemen mikro secara alami menggunakan _spacing_ (`gap-*`) dan ruang negatif (_whitespace_), tanpa garis divider artifisial yang membebani tampilan (_visual noise_).
+
 ## Mobile-first
 
 Mulai dari layout layar kecil dengan kelas tanpa prefiks. Tambahkan `sm:`, `md:`, atau `lg:` sesuai kebutuhan saat ruang bertambah. Contohnya, `grid grid-cols-1 gap-4 md:grid-cols-2` menampilkan satu kolom di ponsel dan dua kolom mulai breakpoint `md`. Periksa UI di layar kecil dan lebar untuk memastikan konten muat dan semua kontrol bisa digunakan. [Responsive design Tailwind](https://tailwindcss.com/docs/responsive-design)

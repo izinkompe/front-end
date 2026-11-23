@@ -14,9 +14,10 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { NavMain, type NavMainItem } from './dashboard-sidebar-nav-main'
-import { RoleSwitcher } from './role-switcher'
+import { NavUser } from './dashboard-sidebar-nav-user'
+import { DashboardSidebarNotifications } from './dashboard-sidebar-notifications'
+import { KebunSwitcher } from './kebun-switcher'
 import {
   getDashboardActor,
   farmerNavItems,
@@ -27,7 +28,7 @@ import {
 import { cn } from '@/lib/utils'
 
 export function DashboardSidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname() ?? ''
   const { state, isMobile } = useSidebar()
   const isCollapsed = state === 'collapsed' && !isMobile
   const actor = getDashboardActor(pathname)
@@ -52,6 +53,7 @@ export function DashboardSidebar() {
     return {
       ...item,
       isActive: isParentActive || hasActiveChild,
+      defaultOpen: true,
       items: subItems,
     }
   })
@@ -60,7 +62,7 @@ export function DashboardSidebar() {
     <Sidebar collapsible='icon' variant='sidebar'>
       <SidebarHeader
         className={cn(
-          'justify-center border-b border-sidebar-border p-2 transition-[height] duration-200 ease-linear',
+          'justify-center border-b p-2 transition-[height] duration-200 ease-linear',
           isCollapsed ? 'h-12' : 'h-16'
         )}
       >
@@ -88,36 +90,20 @@ export function DashboardSidebar() {
       </SidebarHeader>
 
       <SidebarContent className='gap-0'>
-        <div className='p-2 border-b group-data-[collapsible=icon]:hidden'>
-          <RoleSwitcher variant='sidebar' />
-        </div>
+        {isFarmer && (
+          <div className='p-2 border-b group-data-[collapsible=icon]:hidden'>
+            <KebunSwitcher variant='sidebar' />
+          </div>
+        )}
         <NavMain
           label={isFarmer ? 'Aktivitas Petani' : 'Operasional Administrator'}
           items={navItems}
         />
       </SidebarContent>
 
-      <SidebarFooter className='gap-1.5 border-t border-sidebar-border p-2'>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip={`${profile.name} (${profile.roleTitle})`}
-              className='h-auto py-1.5 hover:bg-sidebar-accent'
-            >
-              <Avatar className='shrink-0'>
-                <AvatarFallback>{profile.initials}</AvatarFallback>
-              </Avatar>
-              <div className='grid flex-1 text-left text-xs leading-tight group-data-[collapsible=icon]:hidden'>
-                <span className='truncate font-semibold text-sidebar-foreground'>
-                  {profile.name}
-                </span>
-                <span className='truncate text-[10px] text-muted-foreground'>
-                  {profile.roleTitle}
-                </span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className='p-2 border-t gap-1'>
+        <DashboardSidebarNotifications actor={actor} userId={profile.id} />
+        <NavUser user={profile} />
       </SidebarFooter>
 
       <SidebarRail />
