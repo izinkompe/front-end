@@ -37,14 +37,14 @@ Setiap kontributor wajib mematuhi [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) untuk
 
 ## 💬 Standar Commit Message
 
-Proyek ini menerapkan standar **Conventional Commits** yang diverifikasi secara otomatis oleh **Commitlint** melalui **Lefthook**.
+Proyek ini menerapkan standar **Conventional Commits** yang diverifikasi secara otomatis oleh **Commitlint** melalui **Lefthook**. Seluruh pesan commit (ringkasan/subjek maupun isi/body jika ada) **WAJIB selalu menggunakan Bahasa Indonesia saja**. Dilarang menggunakan bahasa Inggris atau mencampur bahasa (campur kode/bahasa gado-gado).
 
 ### Format
 
 ```text
-<type>(<scope opsional>): <deskripsi singkat>
+<type>(<scope opsional>): <deskripsi singkat dalam bahasa indonesia>
 
-[body opsional]
+[body opsional dalam bahasa indonesia]
 
 [footer opsional]
 ```
@@ -63,9 +63,9 @@ Proyek ini menerapkan standar **Conventional Commits** yang diverifikasi secara 
 ### Contoh yang Benar:
 
 ```bash
-git commit -m "feat(auth): tambahkan integrasi login OAuth"
-git commit -m "fix(cart): perbaiki kalkulasi subtotal harga"
-git commit -m "docs: perbarui panduan kontribusi"
+git commit -m "feat(auth): tambahkan integrasi autentikasi pengguna"
+git commit -m "fix(keranjang): perbaiki kalkulasi subtotal harga"
+git commit -m "docs: perbarui panduan kontribusi dan konvensi commit"
 ```
 
 ---

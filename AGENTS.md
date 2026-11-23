@@ -52,7 +52,7 @@ Run unit tests with `bun run test`. Place Bun tests next to the code they cover,
 
 ## Commits and Pull Requests
 
-Branch from `main` with a descriptive name such as `fix/price-input`. Commitlint enforces Conventional Commits, for example `fix(cart): correct subtotal`. Target `main`, summarize the change and how you verified it, and link related issues when available. Include screenshots when they help reviewers assess a visual change. Wait for CI, CT, and at least one team approval before merging. See the [commit convention](docs/COMMIT-CONVENTION.md) and [contributor guide](CONTRIBUTING.md).
+Branch from `main` with a descriptive name such as `fix/price-input`. Commitlint enforces Conventional Commits where commit messages MUST always be in Bahasa Indonesia only, for example `fix(keranjang): perbaiki kalkulasi subtotal`. Target `main`, summarize the change and how you verified it, and link related issues when available. Include screenshots when they help reviewers assess a visual change. Wait for CI, CT, and at least one team approval before merging. See the [commit convention](docs/COMMIT-CONVENTION.md) and [contributor guide](CONTRIBUTING.md).
 
 ## Pre-Commit Security Audit
 
