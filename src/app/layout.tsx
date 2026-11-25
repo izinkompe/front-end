@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'PanganTani',
   description: 'Platform Kolaborasi Agrikultur dan Pangan Berkelanjutan',
+  other: {
+    'text-scale': 'scale',
+  },
 }
 
 export default function RootLayout({

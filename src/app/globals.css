@@ -81,6 +81,15 @@
   --sidebar-ring: oklch(0.737 0.021 106.9);
   --background: oklch(1 0 0);
   --foreground: oklch(0.153 0.006 107.1);
+  --target-size: 2.5rem;
+  --control-min-height: 2.75rem;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --target-size: 2.75rem;
+    --control-min-height: 3rem;
+  }
 }
 
 .dark {
@@ -123,10 +132,28 @@
   }
   html {
     @apply font-sans;
-    font-size: 16px;
+    scroll-padding-top: 6.5rem;
   }
   body {
     @apply font-sans text-base bg-background text-foreground;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p,
+  li {
+    text-wrap: pretty;
+  }
+  :where(a, code) {
+    overflow-wrap: anywhere;
+  }
+  :where(input:not([type='checkbox'], [type='radio']), textarea, select) {
+    font: inherit;
+    font-size: max(1rem, 1em);
   }
   input::-ms-reveal,
   input::-ms-clear {
@@ -146,5 +173,5 @@
 
 @utility font-base {
   font-size: 1rem;
-  line-height: 1.5rem;
+  line-height: 1.5;
 }
