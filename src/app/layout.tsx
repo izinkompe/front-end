@@ -1,17 +1,12 @@
 import type { Metadata } from 'next'
-import { Lato, Lora, Geist_Mono } from 'next/font/google'
+import { Geist_Mono, IBM_Plex_Sans } from 'next/font/google'
 import { QueryProvider } from '@/components/providers/query-provider'
+import { cn } from '@/lib/utils'
 import './globals.css'
 
-const lato = Lato({
-  variable: '--font-lato',
+const ibmPlexSans = IBM_Plex_Sans({
   subsets: ['latin'],
-  weight: ['100', '300', '400', '700', '900'],
-})
-
-const lora = Lora({
-  variable: '--font-lora',
-  subsets: ['latin'],
+  variable: '--font-sans',
 })
 
 const geistMono = Geist_Mono({
@@ -32,7 +27,7 @@ export default function RootLayout({
   return (
     <html
       lang='id'
-      className={`${lato.variable} ${lora.variable} ${geistMono.variable} h-full antialiased`}
+      className={cn('h-full antialiased font-sans', ibmPlexSans.variable, geistMono.variable)}
     >
       <body className='min-h-full flex flex-col font-sans text-base'>
         <QueryProvider>{children}</QueryProvider>
