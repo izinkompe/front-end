@@ -442,11 +442,11 @@ export function FarmerOnboardingFlow({ resumeNotice = false }: { resumeNotice?: 
 
       <div className='mx-auto flex w-full max-w-md flex-col gap-4 pt-2'>
         <Separator />
-        <p className='text-center text-sm text-muted-foreground'>
+        <p className='text-center text-base text-muted-foreground'>
           Sudah pernah mendaftar sebagai petani?{' '}
           <Link
             href='/masuk-petani'
-            className='rounded-sm font-medium text-primary underline underline-offset-4 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            className='inline-flex min-h-10 items-center rounded-sm px-1 font-medium text-primary underline underline-offset-4 transition-opacity pointer-coarse:min-h-11 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           >
             Masuk di sini
           </Link>

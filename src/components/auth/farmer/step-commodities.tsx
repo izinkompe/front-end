@@ -57,10 +57,10 @@ export function StepCommodities({
       className='flex flex-col gap-8'
     >
       <div className='mx-auto flex max-w-2xl flex-col gap-2 text-center'>
-        <h1 className='text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'>
+        <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
           Hasil panen apa saja yang Anda tanam?
         </h1>
-        <p className='text-sm leading-relaxed text-muted-foreground sm:text-base'>
+        <p className='text-base leading-relaxed text-muted-foreground'>
           Pilih satu atau beberapa kategori hasil panen utama Anda. Jika belum ada dalam daftar,
           pilih kartu Lainnya untuk menuliskan kategori baru.
         </p>
@@ -147,7 +147,7 @@ export function StepCommodities({
         )}
 
         <div className='flex flex-col gap-2.5'>
-          <Button type='submit' className='w-full rounded-full'>
+          <Button type='submit' size='lg' className='w-full rounded-full'>
             Lanjut ke Langkah 3: Data Akun
           </Button>
           <Button type='button' variant='ghost' className='w-full rounded-full' onClick={onBack}>

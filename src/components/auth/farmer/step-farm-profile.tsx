@@ -128,10 +128,10 @@ export function StepFarmProfile({ values, errors, onChange, onNext }: StepFarmPr
       className='flex flex-col gap-8'
     >
       <div className='mx-auto flex max-w-2xl flex-col gap-2 text-center'>
-        <h1 className='text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'>
+        <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
           Mari mulai: Bagaimana bentuk usaha tani Anda?
         </h1>
-        <p className='text-sm leading-relaxed text-muted-foreground sm:text-base'>
+        <p className='text-base leading-relaxed text-muted-foreground'>
           Pilih jenis usaha tani dan tuliskan nama kebun atau kelompok tani Anda. Semua langkah
           pendaftaran wajib diisi agar akun siap diverifikasi.
         </p>
@@ -204,7 +204,7 @@ export function StepFarmProfile({ values, errors, onChange, onNext }: StepFarmPr
           </Field>
         </FieldGroup>
 
-        <Button type='submit' className='w-full rounded-full'>
+        <Button type='submit' size='lg' className='w-full rounded-full'>
           Lanjut ke Langkah 2: Kategori Hasil Panen
         </Button>
       </div>

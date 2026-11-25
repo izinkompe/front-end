@@ -41,10 +41,10 @@ export function StepAccountInfo({
       className='flex flex-col gap-6'
     >
       <div className='flex flex-col gap-2 text-center'>
-        <h1 className='text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'>
+        <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
           Buat akun dan kontak aktif Anda
         </h1>
-        <p className='text-sm leading-relaxed text-muted-foreground sm:text-base'>
+        <p className='text-base leading-relaxed text-muted-foreground'>
           Gunakan nama asli serta email dan nomor WhatsApp yang aktif agar kami mudah memberi kabar
           saat ada pesanan masuk.
         </p>
@@ -113,7 +113,8 @@ export function StepAccountInfo({
             />
             <InputGroupAddon align='inline-end'>
               <InputGroupButton
-                size='icon-xs'
+                size='icon-sm'
+                aria-pressed={showPassword}
                 aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
                 onClick={() => setShowPassword((prev) => !prev)}
               >
@@ -141,7 +142,8 @@ export function StepAccountInfo({
             />
             <InputGroupAddon align='inline-end'>
               <InputGroupButton
-                size='icon-xs'
+                size='icon-sm'
+                aria-pressed={showConfirmPassword}
                 aria-label={
                   showConfirmPassword ? 'Sembunyikan ulangi kata sandi' : 'Lihat ulangi kata sandi'
                 }
@@ -156,7 +158,7 @@ export function StepAccountInfo({
       </FieldGroup>
 
       <div className='flex flex-col gap-2.5'>
-        <Button type='submit' className='w-full rounded-full'>
+        <Button type='submit' size='lg' className='w-full rounded-full'>
           Lanjut ke Langkah 4: Lokasi Lahan
         </Button>
         <Button type='button' variant='ghost' className='w-full rounded-full' onClick={onBack}>

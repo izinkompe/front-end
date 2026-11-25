@@ -49,10 +49,10 @@ export function FarmerLoginForm() {
     <FarmerAuthShell width='narrow'>
       <div className='flex flex-col gap-6 pt-2'>
         <div className='flex flex-col gap-2 text-center'>
-          <h1 className='text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'>
+          <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
             Masuk ke Akun Petani
           </h1>
-          <p className='text-sm leading-relaxed text-muted-foreground sm:text-base'>
+          <p className='text-base leading-relaxed text-muted-foreground'>
             Masukkan email dan kata sandi akun petani Anda untuk mengelola hasil panen dan pesanan.
           </p>
         </div>
@@ -108,7 +108,7 @@ export function FarmerLoginForm() {
                       <FieldLabel htmlFor='farmer-login-password'>Kata sandi</FieldLabel>
                       <Link
                         href='/bantuan'
-                        className='rounded-sm text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                        className='inline-flex min-h-10 items-center rounded-sm px-1 text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                       >
                         Lupa kata sandi?
                       </Link>
@@ -127,7 +127,8 @@ export function FarmerLoginForm() {
                       />
                       <InputGroupAddon align='inline-end'>
                         <InputGroupButton
-                          size='icon-xs'
+                          size='icon-sm'
+                          aria-pressed={showPassword}
                           aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
                           onClick={() => setShowPassword((prev) => !prev)}
                         >
@@ -149,7 +150,12 @@ export function FarmerLoginForm() {
             {(isSubmitting) => {
               const isPending = isSubmitting || loginMutation.isPending
               return (
-                <Button type='submit' className='w-full rounded-full' disabled={isPending}>
+                <Button
+                  type='submit'
+                  size='lg'
+                  className='w-full rounded-full'
+                  disabled={isPending}
+                >
                   {isPending && <Spinner data-icon='inline-start' />}
                   <span>{isPending ? 'Sedang masuk...' : 'Masuk ke Akun Petani'}</span>
                 </Button>
@@ -160,11 +166,11 @@ export function FarmerLoginForm() {
 
         <Separator />
 
-        <div className='flex flex-col items-center gap-1.5 text-center text-sm text-muted-foreground'>
+        <div className='flex flex-col items-center gap-1 text-center text-base text-muted-foreground'>
           <p>Baru pertama kali ingin berjualan hasil panen di PanganTani?</p>
           <Link
             href='/daftar-petani'
-            className='rounded-sm font-medium text-primary underline underline-offset-4 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            className='inline-flex min-h-10 items-center rounded-sm px-2 font-medium text-primary underline underline-offset-4 transition-opacity pointer-coarse:min-h-11 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           >
             Daftar jadi petani sekarang
           </Link>

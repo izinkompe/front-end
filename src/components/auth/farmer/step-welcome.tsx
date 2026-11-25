@@ -24,10 +24,10 @@ export function StepWelcome({ farmerName, farmName }: StepWelcomeProps) {
           <Clock data-icon='inline-start' />
           <span>Status Verifikasi: Sedang Ditinjau Admin</span>
         </Badge>
-        <h1 className='text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'>
+        <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
           Selamat datang di PanganTani, {farmerName}!
         </h1>
-        <p className='text-sm leading-relaxed text-muted-foreground sm:text-base'>
+        <p className='text-base leading-relaxed text-muted-foreground'>
           Pendaftaran untuk <span className='font-medium text-foreground'>{farmName}</span> sudah
           kami terima dan sedang diperiksa oleh tim Admin.
         </p>
@@ -37,9 +37,9 @@ export function StepWelcome({ farmerName, farmName }: StepWelcomeProps) {
         <CardHeader>
           <CardTitle>Apa yang bisa Anda lakukan sekarang?</CardTitle>
         </CardHeader>
-        <CardContent className='flex flex-col gap-3.5 text-sm leading-relaxed text-muted-foreground'>
+        <CardContent className='flex flex-col gap-3.5 text-base leading-relaxed text-muted-foreground'>
           <div className='flex items-start gap-3'>
-            <FileEdit className='mt-0.5 size-4 shrink-0 text-primary' aria-hidden='true' />
+            <FileEdit className='mt-1 size-4.5 shrink-0 text-primary' aria-hidden='true' />
             <p>
               <span className='font-medium text-foreground'>Bisa langsung dilakukan:</span> Masuk ke
               Dasbor Petani untuk mulai menyiapkan dan menyimpan{' '}
@@ -48,7 +48,7 @@ export function StepWelcome({ farmerName, farmName }: StepWelcomeProps) {
           </div>
           <Separator />
           <div className='flex items-start gap-3'>
-            <Lock className='mt-0.5 size-4 shrink-0 text-muted-foreground' aria-hidden='true' />
+            <Lock className='mt-1 size-4.5 shrink-0 text-muted-foreground' aria-hidden='true' />
             <p>
               <span className='font-medium text-foreground'>Aktif setelah disetujui Admin:</span>{' '}
               Tombol <span className='font-medium text-foreground'>Terbitkan Penawaran</span> dan{' '}
@@ -60,6 +60,7 @@ export function StepWelcome({ farmerName, farmName }: StepWelcomeProps) {
       </Card>
 
       <Button
+        size='lg'
         className='w-full rounded-full'
         nativeButton={false}
         render={<Link href='/dashboard' />}

@@ -92,7 +92,6 @@ function BuyerLoginForm({ onSuccess }: { onSuccess: () => void }) {
                   type='email'
                   autoComplete='email'
                   placeholder='nama@email.com'
-                  className='h-10'
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.value)}
@@ -115,12 +114,12 @@ function BuyerLoginForm({ onSuccess }: { onSuccess: () => void }) {
                   <Link
                     href='/bantuan'
                     onClick={onSuccess}
-                    className='rounded-sm text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                    className='inline-flex min-h-10 items-center rounded-sm px-1 text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                   >
                     Lupa kata sandi?
                   </Link>
                 </div>
-                <InputGroup className='h-10'>
+                <InputGroup>
                   <InputGroupInput
                     id='buyer-login-password'
                     name={field.name}
@@ -134,7 +133,8 @@ function BuyerLoginForm({ onSuccess }: { onSuccess: () => void }) {
                   />
                   <InputGroupAddon align='inline-end'>
                     <InputGroupButton
-                      size='icon-xs'
+                      size='icon-sm'
+                      aria-pressed={showPassword}
                       aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
                       onClick={() => setShowPassword((prev) => !prev)}
                     >
@@ -153,7 +153,7 @@ function BuyerLoginForm({ onSuccess }: { onSuccess: () => void }) {
         {(isSubmitting) => {
           const isPending = isSubmitting || loginMutation.isPending
           return (
-            <Button type='submit' size='lg' className='h-10 w-full' disabled={isPending}>
+            <Button type='submit' size='lg' className='w-full' disabled={isPending}>
               {isPending && <Spinner data-icon='inline-start' />}
               <span>{isPending ? 'Memproses...' : 'Masuk'}</span>
             </Button>
@@ -214,7 +214,6 @@ function BuyerRegisterForm({ onSuccess }: { onSuccess: () => void }) {
                   type='text'
                   autoComplete='name'
                   placeholder='Masukkan nama lengkap'
-                  className='h-10'
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.value)}
@@ -239,7 +238,6 @@ function BuyerRegisterForm({ onSuccess }: { onSuccess: () => void }) {
                   type='email'
                   autoComplete='email'
                   placeholder='nama@email.com'
-                  className='h-10'
                   value={field.state.value}
                   onBlur={field.handleBlur}
                   onChange={(event) => field.handleChange(event.target.value)}
@@ -258,7 +256,7 @@ function BuyerRegisterForm({ onSuccess }: { onSuccess: () => void }) {
             return (
               <Field data-invalid={isInvalid || undefined}>
                 <FieldLabel htmlFor='buyer-register-password'>Kata sandi</FieldLabel>
-                <InputGroup className='h-10'>
+                <InputGroup>
                   <InputGroupInput
                     id='buyer-register-password'
                     name={field.name}
@@ -272,7 +270,8 @@ function BuyerRegisterForm({ onSuccess }: { onSuccess: () => void }) {
                   />
                   <InputGroupAddon align='inline-end'>
                     <InputGroupButton
-                      size='icon-xs'
+                      size='icon-sm'
+                      aria-pressed={showPassword}
                       aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
                       onClick={() => setShowPassword((prev) => !prev)}
                     >
@@ -288,7 +287,7 @@ function BuyerRegisterForm({ onSuccess }: { onSuccess: () => void }) {
       </FieldGroup>
 
       <div className='flex flex-col gap-4'>
-        <p className='text-xs leading-relaxed text-muted-foreground'>
+        <p className='text-sm leading-relaxed text-muted-foreground'>
           Dengan mendaftar, Anda menyetujui{' '}
           <Link
             href='/syarat'
@@ -312,7 +311,7 @@ function BuyerRegisterForm({ onSuccess }: { onSuccess: () => void }) {
           {(isSubmitting) => {
             const isPending = isSubmitting || registerMutation.isPending
             return (
-              <Button type='submit' size='lg' className='h-10 w-full' disabled={isPending}>
+              <Button type='submit' size='lg' className='w-full' disabled={isPending}>
                 {isPending && <Spinner data-icon='inline-start' />}
                 <span>{isPending ? 'Mendaftarkan...' : 'Daftar'}</span>
               </Button>
@@ -334,10 +333,8 @@ export function BuyerAuthDialog({ open, onOpenChange }: BuyerAuthDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='gap-5 p-6 sm:max-w-md'>
-        <DialogHeader className='gap-1.5 pr-6'>
-          <DialogTitle className='text-xl font-semibold tracking-tight'>
-            Masuk ke PanganTani
-          </DialogTitle>
+        <DialogHeader className='gap-1.5 pr-10'>
+          <DialogTitle className='text-xl font-semibold'>Masuk ke PanganTani</DialogTitle>
           <DialogDescription>
             Khusus akun Pembeli untuk memesan hasil panen langsung dari petani.
           </DialogDescription>
@@ -350,12 +347,12 @@ export function BuyerAuthDialog({ open, onOpenChange }: BuyerAuthDialogProps) {
         >
           <TabsList
             variant='line'
-            className='h-10 w-full justify-start gap-6 border-b border-border p-0'
+            className='min-h-11 w-full justify-start gap-6 border-b border-border p-0'
           >
-            <TabsTrigger value='login' className='flex-none px-0 pb-2 after:bottom-0'>
+            <TabsTrigger value='login' className='flex-none px-1 pb-2.5 after:bottom-0'>
               Masuk
             </TabsTrigger>
-            <TabsTrigger value='register' className='flex-none px-0 pb-2 after:bottom-0'>
+            <TabsTrigger value='register' className='flex-none px-1 pb-2.5 after:bottom-0'>
               Daftar Baru
             </TabsTrigger>
           </TabsList>

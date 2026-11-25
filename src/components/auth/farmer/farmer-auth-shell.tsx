@@ -25,16 +25,16 @@ export function FarmerAuthShell({
   return (
     <div className='flex min-h-dvh flex-col bg-background text-foreground'>
       <header className='w-full border-b border-border bg-background'>
-        <div className='mx-auto flex h-16 max-w-5xl items-center justify-center px-4 sm:px-6'>
+        <div className='mx-auto flex min-h-16 max-w-5xl items-center justify-center px-4 py-2 sm:px-6'>
           <Link
             href='/'
             aria-label='Kembali ke beranda PanganTani'
-            className='inline-flex items-center gap-2.5 rounded-lg px-2 py-1 transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            className='inline-flex min-h-11 items-center gap-2.5 rounded-lg px-2.5 py-1.5 transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           >
-            <span className='flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
-              <Sprout className='size-4' aria-hidden='true' />
+            <span className='flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
+              <Sprout className='size-5' aria-hidden='true' />
             </span>
-            <span className='text-lg font-semibold tracking-tight text-foreground'>PanganTani</span>
+            <span className='text-lg font-semibold text-foreground'>PanganTani</span>
           </Link>
         </div>
       </header>
@@ -55,7 +55,7 @@ export function FarmerAuthShell({
                     Langkah {step} dari {totalSteps}
                   </span>
                   {stepLabel && (
-                    <span className='text-xs font-normal text-muted-foreground'>{stepLabel}</span>
+                    <span className='text-sm font-normal text-muted-foreground'>{stepLabel}</span>
                   )}
                 </ProgressLabel>
               </Progress>
@@ -67,22 +67,22 @@ export function FarmerAuthShell({
       </main>
 
       <footer className='mt-auto w-full border-t border-border bg-background'>
-        <div className='mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-5 gap-y-2 px-4 py-5 text-xs text-muted-foreground sm:px-6'>
+        <div className='mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-5 gap-y-1 px-4 py-5 text-sm text-muted-foreground sm:px-6'>
           <Link
             href='/privasi'
-            className='rounded-sm underline underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            className='inline-flex min-h-10 items-center rounded-sm px-1 underline underline-offset-4 transition-colors pointer-coarse:min-h-11 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           >
             Kebijakan Privasi
           </Link>
-          <Separator orientation='vertical' className='hidden h-3.5 sm:block' />
-          <span className='inline-flex items-center gap-1.5 font-medium text-foreground/80'>
-            <Lock className='size-3.5 text-primary' aria-hidden='true' />
+          <Separator orientation='vertical' className='hidden h-4 sm:block' />
+          <span className='inline-flex min-h-10 items-center gap-1.5 font-medium text-foreground/80'>
+            <Lock className='size-4 text-primary' aria-hidden='true' />
             <span>Aman &amp; Terenkripsi</span>
           </span>
-          <Separator orientation='vertical' className='hidden h-3.5 sm:block' />
+          <Separator orientation='vertical' className='hidden h-4 sm:block' />
           <Link
             href='/bantuan'
-            className='rounded-sm underline underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            className='inline-flex min-h-10 items-center rounded-sm px-1 underline underline-offset-4 transition-colors pointer-coarse:min-h-11 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           >
             Butuh Bantuan?
           </Link>

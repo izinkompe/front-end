@@ -104,18 +104,20 @@ function DocumentUploadBox({
         />
         {file ? (
           <div className='flex flex-col items-center gap-1.5'>
-            <CheckCircle2 className='size-5 text-primary' aria-hidden='true' />
-            <p className='max-w-full truncate text-sm font-medium text-foreground'>{file.name}</p>
+            <CheckCircle2 className='size-6 text-primary' aria-hidden='true' />
+            <p className='max-w-full truncate text-base font-medium text-foreground'>{file.name}</p>
             <Badge variant='secondary'>{formatFileSize(file.size)} • Siap dikirim</Badge>
-            <span className='text-xs text-primary underline underline-offset-4'>Ganti foto</span>
+            <span className='text-sm font-medium text-primary underline underline-offset-4'>
+              Ganti foto
+            </span>
           </div>
         ) : (
           <div className='flex flex-col items-center gap-1.5'>
-            <Upload className='size-5 text-muted-foreground' aria-hidden='true' />
-            <span className='text-sm font-medium text-foreground'>
+            <Upload className='size-6 text-muted-foreground' aria-hidden='true' />
+            <span className='text-base font-medium text-foreground'>
               Ketuk di sini untuk pilih foto dari HP atau komputer
             </span>
-            <span className='text-xs text-muted-foreground'>
+            <span className='text-sm text-muted-foreground'>
               Format JPG atau PNG, maksimal 5 MB
             </span>
           </div>
@@ -150,10 +152,10 @@ export function StepVerification({
       className='flex flex-col gap-6'
     >
       <div className='flex flex-col gap-2 text-center'>
-        <h1 className='text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'>
+        <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
           Selesaikan pendaftaran akun petani Anda
         </h1>
-        <p className='text-sm leading-relaxed text-muted-foreground sm:text-base'>
+        <p className='text-base leading-relaxed text-muted-foreground'>
           Lengkapi bukti identitas agar Admin PanganTani dapat menyetujui akun Anda untuk mulai
           menerbitkan penawaran panen.
         </p>
@@ -170,15 +172,15 @@ export function StepVerification({
         <CardHeader>
           <CardTitle>Ringkasan data Anda</CardTitle>
         </CardHeader>
-        <CardContent className='grid grid-cols-1 gap-2 text-sm sm:grid-cols-2'>
+        <CardContent className='grid grid-cols-1 gap-3 text-base sm:grid-cols-2'>
           <div>
-            <p className='text-xs text-muted-foreground'>Nama &amp; Kebun</p>
+            <p className='text-sm text-muted-foreground'>Nama &amp; Kebun</p>
             <p className='font-medium text-foreground'>
               {summary.name} — {summary.farmName}
             </p>
           </div>
           <div>
-            <p className='text-xs text-muted-foreground'>Wilayah &amp; Rekening</p>
+            <p className='text-sm text-muted-foreground'>Wilayah &amp; Rekening</p>
             <p className='font-medium text-foreground tabular-nums'>
               {summary.areaName} • {summary.bankName} {summary.accountNumber}
             </p>
@@ -236,7 +238,7 @@ export function StepVerification({
         <Field
           orientation='horizontal'
           data-invalid={Boolean(errors.agreedToTerms) || undefined}
-          className='items-start rounded-xl border border-border bg-muted/30 p-3.5'
+          className='items-start gap-3 rounded-xl border border-border bg-muted/30 p-4'
         >
           <Checkbox
             id='farmer-agree-terms'
@@ -245,7 +247,10 @@ export function StepVerification({
             aria-invalid={Boolean(errors.agreedToTerms) || undefined}
           />
           <FieldContent>
-            <FieldLabel htmlFor='farmer-agree-terms' className='leading-relaxed font-normal'>
+            <FieldLabel
+              htmlFor='farmer-agree-terms'
+              className='text-sm leading-relaxed font-normal sm:text-base'
+            >
               <span>
                 Saya menyatakan data yang diisi benar serta menyetujui{' '}
                 <Link
@@ -270,7 +275,7 @@ export function StepVerification({
       </FieldGroup>
 
       <div className='flex flex-col gap-2.5'>
-        <Button type='submit' className='w-full rounded-full' disabled={isSubmitting}>
+        <Button type='submit' size='lg' className='w-full rounded-full' disabled={isSubmitting}>
           {isSubmitting && <Spinner data-icon='inline-start' />}
           <span>{isSubmitting ? 'Mengirim pendaftaran...' : 'Selesaikan Pendaftaran'}</span>
         </Button>

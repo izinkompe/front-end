@@ -105,10 +105,10 @@ export function StepFarmLocation({
       className='flex flex-col gap-6'
     >
       <div className='flex flex-col gap-2 text-center'>
-        <h1 className='text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'>
+        <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
           Di mana tempat pembeli mengambil hasil panen?
         </h1>
-        <p className='text-sm leading-relaxed text-muted-foreground sm:text-base'>
+        <p className='text-base leading-relaxed text-muted-foreground'>
           Pembeli akan datang langsung ke lokasi yang Anda tentukan untuk mengambil pesanan.
         </p>
       </div>
@@ -138,7 +138,7 @@ export function StepFarmLocation({
           <span>{locating ? 'Mencari lokasi HP Anda...' : 'Gunakan Lokasi HP Saya Otomatis'}</span>
         </Button>
         {locationInfo && (
-          <p className='text-center text-xs text-muted-foreground'>{locationInfo}</p>
+          <p className='text-center text-sm text-muted-foreground'>{locationInfo}</p>
         )}
       </div>
 
@@ -191,7 +191,7 @@ export function StepFarmLocation({
               <MapPin data-icon='inline-start' />
               <span>Titik peta otomatis siap</span>
             </Badge>
-            <span className='text-xs text-muted-foreground tabular-nums'>
+            <span className='text-sm text-muted-foreground tabular-nums'>
               ({values.latitude.toFixed(4)}, {values.longitude.toFixed(4)})
             </span>
           </div>
@@ -233,7 +233,7 @@ export function StepFarmLocation({
       </FieldGroup>
 
       <div className='flex flex-col gap-2.5'>
-        <Button type='submit' className='w-full rounded-full'>
+        <Button type='submit' size='lg' className='w-full rounded-full'>
           Lanjut ke Langkah 5: Rekening Bank
         </Button>
         <Button type='button' variant='ghost' className='w-full rounded-full' onClick={onBack}>

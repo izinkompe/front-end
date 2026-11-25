@@ -41,10 +41,10 @@ export function StepBankAccount({
       className='flex flex-col gap-6'
     >
       <div className='flex flex-col gap-2 text-center'>
-        <h1 className='text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'>
+        <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
           Rekening penerima uang hasil penjualan
         </h1>
-        <p className='text-sm leading-relaxed text-muted-foreground sm:text-base'>
+        <p className='text-base leading-relaxed text-muted-foreground'>
           Masukkan nomor rekening bank tempat Anda menerima transfer pembayaran dari pembeli.
         </p>
       </div>
@@ -124,7 +124,7 @@ export function StepBankAccount({
       </FieldGroup>
 
       <div className='flex flex-col gap-2.5'>
-        <Button type='submit' className='w-full rounded-full'>
+        <Button type='submit' size='lg' className='w-full rounded-full'>
           Lanjut ke Langkah 6: Verifikasi Identitas
         </Button>
         <Button type='button' variant='ghost' className='w-full rounded-full' onClick={onBack}>
