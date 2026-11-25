@@ -7,6 +7,7 @@ import { ChevronRight, Heart, Menu, ShoppingBag, Sprout, User, X } from 'lucide-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { BuyerAuthDialog } from '@/components/auth/buyer-auth-dialog'
 import {
   LocationPicker,
   defaultLocation,
@@ -31,19 +32,27 @@ function getUserInitials(name: string) {
 
 export function GlobalHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation>(defaultLocation)
   const pathname = usePathname()
   const { data: currentUser } = useCurrentUser()
 
   return (
     <header className='sticky top-0 z-40 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/85'>
-      <div className='hidden bg-primary text-primary-foreground lg:block'>
-        <div className='mx-auto flex min-h-9 max-w-7xl items-center justify-end px-4 py-1.5 sm:px-6 lg:px-8'>
+      <div className='hidden bg-secondary text-secondary-foreground lg:block'>
+        <div className='mx-auto flex min-h-9 max-w-7xl items-center justify-end gap-3 px-4 py-1.5 sm:px-6 lg:px-8'>
           <LocationPicker
             selected={selectedLocation}
             onSelect={setSelectedLocation}
-            variant='primary'
+            variant='banner'
           />
+          <span className='h-3.5 w-px bg-border' aria-hidden='true' />
+          <Link
+            href='/daftar-petani'
+            className='rounded-sm text-xs font-medium text-secondary-foreground/85 transition-colors hover:text-secondary-foreground hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          >
+            Daftar Jadi Petani
+          </Link>
         </div>
       </div>
 
@@ -141,8 +150,8 @@ export function GlobalHeader() {
                   variant='ghost'
                   size='icon-sm'
                   className='md:size-8'
-                  nativeButton={false}
-                  render={<Link href='/dashboard' aria-label='Akun & Dashboard' />}
+                  aria-label='Masuk atau daftar akun pembeli'
+                  onClick={() => setAuthDialogOpen(true)}
                 >
                   <User />
                 </Button>
@@ -177,6 +186,8 @@ export function GlobalHeader() {
           </div>
         </CollapsibleContent>
       </Collapsible>
+
+      <BuyerAuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
     </header>
   )
 }

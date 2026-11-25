@@ -137,7 +137,7 @@ export const defaultLocation: SelectedLocation = {
 interface LocationPickerProps {
   selected: SelectedLocation
   onSelect: (location: SelectedLocation) => void
-  variant?: 'primary' | 'secondary'
+  variant?: 'banner' | 'primary' | 'secondary'
 }
 
 function findNearestLocation(lat: number, lng: number): SelectedLocation {
@@ -165,7 +165,7 @@ function findNearestLocation(lat: number, lng: number): SelectedLocation {
   }
 }
 
-export function LocationPicker({ selected, onSelect, variant = 'primary' }: LocationPickerProps) {
+export function LocationPicker({ selected, onSelect, variant = 'banner' }: LocationPickerProps) {
   const [open, setOpen] = useState(false)
   const [activeProvinceId, setActiveProvinceId] = useState<string>(selected.provinceId)
   const [mobileStep, setMobileStep] = useState<'province' | 'region'>('province')
@@ -234,9 +234,12 @@ export function LocationPicker({ selected, onSelect, variant = 'primary' }: Loca
             aria-label={`Pilih lokasi panen, saat ini ${selected.label}`}
             className={cn(
               'inline-flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2',
-              variant === 'secondary'
-                ? 'h-7 bg-secondary text-secondary-foreground hover:bg-secondary/80 focus-visible:ring-ring'
-                : 'text-primary-foreground/95 hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-primary-foreground/40'
+              variant === 'secondary' &&
+                'h-7 bg-secondary text-secondary-foreground hover:bg-secondary/80 focus-visible:ring-ring',
+              variant === 'banner' &&
+                'text-secondary-foreground hover:bg-foreground/5 focus-visible:ring-ring',
+              variant === 'primary' &&
+                'text-primary-foreground/95 hover:bg-primary-foreground/10 hover:text-primary-foreground focus-visible:ring-primary-foreground/40'
             )}
           />
         }
@@ -257,7 +260,7 @@ export function LocationPicker({ selected, onSelect, variant = 'primary' }: Loca
       </PopoverTrigger>
 
       <PopoverContent
-        align={variant === 'primary' ? 'end' : 'start'}
+        align={variant === 'secondary' ? 'start' : 'end'}
         sideOffset={8}
         className='w-[calc(100vw-2rem)] max-w-sm gap-0 overflow-hidden p-0 sm:w-[34rem] sm:max-w-none'
       >
