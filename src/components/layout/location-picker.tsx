@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ChevronLeft, ChevronRight, LocateFixed, MapPin } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -29,6 +29,7 @@ export function LocationPicker({ selected, onSelect, variant = 'banner' }: Locat
   const [mobileStep, setMobileStep] = useState<'province' | 'region'>('province')
   const [locating, setLocating] = useState(false)
   const [locationMessage, setLocationMessage] = useState<string | null>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
 
   const activeProvince =
     provinceGroups.find((province) => province.id === activeProvinceId) ?? provinceGroups[0]
@@ -124,8 +125,11 @@ export function LocationPicker({ selected, onSelect, variant = 'banner' }: Locat
       </PopoverTrigger>
 
       <PopoverContent
+        ref={popupRef}
         align={variant === 'secondary' || variant === 'overlay-pill' ? 'start' : 'end'}
         sideOffset={8}
+        positionMethod='fixed'
+        initialFocus={popupRef}
         className='w-[calc(100vw-2rem)] max-w-sm gap-0 overflow-hidden p-0 sm:w-[34rem] sm:max-w-none'
       >
         <div className='hidden grid-cols-2 border-b border-border sm:grid'>
