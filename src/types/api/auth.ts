@@ -31,10 +31,17 @@ export const UserSchema = z.object({
 export type User = z.infer<typeof UserSchema>
 
 export const LoginRequestSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().trim().email('Format email tidak valid'),
+  password: z.string().min(6, 'Kata sandi minimal 6 karakter'),
 })
 export type LoginRequest = z.infer<typeof LoginRequestSchema>
+
+export const BuyerRegisterRequestSchema = z.object({
+  name: z.string().trim().min(2, 'Nama minimal 2 karakter'),
+  email: z.string().trim().email('Format email tidak valid'),
+  password: z.string().min(6, 'Kata sandi minimal 6 karakter'),
+})
+export type BuyerRegisterRequest = z.infer<typeof BuyerRegisterRequestSchema>
 
 export const RegisterRequestSchema = z.object({
   name: z.string().min(2),

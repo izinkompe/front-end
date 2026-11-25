@@ -7,6 +7,9 @@ import { needsBoardCollection } from './collections/needs-board'
 import type { Order } from '@/types/api/orders'
 import type { DistributionStats } from '@/types/api/admin'
 import type { NeedRequest } from '@/types/api/needs-board'
+import type { User } from '@/types/api/auth'
+
+let activeSessionUserId: string | null = null
 
 interface AdapterOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>
@@ -33,22 +36,65 @@ export const tanstackDbAdapter = {
     const method = (options.method || 'GET').toUpperCase()
 
     if (endpoint === '/api/auth/me') {
-      const user = usersCollection.get('usr-pb-01')
+      if (!activeSessionUserId) {
+        return null
+      }
+      const user = usersCollection.get(activeSessionUserId)
       if (!user) {
-        throw new ApiError(401, 'Sesi tidak ditemukan', 'UNAUTHORIZED')
+        activeSessionUserId = null
+        return null
       }
       return user
     }
 
     if (endpoint === '/api/auth/login' && method === 'POST') {
-      const body = parseJsonBody<{ email?: string }>(options.body)
+      const body = parseJsonBody<{ email?: string; password?: string }>(options.body)
+      const normalizedEmail = (body.email || '').trim().toLowerCase()
       const user =
-        Array.from(usersCollection.values()).find((item) => item.email === body.email) ||
-        usersCollection.get('usr-pb-01')
+        Array.from(usersCollection.values()).find(
+          (item) => item.email.toLowerCase() === normalizedEmail
+        ) || usersCollection.get('usr-pb-01')
+      if (!user) {
+        throw new ApiError(401, 'Email atau kata sandi tidak sesuai', 'UNAUTHORIZED')
+      }
+      activeSessionUserId = user.id
       return {
         token: 'dummy-token-' + Date.now(),
         user,
       }
+    }
+
+    if (endpoint === '/api/auth/register' && method === 'POST') {
+      const body = parseJsonBody<{ name?: string; email?: string; password?: string }>(options.body)
+      const normalizedEmail = (body.email || '').trim().toLowerCase()
+      const existingUser = Array.from(usersCollection.values()).find(
+        (item) => item.email.toLowerCase() === normalizedEmail
+      )
+      if (existingUser) {
+        throw new ApiError(409, 'Email sudah terdaftar, silakan masuk', 'EMAIL_EXISTS')
+      }
+
+      const now = new Date().toISOString()
+      const newUser: User = {
+        id: 'usr-pb-' + Date.now(),
+        name: (body.name || '').trim() || 'Pembeli PanganTani',
+        email: normalizedEmail,
+        phone: '',
+        role: 'buyer',
+        createdAt: now,
+        updatedAt: now,
+      }
+      usersCollection.insert(newUser)
+      activeSessionUserId = newUser.id
+      return {
+        token: 'dummy-token-' + Date.now(),
+        user: newUser,
+      }
+    }
+
+    if (endpoint === '/api/auth/logout' && method === 'POST') {
+      activeSessionUserId = null
+      return { success: true }
     }
 
     if (endpoint === '/api/offers/expiring-soon') {
