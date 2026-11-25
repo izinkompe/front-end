@@ -1,0 +1,422 @@
+'use client'
+
+import { useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
+import { id } from 'date-fns/locale'
+import {
+  Calendar as CalendarIcon,
+  ChevronDown,
+  Clock,
+  MapPin,
+  Navigation,
+  Search,
+} from 'lucide-react'
+import { useSelectedLocation } from '@/components/providers/location-provider'
+import { Button } from '@/components/ui/button'
+import { Calendar } from '@/components/ui/calendar'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { cn } from '@/lib/utils'
+import {
+  buildBuyerSearchHref,
+  categoryFilterOptions,
+  deadlineOptions,
+  formatPickupDateIso,
+  formatPickupDateLabel,
+  minStockOptions,
+  radiusOptions,
+  type BuyerCategoryFilter,
+  type BuyerDeadlineOption,
+  type BuyerMinStockOption,
+  type BuyerRadiusOption,
+  type BuyerSearchMode,
+} from './hero-search-params'
+
+const searchModes: ReadonlyArray<{
+  value: BuyerSearchMode
+  label: string
+  ctaLabel: string
+}> = [
+  { value: 'katalog', label: 'Cari Panen', ctaLabel: 'Cari Panen' },
+  { value: 'peta', label: 'Peta Radius', ctaLabel: 'Lihat Peta' },
+  { value: 'segera-ditutup', label: 'Segera Ditutup', ctaLabel: 'Lihat Penawaran' },
+]
+
+function getTodayStart() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+}
+
+interface PickupCalendarPopoverProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  selectedDate: Date | undefined
+  today: Date | undefined
+  onSelectDate: (date: Date | undefined) => void
+  onSelectToday: () => void
+  onClearDate: () => void
+}
+
+function PickupCalendarPopover({
+  open,
+  onOpenChange,
+  selectedDate,
+  today,
+  onSelectDate,
+  onSelectToday,
+  onClearDate,
+}: PickupCalendarPopoverProps) {
+  const pickupDateLabel = selectedDate ? formatPickupDateLabel(selectedDate) : 'Semua jadwal'
+
+  return (
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger
+        render={
+          <Button
+            type='button'
+            variant='outline'
+            className='min-h-12 w-full justify-between font-normal'
+            aria-label='Pilih tanggal jadwal pengambilan mandiri'
+          />
+        }
+      >
+        <span className='flex min-w-0 items-center gap-2'>
+          <CalendarIcon data-icon='inline-start' aria-hidden='true' />
+          <span className={cn('truncate', !selectedDate && 'text-muted-foreground')}>
+            {pickupDateLabel}
+          </span>
+        </span>
+        <ChevronDown data-icon='inline-end' aria-hidden='true' />
+      </PopoverTrigger>
+
+      <PopoverContent align='start' className='w-auto min-w-80 gap-0 p-0'>
+        <Calendar
+          mode='single'
+          selected={selectedDate}
+          onSelect={onSelectDate}
+          defaultMonth={selectedDate ?? today}
+          disabled={today ? { before: today } : undefined}
+          locale={id}
+          className='w-full'
+          classNames={{ root: 'w-full' }}
+        />
+        <Separator />
+        <div className='flex items-center justify-between gap-2 p-2.5'>
+          <Button type='button' variant='ghost' size='sm' onClick={onSelectToday}>
+            Hari ini
+          </Button>
+          <Button
+            type='button'
+            variant='ghost'
+            size='sm'
+            onClick={onClearDate}
+            disabled={!selectedDate}
+          >
+            Semua jadwal
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export function BuyerHeroSearch() {
+  const router = useRouter()
+  const { selectedLocation, hasUpdatedLocation, locating, locationMessage, detectCurrentLocation } =
+    useSelectedLocation()
+
+  const [mode, setMode] = useState<BuyerSearchMode>('katalog')
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState<BuyerCategoryFilter>('semua')
+  const [radiusKm, setRadiusKm] = useState<BuyerRadiusOption>('10')
+  const [minStockKg, setMinStockKg] = useState<BuyerMinStockOption>('semua')
+  const [deadlineWindow, setDeadlineWindow] = useState<BuyerDeadlineOption>('semua')
+  const [pickupDate, setPickupDate] = useState<Date | undefined>(undefined)
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const [today, setToday] = useState<Date | undefined>(undefined)
+
+  const activeModeMeta = searchModes.find((item) => item.value === mode) ?? searchModes[0]
+  const selectedCategoryLabel =
+    categoryFilterOptions.find((option) => option.value === category)?.label ?? 'Semua kategori'
+  const selectedRadiusLabel =
+    radiusOptions.find((option) => option.value === radiusKm)?.label ?? 'Radius 10 km'
+  const selectedMinStockLabel =
+    minStockOptions.find((option) => option.value === minStockKg)?.label ?? 'Semua stok'
+  const selectedDeadlineLabel =
+    deadlineOptions.find((option) => option.value === deadlineWindow)?.label ?? 'Semua batas waktu'
+
+  function handleModeChange(nextValues: string[]) {
+    const next = nextValues[0]
+    if (next === 'katalog' || next === 'peta' || next === 'segera-ditutup') {
+      setMode(next)
+      setCalendarOpen(false)
+    }
+  }
+
+  function handleCategoryChange(nextValue: string | null) {
+    if (
+      nextValue === 'semua' ||
+      nextValue === 'sayuran' ||
+      nextValue === 'buah' ||
+      nextValue === 'padi-biji' ||
+      nextValue === 'rempah-umbi'
+    ) {
+      setCategory(nextValue)
+    }
+  }
+
+  function handleRadiusChange(nextValue: string | null) {
+    if (nextValue === '5' || nextValue === '10' || nextValue === '25' || nextValue === '50') {
+      setRadiusKm(nextValue)
+    }
+  }
+
+  function handleMinStockChange(nextValue: string | null) {
+    if (
+      nextValue === 'semua' ||
+      nextValue === '10' ||
+      nextValue === '25' ||
+      nextValue === '50' ||
+      nextValue === '100'
+    ) {
+      setMinStockKg(nextValue)
+    }
+  }
+
+  function handleDeadlineChange(nextValue: string | null) {
+    if (
+      nextValue === 'semua' ||
+      nextValue === '3h' ||
+      nextValue === '6h' ||
+      nextValue === 'today'
+    ) {
+      setDeadlineWindow(nextValue)
+    }
+  }
+
+  function handleCalendarOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setToday(getTodayStart())
+    }
+    setCalendarOpen(nextOpen)
+  }
+
+  function handleSelectPickupDate(nextDate: Date | undefined) {
+    setPickupDate(nextDate)
+    setCalendarOpen(false)
+  }
+
+  function handleSelectToday() {
+    setPickupDate(today ?? getTodayStart())
+    setCalendarOpen(false)
+  }
+
+  function handleClearPickupDate() {
+    setPickupDate(undefined)
+    setCalendarOpen(false)
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const href = buildBuyerSearchHref({
+      mode,
+      query,
+      category,
+      radiusKm,
+      minStockKg,
+      deadlineWindow,
+      pickupDate: pickupDate ? formatPickupDateIso(pickupDate) : null,
+      location: selectedLocation,
+    })
+    router.push(href)
+  }
+
+  return (
+    <div className='mx-auto flex w-full max-w-5xl flex-col items-center gap-4'>
+      <ToggleGroup
+        variant='outline'
+        spacing={0}
+        value={[mode]}
+        onValueChange={handleModeChange}
+        aria-label='Mode pencarian panen'
+        className='max-w-full overflow-x-auto bg-card shadow-sm'
+      >
+        <ToggleGroupItem value='katalog'>
+          <Search data-icon='inline-start' aria-hidden='true' />
+          <span>Cari Panen</span>
+        </ToggleGroupItem>
+        <ToggleGroupItem value='peta'>
+          <MapPin data-icon='inline-start' aria-hidden='true' />
+          <span>Peta Radius</span>
+        </ToggleGroupItem>
+        <ToggleGroupItem value='segera-ditutup'>
+          <Clock data-icon='inline-start' aria-hidden='true' />
+          <span>Segera Ditutup</span>
+        </ToggleGroupItem>
+      </ToggleGroup>
+
+      <form
+        onSubmit={handleSubmit}
+        role='search'
+        aria-label='Pencarian panen surplus'
+        className='grid w-full grid-cols-1 gap-2.5 rounded-xl border border-border bg-card p-2.5 shadow-sm sm:grid-cols-2 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_auto] lg:items-center'
+      >
+        <InputGroup className='min-h-12 sm:col-span-2 lg:col-span-1'>
+          <InputGroupAddon align='inline-start'>
+            <Search aria-hidden='true' />
+          </InputGroupAddon>
+          <InputGroupInput
+            type='search'
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder='Cari tomat, buncis, mangga...'
+            aria-label='Cari nama komoditas'
+            maxLength={100}
+          />
+        </InputGroup>
+
+        {mode === 'katalog' && (
+          <>
+            <Select value={category} onValueChange={handleCategoryChange}>
+              <SelectTrigger className='min-h-12 w-full' aria-label='Pilih kategori komoditas'>
+                <SelectValue>{selectedCategoryLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {categoryFilterOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <PickupCalendarPopover
+              open={calendarOpen}
+              onOpenChange={handleCalendarOpenChange}
+              selectedDate={pickupDate}
+              today={today}
+              onSelectDate={handleSelectPickupDate}
+              onSelectToday={handleSelectToday}
+              onClearDate={handleClearPickupDate}
+            />
+          </>
+        )}
+
+        {mode === 'peta' && (
+          <>
+            <Select value={radiusKm} onValueChange={handleRadiusChange}>
+              <SelectTrigger className='min-h-12 w-full' aria-label='Pilih radius jarak pencarian'>
+                <SelectValue>{selectedRadiusLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {radiusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Select value={minStockKg} onValueChange={handleMinStockChange}>
+              <SelectTrigger className='min-h-12 w-full' aria-label='Pilih minimum stok tersedia'>
+                <SelectValue>{selectedMinStockLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {minStockOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </>
+        )}
+
+        {mode === 'segera-ditutup' && (
+          <>
+            <Select value={deadlineWindow} onValueChange={handleDeadlineChange}>
+              <SelectTrigger className='min-h-12 w-full' aria-label='Pilih batas waktu pemesanan'>
+                <SelectValue>{selectedDeadlineLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {deadlineOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <PickupCalendarPopover
+              open={calendarOpen}
+              onOpenChange={handleCalendarOpenChange}
+              selectedDate={pickupDate}
+              today={today}
+              onSelectDate={handleSelectPickupDate}
+              onSelectToday={handleSelectToday}
+              onClearDate={handleClearPickupDate}
+            />
+          </>
+        )}
+
+        <Button
+          type='submit'
+          size='lg'
+          className='w-full px-6 sm:col-span-2 lg:col-span-1 lg:w-auto'
+        >
+          {activeModeMeta.ctaLabel}
+        </Button>
+      </form>
+
+      <div className='flex flex-col items-center gap-1.5 text-center'>
+        <div className='flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm text-white/95 drop-shadow-xs'>
+          <span>
+            {hasUpdatedLocation
+              ? `Lokasi Anda kini diatur ke ${selectedLocation.label}`
+              : `Sepertinya Anda berada di ${selectedLocation.label}. Kurang tepat?`}
+          </span>
+
+          <button
+            type='button'
+            onClick={() => detectCurrentLocation()}
+            disabled={locating}
+            className='inline-flex min-h-10 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-semibold text-white underline underline-offset-4 transition-opacity pointer-coarse:min-h-11 hover:opacity-85 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70'
+          >
+            <Navigation className='size-4 shrink-0 fill-current' aria-hidden='true' />
+            <span>
+              {locating
+                ? 'Mendeteksi lokasi...'
+                : hasUpdatedLocation
+                  ? 'Perbarui lokasi'
+                  : 'Gunakan lokasi saat ini'}
+            </span>
+          </button>
+        </div>
+
+        {locationMessage && (
+          <p role='status' aria-live='polite' className='text-sm text-white/90 drop-shadow-xs'>
+            {locationMessage}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
