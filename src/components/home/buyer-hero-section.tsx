@@ -20,7 +20,7 @@ export function BuyerHeroSection() {
         />
         <div
           aria-hidden='true'
-          className='pointer-events-none absolute inset-0 bg-linear-to-b from-black/65 via-black/45 to-black/55'
+          className='pointer-events-none absolute inset-0 bg-linear-to-b from-black/65 via-black/45 to-black/35'
         />
 
         <div className='relative z-10 mx-auto flex w-full max-w-7xl flex-col items-center gap-7 px-4 pt-24 pb-12 sm:gap-8 sm:px-6 sm:pt-28 sm:pb-16 lg:px-8 lg:pt-36 lg:pb-20'>
