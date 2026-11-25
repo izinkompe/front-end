@@ -39,7 +39,7 @@ export function GlobalHeader() {
 
   return (
     <header className='sticky top-0 z-40 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/85'>
-      <div className='hidden bg-secondary text-secondary-foreground lg:block'>
+      <div className='hidden border-b border-border bg-secondary text-secondary-foreground lg:block'>
         <div className='mx-auto flex min-h-9 max-w-7xl items-center justify-end gap-3 px-4 py-1.5 sm:px-6 lg:px-8'>
           <LocationPicker
             selected={selectedLocation}

@@ -124,18 +124,18 @@ const currentYear = new Date().getFullYear()
 
 export function GlobalFooter() {
   return (
-    <footer className='border-t border-border bg-muted text-foreground'>
+    <footer className='border-t border-border bg-secondary text-secondary-foreground'>
       <div className='mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8'>
         <div className='grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4'>
           {footerColumns.map((column) => (
             <div key={column.title} className='flex flex-col gap-3.5'>
-              <h3 className='text-sm font-semibold text-foreground'>{column.title}</h3>
+              <h3 className='text-sm font-semibold text-secondary-foreground'>{column.title}</h3>
               <ul className='flex flex-col gap-2.5 text-sm text-muted-foreground'>
                 {column.links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className='rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                      className='rounded-sm transition-colors hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                     >
                       {link.label}
                     </Link>
@@ -147,12 +147,12 @@ export function GlobalFooter() {
 
           <div className='flex flex-col gap-6'>
             <div className='flex flex-col gap-3.5'>
-              <h3 className='text-sm font-semibold text-foreground'>Konten & Layanan</h3>
+              <h3 className='text-sm font-semibold text-secondary-foreground'>Konten & Layanan</h3>
               <ul className='flex flex-col gap-2.5 text-sm text-muted-foreground'>
                 <li>
                   <Link
                     href='/edukasi'
-                    className='rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                    className='rounded-sm transition-colors hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                   >
                     Edukasi Tani: panduan budidaya & panen terbaru
                   </Link>
@@ -189,7 +189,7 @@ export function GlobalFooter() {
             <Link
               key={link.href}
               href={link.href}
-              className='rounded-sm text-sm text-foreground underline underline-offset-4 transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              className='rounded-sm text-sm text-secondary-foreground underline underline-offset-4 transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
             >
               {link.label}
             </Link>
