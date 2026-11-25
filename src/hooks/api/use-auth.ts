@@ -7,6 +7,7 @@ import { queryKeys } from '@/lib/api/query-keys'
 import {
   UserSchema,
   type BuyerRegisterRequest,
+  type FarmerRegisterRequest,
   type LoginRequest,
   type User,
 } from '@/types/api/auth'
@@ -47,6 +48,23 @@ export function useLogin() {
   })
 }
 
+export function useLoginFarmer() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (credentials: LoginRequest) =>
+      apiClient<{ token: string; user: User }>('/api/auth/login-farmer', undefined, {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.auth.me, data.user)
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
+    },
+  })
+}
+
 export function useRegisterBuyer() {
   const queryClient = useQueryClient()
 
@@ -59,6 +77,23 @@ export function useRegisterBuyer() {
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.auth.me, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+    },
+  })
+}
+
+export function useRegisterFarmer() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: FarmerRegisterRequest) =>
+      apiClient<{ token: string; user: User }>('/api/auth/register-farmer', undefined, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.auth.me, data.user)
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
     },
   })
 }

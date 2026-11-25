@@ -92,6 +92,98 @@ export const tanstackDbAdapter = {
       }
     }
 
+    if (endpoint === '/api/auth/login-farmer' && method === 'POST') {
+      const body = parseJsonBody<{ email?: string; password?: string }>(options.body)
+      const normalizedEmail = (body.email || '').trim().toLowerCase()
+      const user = Array.from(usersCollection.values()).find(
+        (item) => item.email.toLowerCase() === normalizedEmail
+      )
+      if (!user) {
+        throw new ApiError(
+          401,
+          'Email belum terdaftar sebagai petani. Silakan periksa kembali atau daftar akun baru.',
+          'UNAUTHORIZED'
+        )
+      }
+      if (user.role !== 'farmer') {
+        throw new ApiError(
+          403,
+          'Akun ini terdaftar sebagai Pembeli atau Admin. Gunakan halaman masuk yang sesuai.',
+          'WRONG_ROLE'
+        )
+      }
+      activeSessionUserId = user.id
+      return {
+        token: 'dummy-token-' + Date.now(),
+        user,
+      }
+    }
+
+    if (endpoint === '/api/auth/register-farmer' && method === 'POST') {
+      const body = parseJsonBody<{
+        name?: string
+        email?: string
+        phone?: string
+        farmName?: string
+        farmerType?: User['farmerType']
+        primaryCommodities?: User['primaryCommodities']
+        customCommodity?: string
+        areaName?: string
+        fullAddress?: string
+        latitude?: number
+        longitude?: number
+        pickupNotes?: string
+        bankAccount?: User['bankAccount']
+      }>(options.body)
+      const normalizedEmail = (body.email || '').trim().toLowerCase()
+      const existingUser = Array.from(usersCollection.values()).find(
+        (item) => item.email.toLowerCase() === normalizedEmail
+      )
+      if (existingUser) {
+        throw new ApiError(
+          409,
+          'Alamat email ini sudah terdaftar. Silakan masuk menggunakan akun Anda.',
+          'EMAIL_EXISTS'
+        )
+      }
+
+      const now = new Date().toISOString()
+      const newFarmer: User = {
+        id: 'usr-pt-' + Date.now(),
+        name: (body.name || '').trim() || 'Petani PanganTani',
+        email: normalizedEmail,
+        phone: (body.phone || '').trim(),
+        role: 'farmer',
+        organization: (body.farmName || '').trim(),
+        farmerType: body.farmerType,
+        primaryCommodities: body.primaryCommodities,
+        customCommodity: body.customCommodity?.trim() || undefined,
+        bankAccount: body.bankAccount,
+        isVerifiedFarmer: false,
+        onboardingCompleted: true,
+        addresses: [
+          {
+            id: 'addr-' + Date.now(),
+            label: (body.farmName || '').trim() || 'Lokasi Lahan Utama',
+            fullAddress: (body.fullAddress || '').trim(),
+            areaName: (body.areaName || '').trim(),
+            latitude: typeof body.latitude === 'number' ? body.latitude : -6.8167,
+            longitude: typeof body.longitude === 'number' ? body.longitude : 107.6167,
+            isDefault: true,
+            notes: (body.pickupNotes || '').trim(),
+          },
+        ],
+        createdAt: now,
+        updatedAt: now,
+      }
+      usersCollection.insert(newFarmer)
+      activeSessionUserId = newFarmer.id
+      return {
+        token: 'dummy-token-' + Date.now(),
+        user: newFarmer,
+      }
+    }
+
     if (endpoint === '/api/auth/logout' && method === 'POST') {
       activeSessionUserId = null
       return { success: true }
