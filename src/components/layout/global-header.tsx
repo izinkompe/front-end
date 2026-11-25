@@ -2,99 +2,190 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Sprout, Menu, X, LayoutDashboard } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { ChevronRight, Heart, Menu, ShoppingBag, Sprout, User, X } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import {
+  LocationPicker,
+  defaultLocation,
+  type SelectedLocation,
+} from '@/components/layout/location-picker'
+import { useCurrentUser } from '@/hooks/api/use-auth'
+import { cn } from '@/lib/utils'
 
 const navItems = [
-  { href: '/', label: 'Beranda' },
-  { href: '/pasar', label: 'Pasar Pangan' },
-  { href: '/edukasi', label: 'Edukasi Tani' },
-  { href: '/tentang', label: 'Tentang Kami' },
+  { href: '/pasar/sayuran', label: 'Sayuran' },
+  { href: '/pasar/buah', label: 'Buah' },
+  { href: '/pasar/padi-biji', label: 'Padi & Biji-bijian' },
+  { href: '/pasar/rempah-umbi', label: 'Rempah & Umbi' },
 ]
+
+function getUserInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return 'PT'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+}
 
 export function GlobalHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation>(defaultLocation)
+  const pathname = usePathname()
+  const { data: currentUser } = useCurrentUser()
 
   return (
-    <header className='sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80'>
-      <div className='mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8'>
-        <div className='flex items-center gap-6'>
+    <header className='sticky top-0 z-40 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/85'>
+      <div className='bg-primary text-primary-foreground'>
+        <div className='mx-auto flex min-h-9 max-w-7xl items-center justify-center px-4 py-1.5 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-8'>
+          <div className='hidden items-center justify-start lg:flex'>
+            <LocationPicker
+              selected={selectedLocation}
+              onSelect={setSelectedLocation}
+              variant='primary'
+            />
+          </div>
           <Link
-            href='/'
-            className='flex items-center gap-2 font-bold text-lg text-foreground hover:opacity-90 transition-opacity'
+            href='/pasar'
+            className='text-center text-xs leading-snug font-medium tracking-wide underline underline-offset-4 transition-opacity hover:opacity-80 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/40'
           >
-            <span className='flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
-              <Sprout className='size-5' />
-            </span>
-            <span>PanganTani</span>
+            Panen Raya: nikmati potongan ongkir 20% untuk hasil tani segar
           </Link>
-
-          <nav
-            aria-label='Navigasi Utama'
-            className='hidden md:flex items-center gap-1 text-sm font-medium text-muted-foreground'
-          >
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className='rounded-md px-3 py-2 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        <div className='hidden md:flex items-center gap-3'>
-          <Link href='/dashboard'>
-            <Button variant='outline' size='sm' className='gap-1.5'>
-              <LayoutDashboard className='size-4' />
-              <span>Akses Dashboard</span>
-            </Button>
-          </Link>
-        </div>
-
-        <div className='flex md:hidden items-center gap-2'>
-          <button
-            type='button'
-            className='inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-            aria-controls='mobile-menu'
-            aria-expanded={mobileMenuOpen}
-            aria-label={mobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className='size-5' /> : <Menu className='size-5' />}
-          </button>
+          <div className='hidden lg:block' aria-hidden='true' />
         </div>
       </div>
 
-      {mobileMenuOpen && (
-        <div
-          id='mobile-menu'
-          className='md:hidden border-t border-border bg-background px-4 pt-3 pb-4 space-y-2'
-        >
-          <nav aria-label='Navigasi Mobile' className='flex flex-col space-y-1'>
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className='rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className='pt-3 border-t border-border'>
-            <Link href='/dashboard' onClick={() => setMobileMenuOpen(false)}>
-              <Button variant='default' className='w-full gap-2'>
-                <LayoutDashboard className='size-4' />
-                <span>Akses Dashboard</span>
-              </Button>
+      <Collapsible open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <div className='border-b border-border'>
+          <div className='mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8'>
+            <div className='flex min-w-0 items-center'>
+              <div className='flex min-w-0 items-center gap-1.5 lg:hidden'>
+                <CollapsibleTrigger
+                  render={
+                    <Button
+                      variant='ghost'
+                      size='icon-sm'
+                      aria-label={mobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+                    />
+                  }
+                >
+                  {mobileMenuOpen ? <X /> : <Menu />}
+                </CollapsibleTrigger>
+                <LocationPicker
+                  selected={selectedLocation}
+                  onSelect={setSelectedLocation}
+                  variant='secondary'
+                />
+              </div>
+
+              <nav aria-label='Kategori Komoditas' className='hidden items-center gap-6 lg:flex'>
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        'rounded-sm text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                        isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  )
+                })}
+              </nav>
+            </div>
+
+            <Link
+              href='/'
+              aria-label='PanganTani - Beranda'
+              className='inline-flex items-center justify-center justify-self-center rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            >
+              <span className='flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
+                <Sprout className='size-5' aria-hidden='true' />
+              </span>
+              <span className='sr-only'>PanganTani</span>
             </Link>
+
+            <div className='flex items-center justify-end gap-1 sm:gap-2'>
+              <Button
+                variant='ghost'
+                size='icon-sm'
+                className='md:size-8'
+                nativeButton={false}
+                render={<Link href='/favorit' aria-label='Favorit' />}
+              >
+                <Heart />
+              </Button>
+
+              <Button
+                variant='ghost'
+                size='icon-sm'
+                className='md:size-8'
+                nativeButton={false}
+                render={<Link href='/keranjang' aria-label='Keranjang' />}
+              >
+                <ShoppingBag />
+              </Button>
+
+              {currentUser ? (
+                <Button
+                  variant='ghost'
+                  size='icon-sm'
+                  className='rounded-full md:size-8'
+                  nativeButton={false}
+                  render={<Link href='/dashboard' aria-label={`Akun ${currentUser.name}`} />}
+                >
+                  <Avatar size='sm' className='md:size-7'>
+                    {currentUser.avatarUrl && (
+                      <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
+                    )}
+                    <AvatarFallback>{getUserInitials(currentUser.name)}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              ) : (
+                <Button
+                  variant='ghost'
+                  size='icon-sm'
+                  className='md:size-8'
+                  nativeButton={false}
+                  render={<Link href='/dashboard' aria-label='Akun & Dashboard' />}
+                >
+                  <User />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      )}
+
+        <CollapsibleContent className='overflow-hidden border-b border-border bg-background transition-all duration-200 ease-out data-ending-style:opacity-0 data-starting-style:opacity-0 lg:hidden'>
+          <div className='mx-auto max-w-7xl px-4 py-3 sm:px-6'>
+            <nav aria-label='Kategori Komoditas Mobile' className='flex flex-col gap-1'>
+              {navItems.map((item) => {
+                const isActive = pathname === item.href
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      'flex items-center justify-between rounded-md px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      isActive
+                        ? 'bg-muted text-foreground'
+                        : 'text-foreground/85 hover:bg-muted hover:text-foreground'
+                    )}
+                  >
+                    <span>{item.label}</span>
+                    <ChevronRight className='size-4 text-muted-foreground' aria-hidden='true' />
+                  </Link>
+                )
+              })}
+            </nav>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </header>
   )
 }
