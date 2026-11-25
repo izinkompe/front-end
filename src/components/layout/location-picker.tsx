@@ -257,7 +257,7 @@ export function LocationPicker({ selected, onSelect, variant = 'primary' }: Loca
       </PopoverTrigger>
 
       <PopoverContent
-        align='start'
+        align={variant === 'primary' ? 'end' : 'start'}
         sideOffset={8}
         className='w-[calc(100vw-2rem)] max-w-sm gap-0 overflow-hidden p-0 sm:w-[34rem] sm:max-w-none'
       >

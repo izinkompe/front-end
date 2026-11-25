@@ -37,22 +37,13 @@ export function GlobalHeader() {
 
   return (
     <header className='sticky top-0 z-40 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/85'>
-      <div className='bg-primary text-primary-foreground'>
-        <div className='mx-auto flex min-h-9 max-w-7xl items-center justify-center px-4 py-1.5 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:px-8'>
-          <div className='hidden items-center justify-start lg:flex'>
-            <LocationPicker
-              selected={selectedLocation}
-              onSelect={setSelectedLocation}
-              variant='primary'
-            />
-          </div>
-          <Link
-            href='/pasar'
-            className='text-center text-xs leading-snug font-medium tracking-wide underline underline-offset-4 transition-opacity hover:opacity-80 focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/40'
-          >
-            Panen Raya: nikmati potongan ongkir 20% untuk hasil tani segar
-          </Link>
-          <div className='hidden lg:block' aria-hidden='true' />
+      <div className='hidden bg-primary text-primary-foreground lg:block'>
+        <div className='mx-auto flex min-h-9 max-w-7xl items-center justify-end px-4 py-1.5 sm:px-6 lg:px-8'>
+          <LocationPicker
+            selected={selectedLocation}
+            onSelect={setSelectedLocation}
+            variant='primary'
+          />
         </div>
       </div>
 
