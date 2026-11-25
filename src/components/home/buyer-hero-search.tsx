@@ -4,12 +4,18 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { id } from 'date-fns/locale'
 import {
+  Apple,
   Calendar as CalendarIcon,
+  Carrot,
   ChevronDown,
   Clock,
+  LayoutGrid,
+  Leaf,
   MapPin,
   Navigation,
   Search,
+  Wheat,
+  type LucideIcon,
 } from 'lucide-react'
 import { useSelectedLocation } from '@/components/providers/location-provider'
 import { Button } from '@/components/ui/button'
@@ -51,6 +57,14 @@ const searchModes: ReadonlyArray<{
   { value: 'peta', label: 'Peta Radius', ctaLabel: 'Lihat Peta' },
   { value: 'segera-ditutup', label: 'Segera Ditutup', ctaLabel: 'Lihat Penawaran' },
 ]
+
+const categoryIcons: Record<BuyerCategoryFilter, LucideIcon> = {
+  semua: LayoutGrid,
+  sayuran: Leaf,
+  buah: Apple,
+  'padi-biji': Wheat,
+  'rempah-umbi': Carrot,
+}
 
 function getTodayStart() {
   const now = new Date()
@@ -148,6 +162,7 @@ export function BuyerHeroSearch() {
   const activeModeMeta = searchModes.find((item) => item.value === mode) ?? searchModes[0]
   const selectedCategoryLabel =
     categoryFilterOptions.find((option) => option.value === category)?.label ?? 'Semua kategori'
+  const SelectedCategoryIcon = categoryIcons[category]
   const selectedRadiusLabel =
     radiusOptions.find((option) => option.value === radiusKm)?.label ?? 'Radius 10 km'
   const selectedMinStockLabel =
@@ -302,15 +317,30 @@ export function BuyerHeroSearch() {
                   className='min-h-12 w-full bg-background'
                   aria-label='Pilih kategori komoditas'
                 >
-                  <SelectValue>{selectedCategoryLabel}</SelectValue>
+                  <SelectValue>
+                    <SelectedCategoryIcon
+                      className='size-4 shrink-0 text-muted-foreground'
+                      aria-hidden='true'
+                    />
+                    <span className='truncate'>{selectedCategoryLabel}</span>
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {categoryFilterOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
+                    {categoryFilterOptions.map((option) => {
+                      const CategoryIcon = categoryIcons[option.value]
+                      return (
+                        <SelectItem key={option.value} value={option.value}>
+                          <span className='flex items-center gap-2'>
+                            <CategoryIcon
+                              className='size-4 shrink-0 text-muted-foreground'
+                              aria-hidden='true'
+                            />
+                            <span>{option.label}</span>
+                          </span>
+                        </SelectItem>
+                      )
+                    })}
                   </SelectGroup>
                 </SelectContent>
               </Select>
