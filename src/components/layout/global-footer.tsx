@@ -128,14 +128,14 @@ export function GlobalFooter() {
       <div className='mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8'>
         <div className='grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4'>
           {footerColumns.map((column) => (
-            <div key={column.title} className='flex flex-col gap-3.5'>
-              <h3 className='text-sm font-semibold text-secondary-foreground'>{column.title}</h3>
-              <ul className='flex flex-col gap-2.5 text-sm text-muted-foreground'>
+            <div key={column.title} className='flex flex-col gap-3'>
+              <h3 className='text-base font-semibold text-secondary-foreground'>{column.title}</h3>
+              <ul className='flex flex-col gap-0.5 text-sm text-muted-foreground'>
                 {column.links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className='rounded-sm transition-colors hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                      className='inline-flex min-h-10 items-center rounded-sm py-1.5 leading-snug transition-colors pointer-coarse:min-h-11 hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                     >
                       {link.label}
                     </Link>
@@ -146,21 +146,23 @@ export function GlobalFooter() {
           ))}
 
           <div className='flex flex-col gap-6'>
-            <div className='flex flex-col gap-3.5'>
-              <h3 className='text-sm font-semibold text-secondary-foreground'>Konten & Layanan</h3>
-              <ul className='flex flex-col gap-2.5 text-sm text-muted-foreground'>
+            <div className='flex flex-col gap-3'>
+              <h3 className='text-base font-semibold text-secondary-foreground'>
+                Konten &amp; Layanan
+              </h3>
+              <ul className='flex flex-col gap-0.5 text-sm text-muted-foreground'>
                 <li>
                   <Link
                     href='/edukasi'
-                    className='rounded-sm transition-colors hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                    className='inline-flex min-h-10 items-center rounded-sm py-1.5 leading-snug transition-colors pointer-coarse:min-h-11 hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
                   >
-                    Edukasi Tani: panduan budidaya & panen terbaru
+                    Edukasi Tani: panduan budidaya &amp; panen terbaru
                   </Link>
                 </li>
               </ul>
             </div>
 
-            <div className='flex items-center gap-1'>
+            <div className='flex flex-wrap items-center gap-1'>
               {socialLinks.map((item) => {
                 const Icon = item.icon
                 return (
@@ -170,7 +172,7 @@ export function GlobalFooter() {
                     target='_blank'
                     rel='noopener noreferrer'
                     aria-label={item.label}
-                    className={buttonVariants({ variant: 'ghost', size: 'icon-sm' })}
+                    className={buttonVariants({ variant: 'ghost', size: 'icon' })}
                   >
                     <Icon />
                   </a>
@@ -184,19 +186,19 @@ export function GlobalFooter() {
       <Separator />
 
       <div className='mx-auto flex max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8'>
-        <nav aria-label='Tautan Kebijakan' className='flex flex-wrap items-center gap-x-6 gap-y-2'>
+        <nav aria-label='Tautan Kebijakan' className='flex flex-wrap items-center gap-x-6 gap-y-1'>
           {legalLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className='rounded-sm text-sm text-secondary-foreground underline underline-offset-4 transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              className='inline-flex min-h-10 items-center rounded-sm py-1.5 text-sm text-secondary-foreground underline underline-offset-4 transition-opacity pointer-coarse:min-h-11 hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className='flex flex-col gap-1 text-xs leading-relaxed text-muted-foreground'>
+        <div className='flex flex-col gap-1.5 text-sm leading-relaxed text-muted-foreground'>
           <p>
             &apos;PanganTani&apos; dan logo &apos;PanganTani&apos; merupakan merek dagang milik
             PanganTani Indonesia dan dilindungi oleh peraturan perundang-undangan yang berlaku.

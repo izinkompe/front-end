@@ -35,16 +35,14 @@ export function DashboardSidebar({ mobileOpen = false, onCloseMobile }: Dashboar
         <div className='flex items-center justify-between'>
           <Link
             href='/dashboard'
-            className='flex items-center gap-2 font-bold text-sidebar-foreground hover:opacity-90 transition-opacity'
+            className='flex min-h-11 items-center gap-2.5 font-bold text-sidebar-foreground hover:opacity-90 transition-opacity'
           >
-            <span className='flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
-              <Sprout className='size-5' />
+            <span className='flex size-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
+              <Sprout className='size-5' aria-hidden='true' />
             </span>
             <div className='flex flex-col'>
-              <span className='text-sm leading-tight'>PanganTani</span>
-              <span className='text-[10px] text-muted-foreground uppercase tracking-wider font-semibold'>
-                Dashboard
-              </span>
+              <span className='text-base leading-tight'>PanganTani</span>
+              <span className='text-xs font-medium text-muted-foreground'>Dashboard</span>
             </div>
           </Link>
 
@@ -52,10 +50,10 @@ export function DashboardSidebar({ mobileOpen = false, onCloseMobile }: Dashboar
             <button
               type='button'
               onClick={onCloseMobile}
-              className='md:hidden rounded-md p-1.5 text-sidebar-foreground hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring'
+              className='inline-flex min-h-11 min-w-11 items-center justify-center md:hidden rounded-lg p-2 text-sidebar-foreground hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring'
               aria-label='Tutup sidebar'
             >
-              <X className='size-5' />
+              <X className='size-5' aria-hidden='true' />
             </button>
           )}
         </div>
@@ -71,13 +69,13 @@ export function DashboardSidebar({ mobileOpen = false, onCloseMobile }: Dashboar
                 href={item.href}
                 onClick={onCloseMobile}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+                  'flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
                   isActive
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs'
                     : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground'
                 )}
               >
-                <Icon className='size-4 shrink-0' />
+                <Icon className='size-5 shrink-0' aria-hidden='true' />
                 <span>{item.label}</span>
               </Link>
             )
@@ -88,21 +86,21 @@ export function DashboardSidebar({ mobileOpen = false, onCloseMobile }: Dashboar
       <div className='space-y-3 pt-4 border-t border-sidebar-border'>
         <Link
           href='/'
-          className='flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring'
+          className='flex min-h-11 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring'
         >
-          <ArrowLeft className='size-4' />
+          <ArrowLeft className='size-4.5' aria-hidden='true' />
           <span>Kembali ke Beranda</span>
         </Link>
 
         <div className='flex items-center gap-3 rounded-lg bg-sidebar-accent/40 px-3 py-2.5'>
-          <div className='flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold'>
+          <div className='flex size-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground text-sm font-semibold'>
             PT
           </div>
           <div className='flex flex-col min-w-0'>
-            <span className='truncate text-xs font-semibold text-sidebar-foreground'>
+            <span className='truncate text-sm font-semibold text-sidebar-foreground'>
               Petani Mitra
             </span>
-            <span className='truncate text-[10px] text-muted-foreground'>petani@pangantani.id</span>
+            <span className='truncate text-xs text-muted-foreground'>petani@pangantani.id</span>
           </div>
         </div>
       </div>
