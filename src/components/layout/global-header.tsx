@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronRight, Heart, Menu, ShoppingBag, Sprout, User, X } from 'lucide-react'
@@ -8,11 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { BuyerAuthDialog } from '@/components/auth/buyer-auth-dialog'
-import {
-  LocationPicker,
-  defaultLocation,
-  type SelectedLocation,
-} from '@/components/layout/location-picker'
+import { LocationPicker } from '@/components/layout/location-picker'
+import { useSelectedLocation } from '@/components/providers/location-provider'
 import { useCurrentUser } from '@/hooks/api/use-auth'
 import { cn } from '@/lib/utils'
 
@@ -33,23 +30,59 @@ function getUserInitials(name: string) {
 export function GlobalHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
-  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation>(defaultLocation)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const { selectedLocation, setSelectedLocation } = useSelectedLocation()
   const pathname = usePathname()
   const { data: currentUser } = useCurrentUser()
 
+  const isHeroPage = pathname === '/'
+  const isTransparent = isHeroPage && !isScrolled && !mobileMenuOpen
+
+  useEffect(() => {
+    function handleScroll() {
+      setIsScrolled(window.scrollY > 8)
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const transparentIconClass =
+    'text-white hover:bg-white/15 hover:text-white focus-visible:ring-white/60'
+
   return (
-    <header className='sticky top-0 z-40 w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/85'>
-      <div className='hidden border-b border-border bg-secondary text-secondary-foreground lg:block'>
-        <div className='mx-auto flex min-h-9 max-w-7xl items-center justify-end gap-3 px-4 py-1.5 sm:px-6 lg:px-8'>
+    <header
+      className={cn(
+        'z-40 w-full transition-colors duration-200',
+        isHeroPage ? 'fixed inset-x-0 top-0' : 'sticky top-0',
+        isTransparent ? 'bg-transparent text-white' : 'bg-background text-foreground shadow-xs'
+      )}
+    >
+      <div
+        className={cn(
+          'hidden transition-colors duration-200 lg:block',
+          isTransparent ? 'bg-transparent text-white' : 'bg-secondary text-secondary-foreground'
+        )}
+      >
+        <div className='mx-auto flex min-h-11 max-w-7xl items-center justify-end gap-3 px-4 py-1 sm:px-6 lg:px-8'>
           <LocationPicker
             selected={selectedLocation}
             onSelect={setSelectedLocation}
-            variant='banner'
+            variant={isTransparent ? 'overlay' : 'banner'}
           />
-          <span className='h-3.5 w-px bg-border' aria-hidden='true' />
+          <span
+            className={cn('h-4 w-px', isTransparent ? 'bg-white/25' : 'bg-border')}
+            aria-hidden='true'
+          />
           <Link
             href='/daftar-petani'
-            className='rounded-sm text-xs font-medium text-secondary-foreground/85 transition-colors hover:text-secondary-foreground hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            className={cn(
+              'inline-flex min-h-9 items-center rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2',
+              isTransparent
+                ? 'text-white/95 hover:text-white focus-visible:ring-white/60'
+                : 'text-secondary-foreground/90 hover:text-secondary-foreground focus-visible:ring-ring'
+            )}
           >
             Daftar Jadi Petani
           </Link>
@@ -57,15 +90,21 @@ export function GlobalHeader() {
       </div>
 
       <Collapsible open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-        <div className='border-b border-border'>
-          <div className='mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:px-8'>
+        <div
+          className={cn(
+            'border-b transition-colors duration-200',
+            isTransparent ? 'border-transparent' : 'border-border'
+          )}
+        >
+          <div className='mx-auto grid min-h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-2 sm:gap-4 sm:px-6 lg:px-8'>
             <div className='flex min-w-0 items-center'>
               <div className='flex min-w-0 items-center gap-1.5 lg:hidden'>
                 <CollapsibleTrigger
                   render={
                     <Button
                       variant='ghost'
-                      size='icon-sm'
+                      size='icon'
+                      className={cn(isTransparent && transparentIconClass)}
                       aria-label={mobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
                     />
                   }
@@ -75,11 +114,14 @@ export function GlobalHeader() {
                 <LocationPicker
                   selected={selectedLocation}
                   onSelect={setSelectedLocation}
-                  variant='secondary'
+                  variant={isTransparent ? 'overlay-pill' : 'secondary'}
                 />
               </div>
 
-              <nav aria-label='Kategori Komoditas' className='hidden items-center gap-6 lg:flex'>
+              <nav
+                aria-label='Kategori Komoditas'
+                className='hidden flex-wrap items-center gap-1 xl:gap-2 lg:flex'
+              >
                 {navItems.map((item) => {
                   const isActive = pathname === item.href
                   return (
@@ -87,8 +129,12 @@ export function GlobalHeader() {
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        'rounded-sm text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                        isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                        'inline-flex min-h-11 items-center rounded-md px-2.5 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2',
+                        isTransparent
+                          ? 'text-white/95 hover:bg-white/15 hover:text-white focus-visible:ring-white/60'
+                          : isActive
+                            ? 'text-foreground focus-visible:ring-ring'
+                            : 'text-muted-foreground hover:text-foreground focus-visible:ring-ring'
                       )}
                     >
                       {item.label}
@@ -101,19 +147,29 @@ export function GlobalHeader() {
             <Link
               href='/'
               aria-label='PanganTani - Beranda'
-              className='inline-flex items-center justify-center justify-self-center rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              className={cn(
+                'inline-flex min-h-11 min-w-11 items-center justify-center justify-self-center rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2',
+                isTransparent ? 'focus-visible:ring-white/60' : 'focus-visible:ring-ring'
+              )}
             >
-              <span className='flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
+              <span
+                className={cn(
+                  'flex size-10 items-center justify-center rounded-lg transition-colors duration-200',
+                  isTransparent
+                    ? 'bg-white text-primary shadow-sm'
+                    : 'bg-primary text-primary-foreground'
+                )}
+              >
                 <Sprout className='size-5' aria-hidden='true' />
               </span>
               <span className='sr-only'>PanganTani</span>
             </Link>
 
-            <div className='flex items-center justify-end gap-1 sm:gap-2'>
+            <div className='flex items-center justify-end gap-1 sm:gap-1.5'>
               <Button
                 variant='ghost'
-                size='icon-sm'
-                className='md:size-8'
+                size='icon'
+                className={cn(isTransparent && transparentIconClass)}
                 nativeButton={false}
                 render={<Link href='/favorit' aria-label='Favorit' />}
               >
@@ -122,8 +178,8 @@ export function GlobalHeader() {
 
               <Button
                 variant='ghost'
-                size='icon-sm'
-                className='md:size-8'
+                size='icon'
+                className={cn(isTransparent && transparentIconClass)}
                 nativeButton={false}
                 render={<Link href='/keranjang' aria-label='Keranjang' />}
               >
@@ -133,12 +189,12 @@ export function GlobalHeader() {
               {currentUser ? (
                 <Button
                   variant='ghost'
-                  size='icon-sm'
-                  className='rounded-full md:size-8'
+                  size='icon'
+                  className={cn('rounded-full', isTransparent && transparentIconClass)}
                   nativeButton={false}
                   render={<Link href='/dashboard' aria-label={`Akun ${currentUser.name}`} />}
                 >
-                  <Avatar size='sm' className='md:size-7'>
+                  <Avatar>
                     {currentUser.avatarUrl && (
                       <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
                     )}
@@ -148,8 +204,8 @@ export function GlobalHeader() {
               ) : (
                 <Button
                   variant='ghost'
-                  size='icon-sm'
-                  className='md:size-8'
+                  size='icon'
+                  className={cn(isTransparent && transparentIconClass)}
                   aria-label='Masuk atau daftar akun pembeli'
                   onClick={() => setAuthDialogOpen(true)}
                 >
@@ -171,17 +227,25 @@ export function GlobalHeader() {
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
-                      'flex items-center justify-between rounded-md px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      'flex min-h-12 items-center justify-between rounded-md px-3.5 py-3 text-base font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                       isActive
                         ? 'bg-muted text-foreground'
                         : 'text-foreground/85 hover:bg-muted hover:text-foreground'
                     )}
                   >
                     <span>{item.label}</span>
-                    <ChevronRight className='size-4 text-muted-foreground' aria-hidden='true' />
+                    <ChevronRight className='size-4.5 text-muted-foreground' aria-hidden='true' />
                   </Link>
                 )
               })}
+              <Link
+                href='/daftar-petani'
+                onClick={() => setMobileMenuOpen(false)}
+                className='mt-1 flex min-h-12 items-center justify-between rounded-md border-t border-border px-3.5 py-3 text-base font-medium text-primary transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              >
+                <span>Daftar Jadi Petani</span>
+                <ChevronRight className='size-4.5 text-primary' aria-hidden='true' />
+              </Link>
             </nav>
           </div>
         </CollapsibleContent>
