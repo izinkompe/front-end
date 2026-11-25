@@ -130,6 +130,20 @@
   body {
     @apply font-sans text-base bg-background text-foreground;
   }
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='tab']:not([aria-disabled='true']),
+  [role='menuitem']:not([aria-disabled='true']),
+  [role='option']:not([aria-disabled='true']),
+  a[href],
+  summary,
+  select:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 @utility font-base {
