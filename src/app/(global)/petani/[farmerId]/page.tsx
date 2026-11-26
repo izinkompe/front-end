@@ -3,8 +3,15 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { FarmerStoreSkeleton } from '@/components/farmer-store/farmer-store-skeleton'
 import { FarmerStoreView } from '@/components/farmer-store/farmer-store-view'
+import { JsonLd } from '@/components/seo/json-ld'
 import { getAllPublicFarmerIds, getPublicFarmerStoreById } from '@/lib/api/db/farmer-routes'
 import { FarmerIdSchema } from '@/lib/data/farmer-store-helpers'
+import {
+  buildBreadcrumbJsonLd,
+  buildFarmerBusinessJsonLd,
+  buildNoIndexMetadata,
+  buildPublicMetadata,
+} from '@/lib/seo'
 
 export function generateStaticParams() {
   return getAllPublicFarmerIds().map((farmerId) => ({
@@ -20,36 +27,63 @@ export async function generateMetadata({ params }: FarmerStorePageProps): Promis
   const { farmerId } = await params
   const parsed = FarmerIdSchema.safeParse(farmerId)
   if (!parsed.success) {
-    return {
-      title: 'Profil Petani Tidak Ditemukan | PanganTani',
-    }
+    return buildNoIndexMetadata({
+      title: 'Profil Petani Tidak Ditemukan',
+      description: 'Profil kebun petani yang Anda cari tidak ditemukan di PanganTani.',
+    })
   }
 
   const store = getPublicFarmerStoreById(parsed.data)
   if (!store) {
-    return {
-      title: 'Profil Kebun Petani | PanganTani',
+    return buildNoIndexMetadata({
+      title: 'Profil Kebun Petani',
       description:
         'Daftar penawaran panen surplus dan ulasan pembeli untuk petani mitra PanganTani.',
-    }
+    })
   }
 
-  return {
-    title: `${store.farmName} | PanganTani`,
+  return buildPublicMetadata({
+    title: store.farmName,
     description: `${store.farmName} di ${store.areaName}. Jelajahi penawaran hasil panen surplus dan ulasan pembeli.`,
-  }
+    path: `/petani/${store.id}`,
+    image: store.avatarUrl ?? undefined,
+    imageAlt: `Kebun ${store.farmName}`,
+    keywords: [store.farmName, store.areaName, 'petani mitra PanganTani'],
+  })
 }
 
-export default async function FarmerStorePage({ params }: FarmerStorePageProps) {
+async function FarmerStoreContent({ params }: FarmerStorePageProps) {
   const { farmerId } = await params
   const parsed = FarmerIdSchema.safeParse(farmerId)
   if (!parsed.success) {
     notFound()
   }
 
+  const store = getPublicFarmerStoreById(parsed.data)
+
+  return (
+    <>
+      {store ? (
+        <>
+          <JsonLd data={buildFarmerBusinessJsonLd(store)} />
+          <JsonLd
+            data={buildBreadcrumbJsonLd([
+              { name: 'Beranda', path: '/' },
+              { name: 'Pasar Panen', path: '/pasar' },
+              { name: store.farmName, path: `/petani/${store.id}` },
+            ])}
+          />
+        </>
+      ) : null}
+      <FarmerStoreView farmerId={parsed.data} />
+    </>
+  )
+}
+
+export default function FarmerStorePage({ params }: FarmerStorePageProps) {
   return (
     <Suspense fallback={<FarmerStoreSkeleton />}>
-      <FarmerStoreView farmerId={parsed.data} />
+      <FarmerStoreContent params={params} />
     </Suspense>
   )
 }

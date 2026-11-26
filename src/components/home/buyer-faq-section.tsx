@@ -6,34 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-
-const questions = [
-  {
-    question: 'Bagaimana cara memesan panen?',
-    answer:
-      'Pilih penawaran, masukkan berat yang ingin dibeli, pilih slot pengambilan, lalu buat reservasi.',
-  },
-  {
-    question: 'Bagaimana pembayaran dilakukan?',
-    answer:
-      'Transfer sesuai nominal ke rekening pada instruksi pembayaran, lalu unggah bukti transfer dalam 30 menit setelah reservasi dibuat. Admin memeriksa bukti pembayaran.',
-  },
-  {
-    question: 'Kapan alamat lengkap terlihat?',
-    answer:
-      'Alamat lengkap dan patokan pengambilan tampil setelah reservasi dibuat. Jadwalnya mengikuti slot yang Anda pilih.',
-  },
-  {
-    question: 'Apakah pesanan diantar?',
-    answer:
-      'Tidak. Pesanan diambil mandiri di lokasi petani sesuai jadwal pada penawaran, tanpa biaya kirim.',
-  },
-  {
-    question: 'Bagaimana berat aktual dicatat?',
-    answer:
-      'Timbang hasil panen bersama petani saat pengambilan, lalu masukkan berat aktual di detail pesanan.',
-  },
-]
+import { buyerFaqItems } from '@/lib/data/faq'
 
 export function BuyerFaqSection() {
   return (
@@ -50,13 +23,13 @@ export function BuyerFaqSection() {
 
         <div className='lg:col-span-8'>
           <Accordion multiple hiddenUntilFound className='border-t border-border'>
-            {questions.map((item) => (
+            {buyerFaqItems.map((item) => (
               <AccordionItem key={item.question} value={item.question}>
                 <AccordionTrigger className='min-h-14 py-4 sm:min-h-16 sm:py-5'>
                   {item.question}
                 </AccordionTrigger>
                 <AccordionContent className='pb-5 text-base leading-relaxed text-muted-foreground [&_p:not(:last-child)]:mb-0'>
-                  <p className='max-w-[64ch]'>{item.answer}</p>
+                  <p className='w-full max-w-none'>{item.answer}</p>
                 </AccordionContent>
               </AccordionItem>
             ))}

@@ -1,12 +1,35 @@
 import type { Metadata } from 'next'
 import { TermsOfUseView } from '@/components/info/terms-of-use-view'
+import { JsonLd } from '@/components/seo/json-ld'
+import { buildBreadcrumbJsonLd, buildPublicMetadata, buildWebPageJsonLd } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Syarat dan Ketentuan | PanganTani',
-  description:
-    'Syarat, ketentuan, dan pemberitahuan penggunaan layanan PanganTani untuk pembeli dan petani mitra.',
-}
+const pageTitle = 'Syarat dan Ketentuan'
+const pageDescription =
+  'Syarat, ketentuan, dan pemberitahuan penggunaan layanan PanganTani untuk pembeli dan petani mitra.'
+
+export const metadata: Metadata = buildPublicMetadata({
+  title: pageTitle,
+  description: pageDescription,
+  path: '/syarat',
+})
 
 export default function TermsPage() {
-  return <TermsOfUseView />
+  return (
+    <>
+      <JsonLd
+        data={buildWebPageJsonLd({
+          name: pageTitle,
+          description: pageDescription,
+          path: '/syarat',
+        })}
+      />
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: 'Beranda', path: '/' },
+          { name: pageTitle, path: '/syarat' },
+        ])}
+      />
+      <TermsOfUseView />
+    </>
+  )
 }

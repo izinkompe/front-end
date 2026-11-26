@@ -3,7 +3,14 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { CatalogLoadingSkeleton } from '@/components/catalog/catalog-loading-skeleton'
 import { CatalogView } from '@/components/catalog/catalog-view'
+import { JsonLd } from '@/components/seo/json-ld'
 import { BuyerCategorySlugSchema, getCategoryMeta, mainCategories } from '@/lib/data/categories'
+import {
+  buildBreadcrumbJsonLd,
+  buildCollectionPageJsonLd,
+  buildNoIndexMetadata,
+  buildPublicMetadata,
+} from '@/lib/seo'
 
 export function generateStaticParams() {
   return mainCategories.map((category) => ({
@@ -19,16 +26,19 @@ export async function generateMetadata({ params }: PasarCategoryPageProps): Prom
   const { category } = await params
   const parsed = BuyerCategorySlugSchema.safeParse(category)
   if (!parsed.success) {
-    return {
-      title: 'Kategori Tidak Ditemukan | PanganTani',
-    }
+    return buildNoIndexMetadata({
+      title: 'Kategori Tidak Ditemukan',
+      description: 'Kategori panen yang Anda cari tidak tersedia di PanganTani.',
+    })
   }
 
   const meta = getCategoryMeta(parsed.data)
-  return {
-    title: `Panen ${meta.label} | PanganTani`,
+  return buildPublicMetadata({
+    title: `Panen ${meta.label}`,
     description: `Penawaran ${meta.label.toLowerCase()} surplus (${meta.examples}) dalam satuan kilogram dengan sistem ambil mandiri.`,
-  }
+    path: meta.href,
+    keywords: [meta.label.toLowerCase(), meta.examples],
+  })
 }
 
 async function PasarCategoryContent({ params }: PasarCategoryPageProps) {
@@ -38,7 +48,27 @@ async function PasarCategoryContent({ params }: PasarCategoryPageProps) {
     notFound()
   }
 
-  return <CatalogView fixedCategory={parsed.data} />
+  const meta = getCategoryMeta(parsed.data)
+
+  return (
+    <>
+      <JsonLd
+        data={buildCollectionPageJsonLd({
+          name: `Panen ${meta.label}`,
+          description: `Penawaran ${meta.label.toLowerCase()} surplus (${meta.examples}) dalam satuan kilogram dengan sistem ambil mandiri.`,
+          path: meta.href,
+        })}
+      />
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: 'Beranda', path: '/' },
+          { name: 'Pasar Panen', path: '/pasar' },
+          { name: meta.label, path: meta.href },
+        ])}
+      />
+      <CatalogView fixedCategory={parsed.data} />
+    </>
+  )
 }
 
 export default function PasarCategoryPage({ params }: PasarCategoryPageProps) {

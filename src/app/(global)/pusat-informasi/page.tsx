@@ -2,12 +2,18 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { resolveInfoCenterTab } from '@/components/info/info-center-data'
 import { InfoCenterView } from '@/components/info/info-center-view'
+import { JsonLd } from '@/components/seo/json-ld'
+import { buildBreadcrumbJsonLd, buildPublicMetadata, buildWebPageJsonLd } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Pusat Informasi | PanganTani',
-  description:
-    'Pusat Bantuan, Syarat dan Ketentuan, Kebijakan Privasi, dan pengaturan Aksesibilitas PanganTani.',
-}
+const pageTitle = 'Pusat Informasi'
+const pageDescription =
+  'Pusat Bantuan, Syarat dan Ketentuan, Kebijakan Privasi, dan pengaturan Aksesibilitas PanganTani.'
+
+export const metadata: Metadata = buildPublicMetadata({
+  title: pageTitle,
+  description: pageDescription,
+  path: '/pusat-informasi',
+})
 
 async function InfoCenterContent({
   searchParams,
@@ -25,8 +31,23 @@ export default function InfoCenterPage({
   searchParams: Promise<{ tab?: string | string[] }>
 }) {
   return (
-    <Suspense fallback={<InfoCenterView activeTab='bantuan' />}>
-      <InfoCenterContent searchParams={searchParams} />
-    </Suspense>
+    <>
+      <JsonLd
+        data={buildWebPageJsonLd({
+          name: pageTitle,
+          description: pageDescription,
+          path: '/pusat-informasi',
+        })}
+      />
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: 'Beranda', path: '/' },
+          { name: pageTitle, path: '/pusat-informasi' },
+        ])}
+      />
+      <Suspense fallback={<InfoCenterView activeTab='bantuan' />}>
+        <InfoCenterContent searchParams={searchParams} />
+      </Suspense>
+    </>
   )
 }

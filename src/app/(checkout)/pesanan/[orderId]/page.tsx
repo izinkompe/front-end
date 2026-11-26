@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { BuyerOrderAccess } from '@/components/checkout/buyer-order-access'
 import { CheckoutSkeleton } from '@/components/checkout/checkout-skeleton'
 import { OrderDetailView } from '@/components/order-detail/order-detail-view'
+import { buildNoIndexMetadata } from '@/lib/seo'
 
 const OrderIdParamSchema = z
   .string()
@@ -12,11 +13,11 @@ const OrderIdParamSchema = z
   .max(64)
   .regex(/^[a-zA-Z0-9_-]+$/)
 
-export const metadata: Metadata = {
-  title: 'Detail Pesanan | PanganTani',
+export const metadata: Metadata = buildNoIndexMetadata({
+  title: 'Detail Pesanan',
   description:
     'Ringkasan status, lokasi pengambilan, alamat pembeli, dan rincian pembayaran pesanan.',
-}
+})
 
 interface OrderDetailPageProps {
   params: Promise<{ orderId: string }>
