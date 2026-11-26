@@ -188,11 +188,13 @@
   html {
     @apply font-sans;
     scroll-padding-top: 6.5rem;
+    overflow-x: clip;
   }
   body {
     @apply font-sans text-base bg-background text-foreground;
     line-height: 1.5;
     overflow-wrap: break-word;
+    overflow-x: clip;
   }
   h1,
   h2,

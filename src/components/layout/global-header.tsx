@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { ChevronDown, ChevronRight, Heart, LayoutGrid, Menu, Sprout, X } from 'lucide-react'
@@ -34,18 +34,28 @@ import { useCurrentUser } from '@/hooks/api/use-auth'
 import { useOffers } from '@/hooks/api/use-offers'
 import { cn } from '@/lib/utils'
 
+const HEADER_SHOW_STICKY_Y = 240
+const HEADER_HIDE_STICKY_Y = 160
+const HEADER_TOP_SNAP_Y = 16
+const HEADER_TRANSITION_MS = 300
+
+type StickyHeaderState = 'top' | 'in' | 'out'
+
 export function GlobalHeader({
   containerClassName = 'max-w-none',
 }: {
   containerClassName?: string
 }) {
   const router = useRouter()
+  const headerRef = useRef<HTMLElement>(null)
+  const hideTimerRef = useRef<number | null>(null)
+  const [headerHeight, setHeaderHeight] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const [authDialogTab, setAuthDialogTab] = useState<'login' | 'register'>('login')
-  const [isScrolled, setIsScrolled] = useState(false)
+  const [stickyState, setStickyState] = useState<StickyHeaderState>('top')
 
   function openAuthDialog(tab: 'login' | 'register') {
     setAuthDialogTab(tab)
@@ -59,19 +69,80 @@ export function GlobalHeader({
   const { data: offers = [] } = useOffers()
 
   const isHeroPage = pathname === '/'
-  const isTransparent = isHeroPage && !isScrolled && !mobileMenuOpen
+  const isCatalogPage =
+    pathname === '/pasar' ||
+    (pathname.startsWith('/pasar/') &&
+      !pathname.startsWith('/pasar/penawaran') &&
+      !pathname.startsWith('/pasar/checkout'))
+  const isSticky = stickyState !== 'top' || mobileMenuOpen
+  const isTransparent = isHeroPage && !isSticky
+  const hideMobileSearch = !isSticky && (isHeroPage || isCatalogPage)
   const isCategoryActive = categoryNavItems.some((item) => pathname === item.href)
   const isMoreActive = moreNavItems.some((item) => pathname === item.href)
 
   useEffect(() => {
+    function clearHideTimer() {
+      if (hideTimerRef.current !== null) {
+        window.clearTimeout(hideTimerRef.current)
+        hideTimerRef.current = null
+      }
+    }
+
     function handleScroll() {
-      setIsScrolled(window.scrollY > 8)
+      const y = window.scrollY
+
+      if (y > HEADER_SHOW_STICKY_Y) {
+        clearHideTimer()
+        setStickyState('in')
+        return
+      }
+
+      if (y <= HEADER_TOP_SNAP_Y) {
+        clearHideTimer()
+        setStickyState('top')
+        return
+      }
+
+      if (y < HEADER_HIDE_STICKY_Y) {
+        setStickyState((prev) => {
+          if (prev !== 'in') {
+            return prev
+          }
+          clearHideTimer()
+          hideTimerRef.current = window.setTimeout(() => {
+            hideTimerRef.current = null
+            if (window.scrollY < HEADER_HIDE_STICKY_Y) {
+              setStickyState('top')
+            }
+          }, HEADER_TRANSITION_MS)
+          return 'out'
+        })
+      }
     }
 
     handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      clearHideTimer()
+    }
   }, [])
+
+  useEffect(() => {
+    const element = headerRef.current
+    if (!element || isSticky) {
+      return
+    }
+
+    const updateHeight = () => {
+      setHeaderHeight(element.getBoundingClientRect().height)
+    }
+
+    updateHeight()
+    const observer = new ResizeObserver(updateHeight)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [isSticky])
 
   function navigateSearch(nextQuery: string, nextCategory: BuyerCategoryFilter = 'semua') {
     const href = buildBuyerSearchHref({
@@ -107,10 +178,26 @@ export function GlobalHeader({
 
   return (
     <>
+      {!isHeroPage && isSticky && headerHeight > 0 && (
+        <div aria-hidden='true' style={{ height: headerHeight }} />
+      )}
       <header
+        ref={headerRef}
         className={cn(
-          'fixed inset-x-0 top-0 z-40 w-full transition-colors duration-200',
-          isTransparent ? 'bg-transparent text-white' : 'bg-background text-foreground shadow-xs'
+          'z-40 w-full',
+          isSticky
+            ? cn(
+                'fixed inset-x-0 top-0 bg-background text-foreground shadow-sm',
+                !mobileMenuOpen &&
+                  stickyState === 'in' &&
+                  'animate-in fade-in slide-in-from-top-full duration-300 ease-out motion-reduce:animate-none',
+                !mobileMenuOpen &&
+                  stickyState === 'out' &&
+                  'pointer-events-none animate-out fade-out slide-out-to-top-full duration-300 ease-in fill-mode-forwards motion-reduce:animate-none'
+              )
+            : isHeroPage
+              ? 'absolute inset-x-0 top-0 bg-transparent text-white'
+              : 'relative bg-background text-foreground shadow-xs'
         )}
       >
         <div
@@ -391,23 +478,25 @@ export function GlobalHeader({
               </div>
             </div>
 
-            <div className={cn(containerClass, 'pb-3 lg:hidden')}>
-              <form
-                onSubmit={handleSearchSubmit}
-                role='search'
-                aria-label='Pencarian panen surplus mobile'
-              >
-                <HeroSearchCombobox
-                  query={searchQuery}
-                  onQueryChange={setSearchQuery}
-                  offers={offers}
-                  onSubmitQuery={(nextQuery) => navigateSearch(nextQuery)}
-                  onSelectCommodity={handleSelectCommodity}
-                  onSelectOffer={handleSelectOffer}
-                  className='w-full text-foreground'
-                />
-              </form>
-            </div>
+            {!hideMobileSearch && (
+              <div className={cn(containerClass, 'pb-3 lg:hidden')}>
+                <form
+                  onSubmit={handleSearchSubmit}
+                  role='search'
+                  aria-label='Pencarian panen surplus mobile'
+                >
+                  <HeroSearchCombobox
+                    query={searchQuery}
+                    onQueryChange={setSearchQuery}
+                    offers={offers}
+                    onSubmitQuery={(nextQuery) => navigateSearch(nextQuery)}
+                    onSelectCommodity={handleSelectCommodity}
+                    onSelectOffer={handleSelectOffer}
+                    className='w-full text-foreground'
+                  />
+                </form>
+              </div>
+            )}
           </div>
 
           <CollapsibleContent className='max-h-[calc(100dvh-10.3125rem)] overflow-y-auto border-b border-border bg-background transition-all duration-200 ease-out data-ending-style:opacity-0 data-starting-style:opacity-0 lg:hidden'>
@@ -478,9 +567,6 @@ export function GlobalHeader({
           defaultTab={authDialogTab}
         />
       </header>
-      {!isHeroPage && (
-        <div aria-hidden='true' className='h-[10.3125rem] shrink-0 lg:h-[6.875rem]' />
-      )}
     </>
   )
 }
