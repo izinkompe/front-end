@@ -63,9 +63,9 @@ const searchModes: ReadonlyArray<{
   label: string
   ctaLabel: string
 }> = [
-  { value: 'katalog', label: 'Cari Panen', ctaLabel: 'Cari Panen' },
-  { value: 'peta', label: 'Peta Radius', ctaLabel: 'Lihat Peta' },
-  { value: 'segera-ditutup', label: 'Segera Ditutup', ctaLabel: 'Lihat Penawaran' },
+  { value: 'katalog', label: 'Cari panen', ctaLabel: 'Cari panen' },
+  { value: 'peta', label: 'Peta radius', ctaLabel: 'Buka peta' },
+  { value: 'segera-ditutup', label: 'Segera ditutup', ctaLabel: 'Lihat penawaran' },
 ]
 
 const categoryIcons: Record<BuyerCategoryFilter, LucideIcon> = {
@@ -344,21 +344,21 @@ export function BuyerHeroSearch() {
           className='min-h-10 rounded-full px-4 text-sm font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <Search data-icon='inline-start' aria-hidden='true' />
-          <span>Cari Panen</span>
+          <span>Cari panen</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value='peta'
           className='min-h-10 rounded-full px-4 text-sm font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <MapPin data-icon='inline-start' aria-hidden='true' />
-          <span>Peta Radius</span>
+          <span>Peta radius</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value='segera-ditutup'
           className='min-h-10 rounded-full px-4 text-sm font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <Clock data-icon='inline-start' aria-hidden='true' />
-          <span>Segera Ditutup</span>
+          <span>Segera ditutup</span>
         </ToggleGroupItem>
       </ToggleGroup>
 
@@ -464,8 +464,8 @@ export function BuyerHeroSearch() {
           <div className='flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm text-foreground/75 sm:justify-start'>
             <span>
               {hasUpdatedLocation
-                ? `Lokasi Anda kini diatur ke ${selectedLocation.label}`
-                : `Sepertinya Anda berada di ${selectedLocation.label}. Kurang tepat?`}
+                ? `Lokasi acuan memakai ${selectedLocation.label}.`
+                : `Lokasi acuan saat ini di ${selectedLocation.label}. Bukan di sana?`}
             </span>
 
             <button

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { AlertCircle, ChevronRight, RefreshCw } from 'lucide-react'
+import { AlertCircle, RefreshCw } from 'lucide-react'
 import { useSelectedLocation } from '@/components/providers/location-provider'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -30,7 +30,7 @@ import {
 type ExpiringQuickFilter = 'semua' | 'under-3h' | 'dynamic' | 'sayuran' | 'buah'
 
 const quickFilterOptions: ReadonlyArray<{ value: ExpiringQuickFilter; label: string }> = [
-  { value: 'semua', label: 'Semua segera tutup' },
+  { value: 'semua', label: 'Semua' },
   { value: 'under-3h', label: 'Kurang dari 3 jam' },
   { value: 'dynamic', label: 'Harga turun terjadwal' },
   { value: 'sayuran', label: 'Sayuran' },
@@ -51,7 +51,7 @@ function isExpiringFilter(value: string | undefined): value is ExpiringQuickFilt
 
 function OfferCardSkeleton() {
   return (
-    <div className='flex h-full flex-col justify-between rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border/70'>
+    <div className='flex h-full flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm'>
       <div className='flex flex-col gap-4'>
         <div className='flex items-start justify-between gap-3'>
           <div className='flex flex-1 flex-col gap-2'>
@@ -62,11 +62,11 @@ function OfferCardSkeleton() {
         </div>
         <div className='flex items-end justify-between gap-3'>
           <div className='flex flex-col gap-2'>
-            <Skeleton className='h-3.5 w-32' />
+            <Skeleton className='h-4 w-32' />
             <Skeleton className='h-4 w-28' />
           </div>
           <div className='flex flex-col items-end gap-1.5'>
-            <Skeleton className='h-3.5 w-20' />
+            <Skeleton className='h-4 w-20' />
             <Skeleton className='h-6 w-28' />
           </div>
         </div>
@@ -220,25 +220,24 @@ export function BuyerExpiringOffersSection() {
       <div className='mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-9 sm:px-6 sm:py-11 lg:px-8'>
         <div className='flex flex-col gap-4'>
           <div className='flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between'>
-            <div className='flex flex-col gap-1'>
+            <div className='flex flex-col gap-1.5'>
               <h2
                 id='expiring-offers-heading'
-                className='text-2xl leading-tight font-bold tracking-tight text-foreground sm:text-3xl'
+                className='text-[clamp(1.5rem,1.25rem+0.9vw,2rem)] leading-tight font-bold text-foreground'
               >
                 Penawaran segera ditutup hari ini
               </h2>
-              <p className='text-base text-muted-foreground'>
-                Diurutkan dari batas pemesanan terdekat, jarak garis lurus diukur dari{' '}
+              <p className='max-w-[62ch] text-base leading-relaxed text-muted-foreground'>
+                Urutan dari batas pesan terdekat, dengan jarak garis lurus dari{' '}
                 {selectedLocation.label}.
               </p>
             </div>
 
             <Link
               href={allExpiringHref}
-              className='inline-flex min-h-10 w-fit items-center gap-1 rounded-md px-2 py-1.5 text-sm font-semibold text-primary transition-opacity pointer-coarse:min-h-11 hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              className='inline-flex min-h-10 w-fit items-center rounded-md px-2 py-1.5 text-base font-semibold text-primary transition-opacity pointer-coarse:min-h-11 hover:underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
             >
-              <span>Lihat semua penawaran</span>
-              <ChevronRight className='size-4 shrink-0' aria-hidden='true' />
+              Lihat semua penawaran
             </Link>
           </div>
 
@@ -254,7 +253,7 @@ export function BuyerExpiringOffersSection() {
               <ToggleGroupItem
                 key={option.value}
                 value={option.value}
-                className='min-h-10 rounded-full border border-border/80 bg-background/90 px-4 text-sm font-medium whitespace-nowrap text-foreground transition-colors pointer-coarse:min-h-11 hover:bg-background hover:text-foreground focus-visible:ring-ring aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:font-semibold aria-pressed:text-primary-foreground'
+                className='min-h-10 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors pointer-coarse:min-h-11 hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:font-semibold aria-pressed:text-primary-foreground'
               >
                 {option.label}
               </ToggleGroupItem>
@@ -268,7 +267,7 @@ export function BuyerExpiringOffersSection() {
 
         {isPending ? (
           <div
-            aria-busy='true'
+            role='status'
             aria-label='Memuat daftar penawaran segera ditutup'
             className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'
           >
@@ -279,12 +278,9 @@ export function BuyerExpiringOffersSection() {
         ) : isError ? (
           <Alert className='border-border bg-card text-card-foreground'>
             <AlertCircle aria-hidden='true' />
-            <AlertTitle>Penawaran segera ditutup belum dapat dimuat</AlertTitle>
+            <AlertTitle>Gagal memuat penawaran</AlertTitle>
             <AlertDescription className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-              <span>
-                Periksa koneksi Anda lalu coba muat ulang untuk melihat batas waktu pemesanan
-                terbaru.
-              </span>
+              <span>Periksa koneksi internet Anda lalu muat ulang.</span>
               <Button
                 type='button'
                 variant='outline'
@@ -293,19 +289,19 @@ export function BuyerExpiringOffersSection() {
                 className='w-fit'
               >
                 <RefreshCw data-icon='inline-start' aria-hidden='true' />
-                Coba muat ulang
+                Muat ulang
               </Button>
             </AlertDescription>
           </Alert>
         ) : filteredOffers.length === 0 ? (
-          <div className='flex flex-col items-start justify-between gap-4 rounded-2xl bg-card p-6 text-card-foreground shadow-sm sm:flex-row sm:items-center'>
+          <div className='flex flex-col items-start justify-between gap-4 rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm sm:flex-row sm:items-center'>
             <div className='flex flex-col gap-1'>
-              <h3 className='text-base font-semibold text-foreground'>
-                Belum ada penawaran yang cocok dengan saringan ini
+              <h3 className='text-lg leading-snug font-semibold text-foreground'>
+                Belum ada penawaran yang cocok dengan filter ini
               </h3>
-              <p className='text-sm text-muted-foreground'>
-                Tampilkan seluruh penawaran segera ditutup atau pasang kebutuhan panen organisasi
-                Anda di Papan Kebutuhan Pangan.
+              <p className='max-w-[60ch] text-base leading-relaxed text-muted-foreground'>
+                Reset filter untuk melihat semua penawaran, atau pasang permintaan di Papan
+                Kebutuhan Pangan.
               </p>
             </div>
             <div className='flex flex-wrap items-center gap-2'>
@@ -320,7 +316,7 @@ export function BuyerExpiringOffersSection() {
                 nativeButton={false}
                 render={<Link href='/papan-kebutuhan' />}
               >
-                Pasang di Papan Kebutuhan
+                Pasang kebutuhan pangan
               </Button>
             </div>
           </div>
@@ -371,10 +367,9 @@ export function BuyerExpiringOffersSection() {
           </Carousel>
         )}
 
-        <p className='text-xs leading-relaxed text-muted-foreground'>
-          Seluruh transaksi menggunakan satuan kilogram dengan pengambilan mandiri. Alamat lengkap
-          petani dibuka setelah pesanan dikonfirmasi, dan harga dinamis mengikuti jadwal waktu yang
-          ditetapkan petani.
+        <p className='max-w-[72ch] text-sm leading-relaxed text-muted-foreground'>
+          Semua harga berlaku per kilogram dengan ambil mandiri. Petani membuka alamat lengkap
+          setelah pesanan terkonfirmasi, dan harga dinamis turun mengikuti jadwal yang petani atur.
         </p>
       </div>
     </section>

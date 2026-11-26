@@ -62,10 +62,10 @@ export function BuyerExpiringOfferCard({
   return (
     <article
       className={cn(
-        'relative flex h-full flex-col justify-between rounded-2xl bg-card p-5 text-card-foreground shadow-sm ring-1 ring-border/70 transition-shadow',
+        'relative flex h-full flex-col justify-between rounded-2xl border border-border p-5 text-card-foreground shadow-sm transition-shadow',
         countdown.isExpired
-          ? 'opacity-80'
-          : 'has-[a.offer-card-link:hover]:shadow-md has-[a.offer-card-link:focus-visible]:ring-2 has-[a.offer-card-link:focus-visible]:ring-ring has-[a.offer-card-link:focus-visible]:ring-inset'
+          ? 'bg-muted/60'
+          : 'bg-card has-[a.offer-card-link:hover]:shadow-md has-[a.offer-card-link:focus-visible]:outline-2 has-[a.offer-card-link:focus-visible]:outline-offset-2 has-[a.offer-card-link:focus-visible]:outline-ring'
       )}
     >
       <div className='flex flex-col gap-4'>
@@ -91,7 +91,7 @@ export function BuyerExpiringOfferCard({
 
           <Badge
             variant={badgeVariant}
-            className='shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold'
+            className='shrink-0 rounded-lg px-2.5 py-1 text-sm font-semibold'
           >
             {countdown.isExpired ? (
               <Lock data-icon='inline-start' aria-hidden='true' />
@@ -109,27 +109,23 @@ export function BuyerExpiringOfferCard({
         </div>
 
         <div className='flex items-end justify-between gap-3'>
-          <div className='flex min-w-0 flex-col gap-0.5'>
-            <p className='text-xs text-muted-foreground'>Ambil mandiri</p>
+          <div className='flex min-w-0 flex-col gap-1'>
+            <p className='text-sm text-muted-foreground'>Ambil mandiri</p>
             <p className='text-sm font-semibold text-foreground tabular-nums'>
               Sisa {formatWeightKg(offer.availableStockKg)}
             </p>
-            <p className='text-xs font-medium text-muted-foreground tabular-nums'>
-              {nextPickupSlot}
-            </p>
+            <p className='text-sm text-muted-foreground tabular-nums'>{nextPickupSlot}</p>
             {countdown.isExpired && (
-              <p className='mt-0.5 text-xs font-medium text-destructive'>
-                Batas pemesanan berakhir
-              </p>
+              <p className='mt-0.5 text-sm font-medium text-destructive'>Batas pesan berakhir</p>
             )}
           </div>
 
           <div className='flex shrink-0 flex-col items-end text-right'>
-            <span className='text-xs font-medium text-muted-foreground'>
+            <span className='text-sm text-muted-foreground'>
               {priceSummary.hasDynamicRule ? 'Harga dinamis' : 'Harga per kg'}
             </span>
             {priceSummary.hasDropped && priceSummary.originalPriceFormatted && (
-              <span className='text-xs text-muted-foreground line-through tabular-nums'>
+              <span className='text-sm text-muted-foreground line-through tabular-nums'>
                 {priceSummary.originalPriceFormatted}
               </span>
             )}
@@ -142,7 +138,7 @@ export function BuyerExpiringOfferCard({
               {formatPricePerKg(offer.pricePerKg)}
             </p>
             {priceSummary.scheduleHint && (
-              <span className='mt-0.5 text-xs text-muted-foreground tabular-nums'>
+              <span className='mt-0.5 text-sm text-muted-foreground tabular-nums'>
                 {priceSummary.scheduleHint}
               </span>
             )}
@@ -153,18 +149,18 @@ export function BuyerExpiringOfferCard({
       <div className='mt-4 flex flex-col gap-3'>
         <Separator />
         <footer className='flex items-center justify-between gap-2'>
-          <div className='flex min-w-0 items-center gap-2 text-xs text-muted-foreground'>
+          <div className='flex min-w-0 items-center gap-2 text-sm text-muted-foreground'>
             <Sprout className='size-4 shrink-0 text-primary' aria-hidden='true' />
             <span className='truncate'>
               {farmerDisplayName}, {conditionMeta.shortLabel}
             </span>
           </div>
 
-          <div className='relative z-10 flex shrink-0 items-center gap-1.5'>
+          <div className='flex shrink-0 items-center gap-1.5'>
             <span
               aria-hidden='true'
               className={cn(
-                'text-xs font-medium transition-opacity duration-150',
+                'text-sm font-medium transition-opacity duration-150',
                 shareState === 'copied'
                   ? 'text-primary opacity-100'
                   : shareState === 'failed'
@@ -182,7 +178,7 @@ export function BuyerExpiringOfferCard({
               aria-label={`Bagikan tautan ${offer.commodityName}`}
               data-copied={shareState === 'copied' ? '' : undefined}
               data-failed={shareState === 'failed' ? '' : undefined}
-              className='text-muted-foreground hover:text-foreground'
+              className='relative z-1 text-muted-foreground hover:text-foreground'
             >
               {shareState === 'copied' ? (
                 <Check aria-hidden='true' className='text-primary' />
