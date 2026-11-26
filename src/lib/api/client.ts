@@ -6,6 +6,7 @@ import { env } from '@/lib/env'
 
 export interface FetchOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>
+  silentStatuses?: number[]
 }
 
 const isMockEnabled = env.NEXT_PUBLIC_USE_MOCK
@@ -43,7 +44,7 @@ export async function apiClient<T>(
     if (isMockEnabled) {
       rawData = await tanstackDbAdapter.dispatch(endpoint, options)
     } else {
-      const { params, headers, ...restOptions } = options
+      const { params, headers, silentStatuses: _silentStatuses, ...restOptions } = options
 
       if (params) {
         Object.entries(params).forEach(([key, val]) => {
@@ -96,14 +97,16 @@ export async function apiClient<T>(
   } catch (err) {
     const sanitizedEndpoint = endpoint.split('?')[0]
     if (err instanceof ApiError) {
-      logger.error(
-        {
-          endpoint: sanitizedEndpoint,
-          status: err.status,
-          code: err.code,
-        },
-        'API Error: ' + err.message
-      )
+      if (!options.silentStatuses?.includes(err.status)) {
+        logger.error(
+          {
+            endpoint: sanitizedEndpoint,
+            status: err.status,
+            code: err.code,
+          },
+          'API Error: ' + err.message
+        )
+      }
     } else if (err instanceof Error) {
       logger.error({ endpoint: sanitizedEndpoint }, 'Unexpected Error: ' + err.message)
     }

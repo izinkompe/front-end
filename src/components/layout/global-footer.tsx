@@ -1,97 +1,201 @@
 import Link from 'next/link'
-import { Sprout } from 'lucide-react'
+import { AccountLink } from '@/components/auth/account-link'
+import { buttonVariants } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 
-const footerLinks = {
-  ekosistem: [
-    { label: 'Pasar Pangan', href: '/pasar' },
-    { label: 'Edukasi Petani', href: '/edukasi' },
-    { label: 'Kemitraan', href: '/kemitraan' },
-  ],
-  informasi: [
-    { label: 'Tentang Kami', href: '/tentang' },
-    { label: 'Pusat Bantuan', href: '/bantuan' },
-    { label: 'Kontak', href: '/kontak' },
-  ],
-  kebijakan: [
-    { label: 'Syarat & Ketentuan', href: '/syarat' },
-    { label: 'Kebijakan Privasi', href: '/privasi' },
-  ],
+const footerColumns = [
+  {
+    title: 'Bantuan pembeli',
+    links: [
+      { label: 'Pusat bantuan', href: '/pusat-informasi?tab=bantuan' },
+      { label: 'Cara memesan', href: '/pusat-informasi?tab=bantuan#pesanan' },
+      { label: 'Pembayaran transfer', href: '/pusat-informasi?tab=bantuan#pembayaran' },
+      { label: 'Pengambilan pesanan', href: '/pusat-informasi?tab=bantuan#pengambilan' },
+      { label: 'Pengaduan dan pengembalian', href: '/pusat-informasi?tab=bantuan#pengembalian' },
+      { label: 'Kontak kami', href: '/pusat-informasi?tab=kontak' },
+    ],
+  },
+  {
+    title: 'Pasar Panen',
+    links: [
+      { label: 'Jelajahi penawaran', href: '/pasar' },
+      { label: 'Papan Kebutuhan Pangan', href: '/papan-kebutuhan' },
+      { label: 'Favorit', href: '/favorit' },
+      { label: 'Pesanan Saya', href: '/akun' },
+      { label: 'Riwayat transaksi', href: '/akun/transaksi' },
+      { label: 'Pengaduan saya', href: '/akun/pengaduan' },
+    ],
+  },
+  {
+    title: 'Akun petani',
+    links: [
+      { label: 'Masuk sebagai petani', href: '/masuk-petani' },
+      { label: 'Daftar sebagai petani', href: '/daftar-petani' },
+    ],
+  },
+]
+
+const legalLinks = [
+  { label: 'Pusat Informasi', href: '/pusat-informasi' },
+  { label: 'Kebijakan Privasi', href: '/pusat-informasi?tab=kebijakan-privasi' },
+  { label: 'Syarat & Ketentuan', href: '/pusat-informasi?tab=syarat' },
+  { label: 'Aksesibilitas', href: '/pusat-informasi?tab=aksesibilitas' },
+  { label: 'Kontak', href: '/pusat-informasi?tab=kontak' },
+]
+
+function InstagramIcon() {
+  return (
+    <svg
+      viewBox='0 0 24 24'
+      fill='none'
+      stroke='currentColor'
+      strokeWidth='1.75'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      aria-hidden='true'
+    >
+      <rect width='20' height='20' x='2' y='2' rx='5' ry='5' />
+      <path d='M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z' />
+      <line x1='17.5' x2='17.51' y1='6.5' y2='6.5' />
+    </svg>
+  )
 }
+
+function TikTokIcon() {
+  return (
+    <svg
+      viewBox='0 0 24 24'
+      fill='none'
+      stroke='currentColor'
+      strokeWidth='1.75'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      aria-hidden='true'
+    >
+      <path d='M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5' />
+    </svg>
+  )
+}
+
+function FacebookIcon() {
+  return (
+    <svg
+      viewBox='0 0 24 24'
+      fill='none'
+      stroke='currentColor'
+      strokeWidth='1.75'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      aria-hidden='true'
+    >
+      <path d='M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z' />
+    </svg>
+  )
+}
+
+function YouTubeIcon() {
+  return (
+    <svg
+      viewBox='0 0 24 24'
+      fill='none'
+      stroke='currentColor'
+      strokeWidth='1.75'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      aria-hidden='true'
+    >
+      <path d='M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17' />
+      <path d='m10 15 5-3-5-3z' />
+    </svg>
+  )
+}
+
+const socialLinks = [
+  { label: 'Instagram PanganTani', href: 'https://instagram.com/pangantani', icon: InstagramIcon },
+  { label: 'TikTok PanganTani', href: 'https://tiktok.com/@pangantani', icon: TikTokIcon },
+  { label: 'Facebook PanganTani', href: 'https://facebook.com/pangantani', icon: FacebookIcon },
+  { label: 'YouTube PanganTani', href: 'https://youtube.com/@pangantani', icon: YouTubeIcon },
+]
 
 const currentYear = new Date().getFullYear()
 
-export function GlobalFooter() {
+interface GlobalFooterProps {
+  containerClassName?: string
+}
+
+export function GlobalFooter({ containerClassName = 'max-w-7xl' }: GlobalFooterProps) {
   return (
-    <footer className='border-t border-border bg-muted/40 text-foreground'>
-      <div className='mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8'>
-        <div className='grid grid-cols-1 gap-8 md:grid-cols-4'>
-          <div className='space-y-4'>
-            <Link
-              href='/'
-              className='flex items-center gap-2 font-bold text-lg text-foreground hover:opacity-90 transition-opacity'
-            >
-              <span className='flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
-                <Sprout className='size-5' />
-              </span>
-              <span>PanganTani</span>
-            </Link>
-            <p className='text-sm text-muted-foreground leading-relaxed'>
-              Mendukung ketahanan pangan melalui kolaborasi langsung antara petani, distributor, dan
-              konsumen.
-            </p>
-          </div>
+    <footer className='border-t border-border bg-secondary text-secondary-foreground'>
+      <div className={cn('mx-auto px-4 py-12 sm:px-6 lg:px-8', containerClassName)}>
+        <div className='grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4'>
+          {footerColumns.map((column) => (
+            <div key={column.title} className='flex flex-col gap-3'>
+              <h3 className='text-base font-semibold text-secondary-foreground'>{column.title}</h3>
+              <ul className='flex flex-col gap-0.5 text-sm text-muted-foreground'>
+                {column.links.map((link) => {
+                  const LinkComponent = link.href.startsWith('/akun') ? AccountLink : Link
+                  return (
+                    <li key={link.label}>
+                      <LinkComponent
+                        href={link.href}
+                        className='inline-flex min-h-10 items-center rounded-sm py-1.5 leading-snug transition-colors pointer-coarse:min-h-11 hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                      >
+                        {link.label}
+                      </LinkComponent>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
 
-          <div>
-            <h3 className='text-sm font-semibold text-foreground mb-3'>Ekosistem</h3>
-            <ul className='space-y-2 text-sm text-muted-foreground'>
-              {footerLinks.ekosistem.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className='hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm'
+          <div className='flex flex-col gap-3'>
+            <h3 className='text-base font-semibold text-secondary-foreground'>PanganTani</h3>
+            <div className='flex flex-wrap items-center gap-1'>
+              {socialLinks.map((item) => {
+                const Icon = item.icon
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    aria-label={item.label}
+                    className={buttonVariants({ variant: 'ghost', size: 'icon' })}
                   >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className='text-sm font-semibold text-foreground mb-3'>Informasi</h3>
-            <ul className='space-y-2 text-sm text-muted-foreground'>
-              {footerLinks.informasi.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className='hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm'
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className='text-sm font-semibold text-foreground mb-3'>Kebijakan</h3>
-            <ul className='space-y-2 text-sm text-muted-foreground'>
-              {footerLinks.kebijakan.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className='hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm'
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                    <Icon />
+                  </a>
+                )
+              })}
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className='mt-10 border-t border-border pt-6 text-center text-xs text-muted-foreground'>
-          <p>&copy; {currentYear} PanganTani. Hak Cipta Dilindungi.</p>
+      <Separator />
+
+      <div
+        className={cn('mx-auto flex flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8', containerClassName)}
+      >
+        <nav aria-label='Tautan Kebijakan' className='flex flex-wrap items-center gap-x-6 gap-y-1'>
+          {legalLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className='inline-flex min-h-10 items-center rounded-sm py-1.5 text-sm text-secondary-foreground underline underline-offset-4 transition-opacity pointer-coarse:min-h-11 hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className='flex flex-col gap-1.5 text-sm leading-relaxed text-muted-foreground'>
+          <p>
+            &apos;PanganTani&apos; dan logo &apos;PanganTani&apos; merupakan merek dagang milik
+            PanganTani Indonesia dan dilindungi oleh peraturan perundang-undangan yang berlaku.
+          </p>
+          <p>&copy; Hak Cipta {currentYear} PanganTani. Seluruh hak cipta dilindungi.</p>
         </div>
       </div>
     </footer>

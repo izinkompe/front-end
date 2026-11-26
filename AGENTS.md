@@ -58,6 +58,10 @@ Keep secrets server-side and out of Git, logs, and build artifacts. Report vulne
 
 Check current CI and CT requirements and review staging, monitoring, and rollback recommendations before connecting CD to a production target. See the [development and production guide](docs/DEVELOPMENT-PRODUCTION.md).
 
+## Notifications
+
+Follow the [notification guide](docs/NOTIFICATIONS.md) when adding or changing notification types, producers, read state, or destinations. Check compatibility with existing clients before emitting a new `type`. Derive pending actions from the current resource state and use the [design guide](DESIGN.md#notifikasi) to choose how to present the message.
+
 ## Next.js Implementation Guidelines
 
 This repo runs Next.js 16.4.6 with Cache Components enabled. Use the conventions below for new routes and integrations. Keep code examples and implementation files free of comments.
