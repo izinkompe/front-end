@@ -1,6 +1,6 @@
 'use client'
 
-import { LocateFixed, MapPin, RefreshCw } from 'lucide-react'
+import { LocateFixed, MapPin, RefreshCw, RotateCcw } from 'lucide-react'
 import type { BuyerRadiusOption } from '@/components/home/hero-search-params'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +22,7 @@ interface CatalogMapControlsProps {
   onRadiusChange: (nextRadius: BuyerRadiusOption | null) => void
   onDetectLocation: () => void
   onSearchMapCenter: () => void
+  onResetPosition: () => void
 }
 
 export function CatalogMapControls({
@@ -32,6 +33,7 @@ export function CatalogMapControls({
   onRadiusChange,
   onDetectLocation,
   onSearchMapCenter,
+  onResetPosition,
 }: CatalogMapControlsProps) {
   const radiusValue = radiusKm ?? 'semua'
   const radiusLabel =
@@ -86,6 +88,18 @@ export function CatalogMapControls({
               <LocateFixed data-icon='inline-start' aria-hidden='true' />
             )}
             <span>{locating ? 'Mendeteksi...' : 'Lokasi saat ini'}</span>
+          </Button>
+
+          <Button
+            type='button'
+            variant='outline'
+            size='sm'
+            onClick={onResetPosition}
+            aria-label='Reset posisi peta'
+            className='rounded-full! border-muted-foreground/45 bg-card/95 font-medium text-foreground shadow-sm backdrop-blur-xs hover:border-foreground/65'
+          >
+            <RotateCcw data-icon='inline-start' aria-hidden='true' />
+            <span>Reset posisi</span>
           </Button>
         </div>
 

@@ -265,7 +265,7 @@ export function CatalogSplitView({
       {hasMap && (
         <aside
           aria-label='Peta radius penawaran panen'
-          className='catalog-containment hidden lg:sticky lg:top-[6.875rem] lg:block lg:h-[calc(100dvh-6.875rem)]'
+          className='hidden lg:sticky lg:top-[6.875rem] lg:block lg:h-[calc(100dvh-6.875rem)]'
         >
           <CatalogRadiusMap
             items={mapItems}

@@ -89,6 +89,11 @@ export function useCatalogLeafletMap(params: UseCatalogLeafletMapParams) {
   const markerRecordsRef = useRef<Array<{ cluster: CatalogMapCluster; marker: L.Marker }>>([])
   const initialCoordinatesRef = useRef(referenceCoordinates)
   const suppressMoveDirtyRef = useRef(false)
+  const lastFittedBoundsKeyRef = useRef<string | null>(null)
+
+  const boundsKey = boundsPoints
+    .map(([lat, lng]) => `${lat.toFixed(5)},${lng.toFixed(5)}`)
+    .join('|')
 
   const callbacksRef = useRef({
     onMapFailure,
@@ -231,6 +236,7 @@ export function useCatalogLeafletMap(params: UseCatalogLeafletMapParams) {
       markersLayerRef.current = null
       markerRecordsRef.current = []
       leafletRef.current = null
+      lastFittedBoundsKeyRef.current = null
       setMapInstance(null)
     }
   }, [])
@@ -276,7 +282,9 @@ export function useCatalogLeafletMap(params: UseCatalogLeafletMapParams) {
   useEffect(() => {
     const map = mapRef.current
     if (!mapReady || !map || boundsPoints.length === 0) return
+    if (lastFittedBoundsKeyRef.current === boundsKey) return
 
+    lastFittedBoundsKeyRef.current = boundsKey
     suppressMoveDirtyRef.current = true
     if (boundsPoints.length === 1) {
       map.setView(boundsPoints[0], 12)
@@ -288,7 +296,7 @@ export function useCatalogLeafletMap(params: UseCatalogLeafletMapParams) {
       maxZoom: 13,
       animate: false,
     })
-  }, [boundsPoints, mapReady])
+  }, [boundsKey, boundsPoints, mapReady])
 
   const syncClusterLayers = useCallback(
     (
@@ -392,6 +400,32 @@ export function useCatalogLeafletMap(params: UseCatalogLeafletMapParams) {
     return center ? { lat: center.lat, lng: center.lng } : null
   }, [])
 
+  const resetMapPosition = useCallback(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    suppressMoveDirtyRef.current = true
+    setMapMoved(false)
+
+    if (boundsPoints.length > 1) {
+      map.fitBounds(boundsPoints, {
+        padding: [40, 40],
+        maxZoom: 13,
+        animate: true,
+      })
+      return
+    }
+
+    if (boundsPoints.length === 1) {
+      map.setView(boundsPoints[0], 12, { animate: true })
+      return
+    }
+
+    if (referenceCoordinates) {
+      map.setView([referenceCoordinates.lat, referenceCoordinates.lng], 12, { animate: true })
+    }
+  }, [boundsPoints, referenceCoordinates])
+
   return {
     containerRef,
     mapInstance,
@@ -402,5 +436,6 @@ export function useCatalogLeafletMap(params: UseCatalogLeafletMapParams) {
     syncClusterLayers,
     syncClusterVisuals,
     getMapCenter,
+    resetMapPosition,
   }
 }

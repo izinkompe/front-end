@@ -146,6 +146,7 @@ export function CatalogRadiusMap({
     syncClusterLayers,
     syncClusterVisuals,
     getMapCenter,
+    resetMapPosition,
   } = useCatalogLeafletMap({
     referenceCoordinates,
     locationLabel: selectedLocation.label,
@@ -239,6 +240,7 @@ export function CatalogRadiusMap({
           onRadiusChange={onRadiusChange}
           onDetectLocation={detectCurrentLocation}
           onSearchMapCenter={handleSearchMapCenter}
+          onResetPosition={resetMapPosition}
         />
 
         {activeCluster && activeClusterPlacement && (
