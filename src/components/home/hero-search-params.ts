@@ -80,14 +80,6 @@ export const deadlineOptions: ReadonlyArray<{ value: BuyerDeadlineOption; label:
   { value: 'today', label: 'Ditutup hari ini' },
 ]
 
-export const buyerHeroCategories: ReadonlyArray<{ href: string; label: string }> = [
-  { href: '/pasar', label: 'Semua Komoditas' },
-  { href: '/pasar/sayuran', label: 'Sayuran' },
-  { href: '/pasar/buah', label: 'Buah' },
-  { href: '/pasar/padi-biji', label: 'Padi & Biji-bijian' },
-  { href: '/pasar/rempah-umbi', label: 'Rempah & Umbi' },
-]
-
 export function formatPickupDateIso(date: Date): string {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')

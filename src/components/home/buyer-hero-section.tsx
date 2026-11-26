@@ -1,8 +1,5 @@
 import Image from 'next/image'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { BuyerHeroSearch } from './buyer-hero-search'
-import { buyerHeroCategories } from './hero-search-params'
 
 export function BuyerHeroSection() {
   return (
@@ -37,34 +34,6 @@ export function BuyerHeroSection() {
           </div>
 
           <BuyerHeroSearch />
-        </div>
-      </div>
-
-      <div className='mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8'>
-        <div className='flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between'>
-          <nav
-            aria-label='Pintasan kategori komoditas'
-            className='flex items-center gap-1 overflow-x-auto pb-1 sm:gap-2 sm:pb-0'
-          >
-            {buyerHeroCategories.map((category) => (
-              <Link
-                key={category.href}
-                href={category.href}
-                className='rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-              >
-                {category.label}
-              </Link>
-            ))}
-          </nav>
-
-          <Button
-            variant='outline'
-            className='w-full sm:w-auto'
-            nativeButton={false}
-            render={<Link href='/papan-kebutuhan' />}
-          >
-            Pasang di Papan Kebutuhan
-          </Button>
         </div>
       </div>
     </section>
