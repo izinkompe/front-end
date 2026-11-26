@@ -50,6 +50,8 @@ import type { User } from '@/types/api/auth'
 import type { Offer } from '@/types/api/offers'
 import type { Order } from '@/types/api/orders'
 
+import { OfferPortionHelper } from './offer-portion-helper'
+
 interface OfferReservationFormProps {
   offer: Offer
   isExpired: boolean
@@ -237,6 +239,11 @@ export function OfferReservationForm({
                 </FieldDescription>
               )}
             </Field>
+
+            <OfferPortionHelper
+              quantityKg={weightError ? null : parsedWeightKg}
+              pricePerKg={offer.pricePerKg}
+            />
 
             <Field data-invalid={showSlotError || undefined}>
               <FieldLabel>Jadwal pengambilan</FieldLabel>

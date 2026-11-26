@@ -42,6 +42,7 @@ export const OfferSchema = z.object({
   soldStockKg: z.number().nonnegative(),
   pricePerKg: z.number().positive(),
   dynamicPriceRule: DynamicPriceRuleSchema.optional(),
+  dynamicPriceStartsAt: z.iso.datetime().optional(),
   orderDeadline: z.string(),
   pickupAddressArea: z.string(),
   pickupAddressFull: z.string().optional(),

@@ -78,7 +78,8 @@ export function CatalogOfferCard({
   const distanceLabel = distanceKm === null ? null : formatStraightLineDistance(distanceKm)
 
   const countdown = nowMs !== null ? getOfferCountdownState(offer.orderDeadline, nowMs) : null
-  const isExpired = Boolean(countdown?.isExpired)
+  const isSoldOut = offer.status === 'sold_out' || offer.availableStockKg < 0.001
+  const isExpired = offer.status !== 'active' || isSoldOut || Boolean(countdown?.isExpired)
   const showUrgentCountdown =
     countdown !== null &&
     !countdown.isExpired &&
@@ -121,7 +122,7 @@ export function CatalogOfferCard({
           {isExpired ? (
             <Badge variant='outline' className='border-border bg-background/95 text-foreground'>
               <Lock data-icon='inline-start' aria-hidden='true' />
-              <span>Ditutup</span>
+              <span>{isSoldOut ? 'Stok habis' : 'Ditutup'}</span>
             </Badge>
           ) : showUrgentCountdown && countdown ? (
             <Badge
@@ -158,7 +159,7 @@ export function CatalogOfferCard({
           {isExpired ? (
             <Badge variant='outline' className='border-border bg-background/95 text-foreground'>
               <Lock data-icon='inline-start' aria-hidden='true' />
-              <span>Ditutup</span>
+              <span>{isSoldOut ? 'Stok habis' : 'Ditutup'}</span>
             </Badge>
           ) : (
             countdown && (

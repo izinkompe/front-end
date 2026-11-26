@@ -25,6 +25,7 @@ import { useCurrentUser } from '@/hooks/api/use-auth'
 import { useOrders } from '@/hooks/api/use-orders'
 import { formatOrderStatusLabel } from '@/lib/data/checkout-helpers'
 import { filterAccountTransactions, formatShortDateId } from '@/lib/data/profile-helpers'
+import { AccountTransactionSummary } from './account-transaction-summary'
 import type { OrderStatus } from '@/types/api/orders'
 
 function getTransactionBadgeVariant(status: OrderStatus) {
@@ -151,6 +152,14 @@ export function AccountTransactionsView() {
             </div>
           )}
         </div>
+
+        {!isPending && !isError && (
+          <AccountTransactionSummary
+            orders={filteredTransactions}
+            fromDate={fromDate}
+            toDate={toDate}
+          />
+        )}
 
         {isPending ? (
           <div className='flex flex-col gap-3'>

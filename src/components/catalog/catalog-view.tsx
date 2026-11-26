@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { BuyerAuthDialog } from '@/components/auth/buyer-auth-dialog'
 import type { ShareButtonState } from '@/components/home/buyer-expiring-offer-card'
@@ -11,7 +11,8 @@ import {
 } from '@/components/home/offer-card-helpers'
 import { useSelectedLocation } from '@/components/providers/location-provider'
 import { CommoditySearchInput } from '@/components/shared/commodity-search-input'
-import { useCurrentUser } from '@/hooks/api/use-auth'
+import { useHydrated } from '@/hooks/use-hydrated'
+import { useOfferFavorites } from '@/hooks/api/use-favorites'
 import { useOffers } from '@/hooks/api/use-offers'
 import { getCategoryMeta, type BuyerCategorySlug } from '@/lib/data/categories'
 import {
@@ -44,24 +45,16 @@ interface CatalogViewProps {
   fixedCategory?: BuyerCategorySlug
 }
 
-const emptySubscribe = () => () => {}
-
 export function CatalogView({ fixedCategory }: CatalogViewProps) {
-  const isHydrated = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false
-  )
+  const isHydrated = useHydrated()
   const searchParams = useSearchParams()
   const { selectedLocation, setSelectedLocation } = useSelectedLocation()
-  const { data: currentUser } = useCurrentUser()
   const { data: offers, isPending, isError, refetch } = useOffers()
   const effectivePending = !isHydrated || isPending
 
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const [mapError, setMapError] = useState<string | null>(null)
-  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => new Set())
   const [shareStates, setShareStates] = useState<Record<string, ShareButtonState>>({})
   const [nowMs, setNowMs] = useState<number | null>(null)
   const [liveAnnouncement, setLiveAnnouncement] = useState('')
@@ -215,25 +208,9 @@ export function CatalogView({ fixedCategory }: CatalogViewProps) {
     [batchKey, catalogItems, visibleCount]
   )
 
-  const handleToggleFavorite = useCallback(
-    (offer: Offer) => {
-      if (!currentUser) {
-        setAuthDialogOpen(true)
-        return
-      }
-      setFavoriteIds((prev) => {
-        const next = new Set(prev)
-        if (next.has(offer.id)) {
-          next.delete(offer.id)
-          announcePolite(`${offer.commodityName} dihapus dari favorit.`)
-        } else {
-          next.add(offer.id)
-          announcePolite(`${offer.commodityName} disimpan ke favorit.`)
-        }
-        return next
-      })
-    },
-    [announcePolite, currentUser]
+  const { favoriteIds, toggleFavorite: handleToggleFavorite } = useOfferFavorites(
+    () => setAuthDialogOpen(true),
+    announcePolite
   )
 
   const handleShareOffer = useCallback(

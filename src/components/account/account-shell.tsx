@@ -4,8 +4,10 @@ import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  Bell,
   LayoutDashboard,
   MapPin,
+  MessageSquareWarning,
   Pencil,
   ReceiptText,
   Settings,
@@ -37,6 +39,7 @@ import {
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useHydrated } from '@/hooks/use-hydrated'
 import { useCurrentUser } from '@/hooks/api/use-auth'
 import {
   calculateProfileCompletion,
@@ -57,6 +60,8 @@ const accountNavItems: ReadonlyArray<AccountNavItem> = [
   { href: '/akun/profil', label: 'Data Profil', icon: UserIcon },
   { href: '/akun/alamat', label: 'Alamat Tersimpan', icon: MapPin },
   { href: '/akun/transaksi', label: 'Riwayat Transaksi', icon: ReceiptText },
+  { href: '/akun/pengaduan', label: 'Pengaduan', icon: MessageSquareWarning },
+  { href: '/akun/notifikasi', label: 'Notifikasi', icon: Bell },
   { href: '/akun/verifikasi', label: 'Kontak & Verifikasi', icon: ShieldCheck },
   { href: '/akun/pengaturan', label: 'Pengaturan', icon: Settings },
 ]
@@ -83,10 +88,11 @@ function AccountShellSkeleton() {
 
 export function AccountShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+  const isHydrated = useHydrated()
   const { data: currentUser, isPending } = useCurrentUser()
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
 
-  if (isPending) {
+  if (!isHydrated || isPending) {
     return <AccountShellSkeleton />
   }
 

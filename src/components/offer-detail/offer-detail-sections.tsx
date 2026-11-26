@@ -24,6 +24,8 @@ import {
   getDynamicPriceScheduleSteps,
 } from '@/lib/data/offer-detail-helpers'
 import { buildFarmerStoreHref } from '@/lib/data/farmer-store-helpers'
+import { getOfferPriceSchedule } from '@/lib/data/offer-price-schedule'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { CommodityCondition, Offer } from '@/types/api/offers'
 import { OfferAreaMap } from './offer-area-map'
@@ -42,6 +44,7 @@ export interface SectionAnchorItem {
 
 interface OfferDetailSectionsProps {
   offer: Offer
+  nowMs: number | null
   locationLabel: string
   distanceLabel: string | null
   sectionAnchors: ReadonlyArray<SectionAnchorItem>
@@ -51,6 +54,7 @@ interface OfferDetailSectionsProps {
 
 export function OfferDetailSections({
   offer,
+  nowMs,
   locationLabel,
   distanceLabel,
   sectionAnchors,
@@ -59,6 +63,9 @@ export function OfferDetailSections({
 }: OfferDetailSectionsProps) {
   const conditionMeta = getCommodityConditionMeta(offer.condition)
   const ConditionIcon = conditionIcons[offer.condition]
+  const nextDropAt = nowMs === null ? null : getOfferPriceSchedule(offer, nowMs).nextDropAt
+  const minutesToDrop =
+    nowMs !== null && nextDropAt !== null ? Math.ceil((nextDropAt - nowMs) / 60_000) : null
   const dynamicStages = getDynamicPriceScheduleSteps(offer.pricePerKg, offer.dynamicPriceRule)
 
   const surplusText =
@@ -185,6 +192,14 @@ export function OfferDetailSections({
             {formatPlainRupiah(offer.dynamicPriceRule.minPrice)}/kg. Harga pesanan dikunci saat
             reservasi dibuat.
           </p>
+
+          {minutesToDrop !== null && (
+            <Badge variant='secondary' className='w-fit'>
+              Harga turun dalam{' '}
+              {minutesToDrop >= 60 ? Math.floor(minutesToDrop / 60) + ' jam ' : ''}
+              {minutesToDrop % 60 ? (minutesToDrop % 60) + ' menit' : ''}
+            </Badge>
+          )}
 
           <div className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
             {dynamicStages.map((stage) => (

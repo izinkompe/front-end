@@ -27,8 +27,8 @@ export const regularCatalogOffersData: Offer[] = [
     surplusReason:
       'Panen serentak blok utara, daun luar sedikit berlubang namun bagian dalam padat',
     harvestDate: getRelativeTimestamp(-6 * HOUR_MS),
-    availableStockKg: 190,
-    reservedStockKg: 10,
+    availableStockKg: 170,
+    reservedStockKg: 30,
     soldStockKg: 40,
     pricePerKg: 5500,
     orderDeadline: getRelativeTimestamp(22 * HOUR_MS),

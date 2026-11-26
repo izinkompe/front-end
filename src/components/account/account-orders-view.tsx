@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { CalendarClock, MapPin, PackageOpen, Search, Sprout } from 'lucide-react'
 import {
+  buildOfferDetailHref,
   formatNextPickupSlot,
   formatPlainRupiah,
   formatWeightKg,
@@ -34,6 +35,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCurrentUser } from '@/hooks/api/use-auth'
+import { useOffers } from '@/hooks/api/use-offers'
+import { AccountRecentlyViewed } from './account-recently-viewed'
 import { useOrders } from '@/hooks/api/use-orders'
 import { formatOrderStatusLabel } from '@/lib/data/checkout-helpers'
 import {
@@ -49,6 +52,7 @@ const ACTIVE_STATUS_OPTIONS: ReadonlyArray<{ value: OrderStatus | 'all'; label: 
   { value: 'payment_submitted', label: 'Menunggu verifikasi' },
   { value: 'processing', label: 'Pembayaran disetujui' },
   { value: 'ready_for_pickup', label: 'Siap diambil' },
+  { value: 'disputed', label: 'Dalam peninjauan' },
 ]
 
 const HISTORY_STATUS_OPTIONS: ReadonlyArray<{ value: OrderStatus | 'all'; label: string }> = [
@@ -58,7 +62,11 @@ const HISTORY_STATUS_OPTIONS: ReadonlyArray<{ value: OrderStatus | 'all'; label:
 ]
 
 function getOrderBadgeVariant(status: OrderStatus, rejectionReason?: string) {
-  if (status === 'cancelled' || (status === 'pending_payment' && Boolean(rejectionReason))) {
+  if (
+    status === 'cancelled' ||
+    status === 'disputed' ||
+    (status === 'pending_payment' && Boolean(rejectionReason))
+  ) {
     return 'destructive' as const
   }
   if (status === 'processing' || status === 'ready_for_pickup' || status === 'completed') {
@@ -67,7 +75,7 @@ function getOrderBadgeVariant(status: OrderStatus, rejectionReason?: string) {
   return 'secondary' as const
 }
 
-function OrderListItem({ order }: { order: Order }) {
+function OrderListItem({ order, reorderHref }: { order: Order; reorderHref?: string }) {
   const photoUrl = order.commodityPhotoUrl ? isSafeOfferPhotoUrl(order.commodityPhotoUrl) : null
   const statusLabel = formatOrderStatusLabel(order.status, order.rejectionReason)
   const badgeVariant = getOrderBadgeVariant(order.status, order.rejectionReason)
@@ -92,8 +100,9 @@ function OrderListItem({ order }: { order: Order }) {
         <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
           <div className='flex flex-wrap items-center gap-2'>
             <Badge variant={badgeVariant}>{statusLabel}</Badge>
+            <span className='font-mono text-xs text-muted-foreground'>{order.id}</span>
             <span className='text-xs text-muted-foreground tabular-nums'>
-              {order.id} · {formatShortDateId(order.createdAt)}
+              {formatShortDateId(order.createdAt)}
             </span>
           </div>
 
@@ -130,6 +139,11 @@ function OrderListItem({ order }: { order: Order }) {
             Lanjut bayar
           </Button>
         )}
+        {reorderHref && (
+          <Button size='sm' nativeButton={false} render={<Link href={reorderHref} />}>
+            Pesan lagi
+          </Button>
+        )}
         <Button
           variant='outline'
           size='sm'
@@ -146,16 +160,37 @@ function OrderListItem({ order }: { order: Order }) {
 export function AccountOrdersView() {
   const { data: currentUser } = useCurrentUser()
   const { data: orders = [], isPending, isError, refetch } = useOrders()
-  const [activeTab, setActiveTab] = useState<AccountOrdersTab>('aktif')
+  const [activeTab, setActiveTab] = useState<AccountOrdersTab | 'terakhir-dilihat'>('aktif')
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all')
 
+  const { data: offers, isPending: offersPending } = useOffers()
+  const [now, setNow] = useState<number | null>(null)
+
+  useEffect(() => {
+    const updateNow = () => setNow(Date.now())
+    updateNow()
+    const intervalId = setInterval(updateNow, 30_000)
+    return () => clearInterval(intervalId)
+  }, [])
+
+  const availableOfferIds = new Set(
+    offers
+      ?.filter(
+        (offer) =>
+          offer.status === 'active' &&
+          offer.availableStockKg >= 0.001 &&
+          (now === null || Date.parse(offer.orderDeadline) > now)
+      )
+      .map((offer) => offer.id)
+  )
+  const orderTab = activeTab === 'riwayat' ? 'riwayat' : 'aktif'
   const baseTabOrders = filterAccountOrders(orders, {
-    tab: activeTab,
+    tab: orderTab,
     userId: currentUser?.id,
   })
   const filteredOrders = filterAccountOrders(orders, {
-    tab: activeTab,
+    tab: orderTab,
     query,
     statusFilter,
     userId: currentUser?.id,
@@ -164,7 +199,7 @@ export function AccountOrdersView() {
   const statusOptions = activeTab === 'aktif' ? ACTIVE_STATUS_OPTIONS : HISTORY_STATUS_OPTIONS
 
   function handleTabChange(nextValue: string) {
-    setActiveTab(nextValue as AccountOrdersTab)
+    setActiveTab(nextValue as AccountOrdersTab | 'terakhir-dilihat')
     setStatusFilter('all')
     setQuery('')
   }
@@ -177,122 +212,147 @@ export function AccountOrdersView() {
 
       <CardContent className='flex flex-col gap-5'>
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList variant='line' className='w-full justify-start border-b border-border'>
+          <TabsList
+            variant='line'
+            className='h-auto w-full flex-wrap justify-start border-b border-border'
+          >
             <TabsTrigger value='aktif' className='flex-none px-4'>
               Aktif
             </TabsTrigger>
             <TabsTrigger value='riwayat' className='flex-none px-4'>
               Riwayat
             </TabsTrigger>
+            {currentUser?.role === 'buyer' && (
+              <TabsTrigger value='terakhir-dilihat' className='flex-none px-4'>
+                Terakhir dilihat
+              </TabsTrigger>
+            )}
           </TabsList>
 
-          <TabsContent value={activeTab} className='flex flex-col gap-4 pt-4'>
-            {isPending ? (
-              <div className='flex flex-col gap-3'>
-                <Skeleton className='h-28 w-full rounded-xl' />
-                <Skeleton className='h-28 w-full rounded-xl' />
-              </div>
-            ) : isError ? (
-              <Alert variant='destructive'>
-                <AlertDescription className='flex flex-wrap items-center justify-between gap-2'>
-                  <span>Daftar pesanan gagal dimuat.</span>
-                  <Button type='button' variant='outline' size='sm' onClick={() => refetch()}>
-                    Coba lagi
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            ) : baseTabOrders.length === 0 ? (
-              <Empty className='border border-dashed'>
-                <EmptyHeader>
-                  <EmptyMedia variant='icon'>
-                    <PackageOpen aria-hidden='true' />
-                  </EmptyMedia>
-                  <EmptyTitle>
-                    {activeTab === 'aktif'
-                      ? 'Belum ada pesanan aktif'
-                      : 'Belum ada riwayat pesanan'}
-                  </EmptyTitle>
-                  <EmptyDescription>
-                    {activeTab === 'aktif'
-                      ? 'Pesanan yang menunggu pembayaran atau siap diambil akan muncul di sini.'
-                      : 'Pesanan yang telah selesai atau dibatalkan akan tercatat di sini.'}
-                  </EmptyDescription>
-                </EmptyHeader>
-                <EmptyContent>
-                  <Button nativeButton={false} render={<Link href='/pasar' />}>
-                    Cari hasil panen
-                  </Button>
-                </EmptyContent>
-              </Empty>
-            ) : (
-              <>
-                <div className='flex flex-col gap-3 sm:flex-row sm:items-center'>
-                  <InputGroup className='flex-1'>
-                    <InputGroupAddon align='inline-start'>
-                      <Search aria-hidden='true' />
-                    </InputGroupAddon>
-                    <InputGroupInput
-                      type='search'
-                      aria-label='Cari pesanan berdasarkan komoditas atau nomor pesanan'
-                      placeholder='Cari komoditas atau no. pesanan'
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                    />
-                  </InputGroup>
-
-                  <Select
-                    value={statusFilter}
-                    onValueChange={(value) =>
-                      setStatusFilter((value as OrderStatus | 'all') ?? 'all')
-                    }
-                  >
-                    <SelectTrigger className='w-full sm:w-56' aria-label='Filter status pesanan'>
-                      <SelectValue placeholder='Semua status' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {statusOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+          {currentUser?.role === 'buyer' && (
+            <TabsContent value='terakhir-dilihat' className='pt-4'>
+              <AccountRecentlyViewed key={currentUser.id} userId={currentUser.id} />
+            </TabsContent>
+          )}
+          {activeTab !== 'terakhir-dilihat' && (
+            <TabsContent value={activeTab} className='flex flex-col gap-4 pt-4'>
+              {isPending ? (
+                <div className='flex flex-col gap-3'>
+                  <Skeleton className='h-28 w-full rounded-xl' />
+                  <Skeleton className='h-28 w-full rounded-xl' />
                 </div>
+              ) : isError ? (
+                <Alert variant='destructive'>
+                  <AlertDescription className='flex flex-wrap items-center justify-between gap-2'>
+                    <span>Daftar pesanan gagal dimuat.</span>
+                    <Button type='button' variant='outline' size='sm' onClick={() => refetch()}>
+                      Coba lagi
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              ) : baseTabOrders.length === 0 ? (
+                <Empty className='border border-dashed'>
+                  <EmptyHeader>
+                    <EmptyMedia variant='icon'>
+                      <PackageOpen aria-hidden='true' />
+                    </EmptyMedia>
+                    <EmptyTitle>
+                      {activeTab === 'aktif'
+                        ? 'Belum ada pesanan aktif'
+                        : 'Belum ada riwayat pesanan'}
+                    </EmptyTitle>
+                    <EmptyDescription>
+                      {activeTab === 'aktif'
+                        ? 'Pesanan yang menunggu pembayaran atau siap diambil akan muncul di sini.'
+                        : 'Pesanan yang telah selesai atau dibatalkan akan tercatat di sini.'}
+                    </EmptyDescription>
+                  </EmptyHeader>
+                  <EmptyContent>
+                    <Button nativeButton={false} render={<Link href='/pasar' />}>
+                      Cari hasil panen
+                    </Button>
+                  </EmptyContent>
+                </Empty>
+              ) : (
+                <>
+                  <div className='flex flex-col gap-3 sm:flex-row sm:items-center'>
+                    <InputGroup className='flex-1'>
+                      <InputGroupAddon align='inline-start'>
+                        <Search aria-hidden='true' />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        type='search'
+                        aria-label='Cari pesanan berdasarkan komoditas atau nomor pesanan'
+                        placeholder='Cari komoditas atau no. pesanan'
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value)}
+                      />
+                    </InputGroup>
 
-                {filteredOrders.length === 0 ? (
-                  <Empty className='border border-dashed'>
-                    <EmptyHeader>
-                      <EmptyTitle>Pesanan tidak ditemukan</EmptyTitle>
-                      <EmptyDescription>
-                        Ubah kata kunci pencarian atau pilih status pesanan lainnya.
-                      </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent>
-                      <Button
-                        type='button'
-                        variant='outline'
-                        size='sm'
-                        onClick={() => {
-                          setQuery('')
-                          setStatusFilter('all')
-                        }}
-                      >
-                        Reset filter
-                      </Button>
-                    </EmptyContent>
-                  </Empty>
-                ) : (
-                  <div className='flex flex-col gap-3'>
-                    {filteredOrders.map((order) => (
-                      <OrderListItem key={order.id} order={order} />
-                    ))}
+                    <Select
+                      value={statusFilter}
+                      onValueChange={(value) =>
+                        setStatusFilter((value as OrderStatus | 'all') ?? 'all')
+                      }
+                    >
+                      <SelectTrigger className='w-full sm:w-56' aria-label='Filter status pesanan'>
+                        <SelectValue placeholder='Semua status' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {statusOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-              </>
-            )}
-          </TabsContent>
+
+                  {filteredOrders.length === 0 ? (
+                    <Empty className='border border-dashed'>
+                      <EmptyHeader>
+                        <EmptyTitle>Pesanan tidak ditemukan</EmptyTitle>
+                        <EmptyDescription>
+                          Ubah kata kunci pencarian atau pilih status pesanan lainnya.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                      <EmptyContent>
+                        <Button
+                          type='button'
+                          variant='outline'
+                          size='sm'
+                          onClick={() => {
+                            setQuery('')
+                            setStatusFilter('all')
+                          }}
+                        >
+                          Reset filter
+                        </Button>
+                      </EmptyContent>
+                    </Empty>
+                  ) : (
+                    <div className='flex flex-col gap-3'>
+                      {filteredOrders.map((order) => (
+                        <OrderListItem
+                          key={order.id}
+                          order={order}
+                          reorderHref={
+                            activeTab === 'riwayat' && !offersPending
+                              ? availableOfferIds.has(order.offerId)
+                                ? buildOfferDetailHref(order.offerId)
+                                : '/pasar?' + new URLSearchParams({ q: order.commodityName })
+                              : undefined
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
       </CardContent>
     </Card>

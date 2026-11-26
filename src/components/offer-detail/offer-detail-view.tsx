@@ -26,6 +26,8 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { useCurrentUser } from '@/hooks/api/use-auth'
+import { recordRecentlyViewed } from '@/lib/data/recently-viewed'
+import { useOfferFavorites } from '@/hooks/api/use-favorites'
 import { useOfferDetail, useOffers } from '@/hooks/api/use-offers'
 import { getRelatedOffers, getSafeOfferPhotoUrls } from '@/lib/data/offer-detail-helpers'
 import type { Offer } from '@/types/api/offers'
@@ -49,7 +51,6 @@ export function OfferDetailView({ offerId }: OfferDetailViewProps) {
   const { data: allOffers = [] } = useOffers()
 
   const [nowMs, setNowMs] = useState<number | null>(null)
-  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => new Set())
   const [shareStates, setShareStates] = useState<Record<string, ShareButtonState>>({})
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const [mobileReserveOpen, setMobileReserveOpen] = useState(false)
@@ -123,30 +124,20 @@ export function OfferDetailView({ offerId }: OfferDetailViewProps) {
     [selectedLocation]
   )
 
+  const viewedOfferId = offer?.id
+  const buyerId = currentUser?.role === 'buyer' ? currentUser.id : undefined
+  useEffect(() => {
+    if (buyerId && viewedOfferId) recordRecentlyViewed(buyerId, viewedOfferId)
+  }, [buyerId, viewedOfferId])
+
   const relatedOffers = useMemo(() => {
     if (!offer) return []
     return getRelatedOffers(offer, allOffers, referenceCoordinates, nowMs, 8)
   }, [allOffers, nowMs, offer, referenceCoordinates])
 
-  const handleToggleFavorite = useCallback(
-    (targetOffer: Offer) => {
-      if (!currentUser) {
-        setAuthDialogOpen(true)
-        return
-      }
-      setFavoriteIds((prev) => {
-        const next = new Set(prev)
-        if (next.has(targetOffer.id)) {
-          next.delete(targetOffer.id)
-          announcePolite(`${targetOffer.commodityName} dihapus dari favorit.`)
-        } else {
-          next.add(targetOffer.id)
-          announcePolite(`${targetOffer.commodityName} disimpan ke favorit.`)
-        }
-        return next
-      })
-    },
-    [announcePolite, currentUser]
+  const { favoriteIds, toggleFavorite: handleToggleFavorite } = useOfferFavorites(
+    () => setAuthDialogOpen(true),
+    announcePolite
   )
 
   const handleShareOffer = useCallback(
@@ -289,6 +280,7 @@ export function OfferDetailView({ offerId }: OfferDetailViewProps) {
 
             <OfferDetailSections
               offer={offer}
+              nowMs={nowMs}
               locationLabel={selectedLocation.label}
               distanceLabel={distanceLabel}
               sectionAnchors={sectionAnchors}
