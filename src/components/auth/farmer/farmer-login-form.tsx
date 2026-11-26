@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from '@tanstack/react-form'
 import { AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -20,12 +20,15 @@ import { Spinner } from '@/components/ui/spinner'
 import { FarmerAuthShell } from '@/components/auth/farmer/farmer-auth-shell'
 import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
 import { useLoginFarmer } from '@/hooks/api/use-auth'
+import { sanitizeCallbackUrl } from '@/lib/auth/rbac'
 import { LoginRequestSchema } from '@/types/api/auth'
 
 export function FarmerLoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const loginMutation = useLoginFarmer()
+  const nextPath = sanitizeCallbackUrl(searchParams.get('next'), '/dashboard')
 
   const form = useForm({
     defaultValues: {
@@ -41,7 +44,8 @@ export function FarmerLoginForm() {
         router.push('/daftar-petani?lanjut=1')
         return
       }
-      router.push('/dashboard')
+      router.push(nextPath)
+      router.refresh()
     },
   })
 
@@ -173,6 +177,12 @@ export function FarmerLoginForm() {
             className='inline-flex min-h-10 items-center rounded-sm px-2 font-medium text-primary underline underline-offset-4 transition-opacity pointer-coarse:min-h-11 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           >
             Daftar jadi petani sekarang
+          </Link>
+          <Link
+            href='/masuk-admin'
+            className='inline-flex min-h-10 items-center rounded-sm px-2 text-sm text-muted-foreground underline underline-offset-4 transition-colors pointer-coarse:min-h-11 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          >
+            Masuk sebagai Admin Operasional
           </Link>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { FarmerLoginForm } from '@/components/auth/farmer/farmer-login-form'
 import { buildNoIndexMetadata } from '@/lib/seo'
@@ -8,5 +9,9 @@ export const metadata: Metadata = buildNoIndexMetadata({
 })
 
 export default function FarmerLoginPage() {
-  return <FarmerLoginForm />
+  return (
+    <Suspense>
+      <FarmerLoginForm />
+    </Suspense>
+  )
 }
