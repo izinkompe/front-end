@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ChevronDown, ChevronRight, Heart, LayoutGrid, Menu, Sprout, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Heart, LayoutGrid, Menu, X } from 'lucide-react'
 import { HeaderNotificationsPopover } from './header-notifications-popover'
 import { BuyerAuthDialog } from '@/components/auth/buyer-auth-dialog'
 import { useFavoritesSidebar } from '@/components/favorites/favorites-sidebar-provider'
+import { BrandLogo } from '@/components/shared/brand-logo'
 import { HeroSearchCombobox } from '@/components/home/hero-search-combobox'
 import {
   buildBuyerSearchHref,
@@ -263,33 +264,10 @@ export function GlobalHeader({
                   </CollapsibleTrigger>
                 </div>
 
-                <Link
-                  href='/'
-                  aria-label='PanganTani - Beranda'
-                  className={cn(
-                    'inline-flex min-h-11 shrink-0 items-center gap-2.5 rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2',
-                    isTransparent ? 'focus-visible:ring-white/60' : 'focus-visible:ring-ring'
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors duration-200',
-                      isTransparent
-                        ? 'bg-white text-primary shadow-sm'
-                        : 'bg-primary text-primary-foreground'
-                    )}
-                  >
-                    <Sprout className='size-5' aria-hidden='true' />
-                  </span>
-                  <span
-                    className={cn(
-                      'hidden text-lg font-bold tracking-tight sm:inline',
-                      isTransparent ? 'text-white' : 'text-foreground'
-                    )}
-                  >
-                    PanganTani
-                  </span>
-                </Link>
+                <BrandLogo
+                  variant={isTransparent ? 'transparent' : 'default'}
+                  wordmarkClassName='hidden sm:inline'
+                />
 
                 <form
                   onSubmit={handleSearchSubmit}

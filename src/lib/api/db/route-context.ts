@@ -25,3 +25,23 @@ export function requireFarmer(userId: string | null) {
     throw new ApiError(403, 'Tindakan ini hanya untuk petani', 'FORBIDDEN')
   return user
 }
+
+export function requireAdmin(userId: string | null) {
+  const user = userId ? usersCollection.get(userId) : undefined
+  if (!user) throw new ApiError(401, 'Masuk sebagai admin untuk melanjutkan', 'UNAUTHORIZED')
+  if (user.role !== 'admin')
+    throw new ApiError(403, 'Tindakan ini hanya untuk admin operasional', 'FORBIDDEN')
+  return user
+}
+
+export function requireRole<T extends string>(
+  userId: string | null,
+  allowedRoles: ReadonlyArray<T>
+) {
+  const user = userId ? usersCollection.get(userId) : undefined
+  if (!user) throw new ApiError(401, 'Autentikasi diperlukan untuk melanjutkan', 'UNAUTHORIZED')
+  if (!allowedRoles.includes(user.role as T)) {
+    throw new ApiError(403, 'Anda tidak memiliki izin untuk mengakses sumber daya ini', 'FORBIDDEN')
+  }
+  return user
+}

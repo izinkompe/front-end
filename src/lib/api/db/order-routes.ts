@@ -37,20 +37,24 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
   if (!activeUser) {
     throw new ApiError(401, 'Masuk untuk mengakses pesanan', 'UNAUTHORIZED')
   }
+  const isFarmerRead =
+    activeUser.role === 'farmer' &&
+    method === 'GET' &&
+    (endpoint === '/api/orders' || Boolean(route[1]))
   const isFarmerPickup =
     activeUser.role === 'farmer' && method === 'POST' && endpoint.endsWith('/ready-for-pickup')
-  if (activeUser.role !== 'buyer' && !isFarmerPickup) {
+  if (activeUser.role !== 'buyer' && !isFarmerPickup && !isFarmerRead) {
     throw new ApiError(403, 'Gunakan akun pembeli untuk mengakses pesanan ini', 'FORBIDDEN')
   }
   const requestedOrderId = route[1]
-  const ownerField = isFarmerPickup ? 'farmerId' : 'buyerId'
+  const ownerField = isFarmerPickup || isFarmerRead ? 'farmerId' : 'buyerId'
   if (requestedOrderId && ordersCollection.get(requestedOrderId)?.[ownerField] !== activeUser.id) {
     throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
   }
 
   if (endpoint === '/api/orders' && method === 'GET') {
     let items = Array.from(ordersCollection.values()).filter(
-      (item) => item.buyerId === activeUser.id
+      (item) => item[ownerField] === activeUser.id
     )
     if (params?.status) {
       items = items.filter((item) => item.status === params?.status)

@@ -31,6 +31,10 @@ const clientSchema = z.object({
     .enum(['true', 'false'])
     .optional()
     .transform((val) => val !== 'false'),
+  NEXT_PUBLIC_AUTH_RELAXED: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((val) => val === 'true'),
 })
 
 const mergedSchema = baseServerSchema.merge(clientSchema).superRefine((data, ctx) => {
@@ -64,6 +68,7 @@ function validateEnv(): Env {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_USE_MOCK: process.env.NEXT_PUBLIC_USE_MOCK,
+    NEXT_PUBLIC_AUTH_RELAXED: process.env.NEXT_PUBLIC_AUTH_RELAXED,
   })
 
   if (!parsedClient.success) {

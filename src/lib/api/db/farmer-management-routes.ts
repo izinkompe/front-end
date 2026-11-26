@@ -1,4 +1,5 @@
 import { ApiError } from '../errors'
+import { offersCollection } from './collections/offers'
 import { usersCollection } from './collections/users'
 import {
   ensureFarmerFarms,
@@ -65,6 +66,13 @@ export function handleFarmerManagementRoute(ctx: FarmerManagementRouteContext) {
       draft.updatedAt = new Date().toISOString()
     })
     return { handled: true, data: farmerStoreSettingsCollection.get(current.farmerId) }
+  }
+
+  if (endpoint === '/api/farmer/offers' && method === 'GET') {
+    const items = Array.from(offersCollection.values()).filter(
+      (offer) => offer.farmerId === farmer.id
+    )
+    return { handled: true, data: items }
   }
 
   if (endpoint === '/api/farmer/farms' && method === 'GET') {

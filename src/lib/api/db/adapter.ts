@@ -12,11 +12,26 @@ import { handleOrderRoute } from './order-routes'
 import { handleProfileRoute } from './profile-routes'
 import { handleFarmerRoute } from './farmer-routes'
 import { handleFarmerManagementRoute } from './farmer-management-routes'
+import { handleAdminRoute } from './admin-routes'
+import { requireAdmin } from './route-context'
+import { isAuthRelaxed } from '@/lib/auth/rbac'
+import { UserRoleSchema, type User } from '@/types/api/auth'
 import type { DistributionStats } from '@/types/api/admin'
-import type { User } from '@/types/api/auth'
 import { matchesOfferCategory } from '@/lib/data/categories'
 
 let sessionUserId: string | null = null
+
+const FARMER_DEMO_PASSWORDS: Record<string, ReadonlyArray<string>> = {
+  'joko@suburmakmur.id': ['PetaniJoko2026!', 'password123'],
+  'sumarni@tanibarokah.id': ['PetaniSumarni2026!'],
+  'dedi@tanimudagarut.id': ['PetaniDedi2026!'],
+}
+
+const ADMIN_DEMO_PASSWORDS: Record<string, string> = {
+  'admin@pangantani.id': 'AdminPangan2026!',
+  'rina.verifikator@pangantani.id': 'Verifikasi2026!',
+  'bagas.audit@pangantani.id': 'Moderasi2026!',
+}
 
 interface AdapterOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>
@@ -75,6 +90,7 @@ export const tanstackDbAdapter = {
     if (endpoint === '/api/auth/login-farmer' && method === 'POST') {
       const body = parseJsonBody<{ email?: string; password?: string }>(options.body)
       const normalizedEmail = (body.email || '').trim().toLowerCase()
+      const password = body.password || ''
       const user = Array.from(usersCollection.values()).find(
         (item) => item.email.toLowerCase() === normalizedEmail
       )
@@ -92,9 +108,34 @@ export const tanstackDbAdapter = {
           'WRONG_ROLE'
         )
       }
+      const allowedPasswords = FARMER_DEMO_PASSWORDS[normalizedEmail]
+      if (!allowedPasswords || !allowedPasswords.includes(password)) {
+        throw new ApiError(401, 'Email atau kata sandi petani tidak sesuai.', 'UNAUTHORIZED')
+      }
       sessionUserId = user.id
       return {
         token: 'dummy-token-' + Date.now(),
+        user,
+      }
+    }
+
+    if (endpoint === '/api/auth/login-admin' && method === 'POST') {
+      const body = parseJsonBody<{ email?: string; password?: string }>(options.body)
+      const normalizedEmail = (body.email || '').trim().toLowerCase()
+      const password = body.password || ''
+      const user = Array.from(usersCollection.values()).find(
+        (item) => item.email.toLowerCase() === normalizedEmail
+      )
+      if (!user || user.role !== 'admin') {
+        throw new ApiError(401, 'Email atau kata sandi admin tidak sesuai.', 'UNAUTHORIZED')
+      }
+      const expectedPassword = ADMIN_DEMO_PASSWORDS[normalizedEmail]
+      if (!expectedPassword || expectedPassword !== password) {
+        throw new ApiError(401, 'Email atau kata sandi admin tidak sesuai.', 'UNAUTHORIZED')
+      }
+      sessionUserId = user.id
+      return {
+        token: 'dummy-admin-token-' + Date.now(),
         user,
       }
     }
@@ -167,6 +208,30 @@ export const tanstackDbAdapter = {
     if (endpoint === '/api/auth/logout' && method === 'POST') {
       sessionUserId = null
       return { success: true }
+    }
+
+    if (endpoint === '/api/auth/preview-role' && method === 'POST') {
+      if (!isAuthRelaxed()) {
+        throw new ApiError(
+          403,
+          'Pengalih peran pratinjau dinonaktifkan pada mode autentikasi ketat',
+          'FORBIDDEN'
+        )
+      }
+      const payload = parseJsonBody<{ role?: unknown }>(options.body)
+      const parsedRole = UserRoleSchema.safeParse(payload.role)
+      if (!parsedRole.success) {
+        throw new ApiError(400, 'Peran pratinjau tidak valid', 'INVALID_ROLE')
+      }
+      const targetRole = parsedRole.data
+      const targetUser = Array.from(usersCollection.values()).find(
+        (item) => item.role === targetRole
+      )
+      if (!targetUser) {
+        throw new ApiError(404, 'Akun pratinjau untuk peran tersebut tidak ditemukan', 'NOT_FOUND')
+      }
+      sessionUserId = targetUser.id
+      return { user: targetUser }
     }
 
     const profileResult = handleProfileRoute({
@@ -313,6 +378,9 @@ export const tanstackDbAdapter = {
     if (needsBoardResult.handled) return needsBoardResult.data
 
     if (endpoint === '/api/admin/stats/distribution' && method === 'GET') {
+      if (!isAuthRelaxed() || activeSessionUserId) {
+        requireAdmin(activeSessionUserId)
+      }
       const stats: DistributionStats = {
         totalDistributedWeightKg: 14250,
         totalRescuedFoodKg: 11800,
@@ -323,6 +391,9 @@ export const tanstackDbAdapter = {
       }
       return stats
     }
+
+    const adminResult = handleAdminRoute(routeContext)
+    if (adminResult.handled) return adminResult.data
 
     throw new ApiError(
       404,

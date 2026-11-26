@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Lock, Sprout } from 'lucide-react'
+import { Lock } from 'lucide-react'
+import { BrandLogo } from '@/components/shared/brand-logo'
 import { Progress, ProgressLabel } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
@@ -26,16 +27,7 @@ export function FarmerAuthShell({
     <div className='flex min-h-dvh flex-col bg-background text-foreground'>
       <header className='w-full border-b border-border bg-background'>
         <div className='mx-auto flex min-h-16 max-w-5xl items-center justify-center px-4 py-2 sm:px-6'>
-          <Link
-            href='/'
-            aria-label='Kembali ke beranda PanganTani'
-            className='inline-flex min-h-11 items-center gap-2.5 rounded-lg px-2.5 py-1.5 transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-          >
-            <span className='flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
-              <Sprout className='size-5' aria-hidden='true' />
-            </span>
-            <span className='text-lg font-semibold text-foreground'>PanganTani</span>
-          </Link>
+          <BrandLogo ariaLabel='Kembali ke beranda PanganTani' className='px-2.5 py-1.5' />
         </div>
       </header>
 

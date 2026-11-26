@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { AccountLink } from '@/components/auth/account-link'
+import { BrandLogo } from '@/components/shared/brand-logo'
 import { buttonVariants } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
@@ -151,7 +152,7 @@ export function GlobalFooter({ containerClassName = 'max-w-7xl' }: GlobalFooterP
           ))}
 
           <div className='flex flex-col gap-3'>
-            <h3 className='text-base font-semibold text-secondary-foreground'>PanganTani</h3>
+            <BrandLogo size='sm' className='w-fit px-0' />
             <div className='flex flex-wrap items-center gap-1'>
               {socialLinks.map((item) => {
                 const Icon = item.icon

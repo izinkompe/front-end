@@ -5,7 +5,14 @@ import { z } from 'zod'
 import { apiClient } from '@/lib/api/client'
 import { ApiError } from '@/lib/api/errors'
 import { queryKeys } from '@/lib/api/query-keys'
+import { isAuthRelaxed } from '@/lib/auth/rbac'
 import {
+  clearSessionRoleCookies,
+  setPreviewRoleCookie,
+  setSessionRoleCookies,
+} from '@/lib/auth/session-cookies'
+import {
+  UserRoleSchema,
   UserSchema,
   type BuyerRegisterRequest,
   type FarmerRegisterRequest,
@@ -15,6 +22,7 @@ import {
   type SaveBuyerAddressRequest,
   type UpdateProfileRequest,
   type User,
+  type UserRole,
   type VerifyPhoneRequest,
 } from '@/types/api/auth'
 
@@ -48,6 +56,7 @@ export function useLogin() {
         body: JSON.stringify(credentials),
       }),
     onSuccess: (data) => {
+      setSessionRoleCookies(data.user.role, data.token)
       queryClient.setQueryData(queryKeys.auth.me, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
     },
@@ -64,9 +73,28 @@ export function useLoginFarmer() {
         body: JSON.stringify(credentials),
       }),
     onSuccess: (data) => {
+      setSessionRoleCookies(data.user.role, data.token)
       queryClient.setQueryData(queryKeys.auth.me, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
       queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
+    },
+  })
+}
+
+export function useLoginAdmin() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (credentials: LoginRequest) =>
+      apiClient<{ token: string; user: User }>('/api/auth/login-admin', undefined, {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      }),
+    onSuccess: (data) => {
+      setSessionRoleCookies(data.user.role, data.token)
+      queryClient.setQueryData(queryKeys.auth.me, data.user)
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats() })
     },
   })
 }
@@ -81,6 +109,7 @@ export function useRegisterBuyer() {
         body: JSON.stringify(payload),
       }),
     onSuccess: (data) => {
+      setSessionRoleCookies(data.user.role, data.token)
       queryClient.setQueryData(queryKeys.auth.me, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
     },
@@ -97,6 +126,7 @@ export function useRegisterFarmer() {
         body: JSON.stringify(payload),
       }),
     onSuccess: (data) => {
+      setSessionRoleCookies(data.user.role, data.token)
       queryClient.setQueryData(queryKeys.auth.me, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
       queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
@@ -177,9 +207,38 @@ export function useLogout() {
         method: 'POST',
       }),
     onSuccess: () => {
+      clearSessionRoleCookies()
       queryClient.setQueryData(queryKeys.auth.me, null)
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
+    },
+  })
+}
+
+export function useSwitchPreviewRole() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (role: UserRole) => {
+      if (!isAuthRelaxed()) {
+        throw new ApiError(
+          403,
+          'Pengalih peran pratinjau tidak tersedia pada mode autentikasi ketat',
+          'FORBIDDEN'
+        )
+      }
+      const parsed = UserRoleSchema.parse(role)
+      return apiClient<{ user: User }>('/api/auth/preview-role', z.object({ user: UserSchema }), {
+        method: 'POST',
+        body: JSON.stringify({ role: parsed }),
+      })
+    },
+    onSuccess: (data) => {
+      setPreviewRoleCookie(data.user.role)
+      setSessionRoleCookies(data.user.role, 'preview-session')
+      queryClient.setQueryData(queryKeys.auth.me, data.user)
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats() })
     },
   })
 }
