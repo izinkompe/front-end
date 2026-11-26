@@ -4,16 +4,27 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { id } from 'date-fns/locale'
 import {
+  AlarmClock,
   Apple,
+  Boxes,
   Calendar as CalendarIcon,
+  CalendarClock,
   Carrot,
   ChevronDown,
   Clock,
+  Compass,
+  Globe,
+  Hourglass,
+  Layers,
   LayoutGrid,
   Leaf,
+  LocateFixed,
   MapPin,
   Navigation,
+  Package,
   Search,
+  ShoppingBasket,
+  Truck,
   Wheat,
   type LucideIcon,
 } from 'lucide-react'
@@ -32,7 +43,6 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { cn } from '@/lib/utils'
 import {
   buildBuyerSearchHref,
   categoryFilterOptions,
@@ -64,6 +74,80 @@ const categoryIcons: Record<BuyerCategoryFilter, LucideIcon> = {
   buah: Apple,
   'padi-biji': Wheat,
   'rempah-umbi': Carrot,
+}
+
+const radiusIcons: Record<BuyerRadiusOption, LucideIcon> = {
+  '5': LocateFixed,
+  '10': MapPin,
+  '25': Compass,
+  '50': Globe,
+}
+
+const minStockIcons: Record<BuyerMinStockOption, LucideIcon> = {
+  semua: Layers,
+  '10': ShoppingBasket,
+  '25': Package,
+  '50': Boxes,
+  '100': Truck,
+}
+
+const deadlineIcons: Record<BuyerDeadlineOption, LucideIcon> = {
+  semua: Clock,
+  '3h': AlarmClock,
+  '6h': Hourglass,
+  today: CalendarClock,
+}
+
+const controlTriggerClassName =
+  'min-h-12 w-full border-input bg-background text-foreground hover:bg-muted/50 dark:bg-input/30 dark:hover:bg-input/50'
+
+const controlIconClassName = 'size-4 shrink-0 text-muted-foreground'
+
+interface HeroFilterSelectProps<T extends string> {
+  value: T
+  onValueChange: (value: string | null) => void
+  options: ReadonlyArray<{ value: T; label: string }>
+  icons: Record<T, LucideIcon>
+  ariaLabel: string
+  fallbackLabel: string
+}
+
+function HeroFilterSelect<T extends string>({
+  value,
+  onValueChange,
+  options,
+  icons,
+  ariaLabel,
+  fallbackLabel,
+}: HeroFilterSelectProps<T>) {
+  const selectedLabel = options.find((option) => option.value === value)?.label ?? fallbackLabel
+  const SelectedIcon: LucideIcon = icons[value]
+
+  return (
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger className={controlTriggerClassName} aria-label={ariaLabel}>
+        <SelectValue>
+          <SelectedIcon className={controlIconClassName} aria-hidden='true' />
+          <span className='truncate text-foreground'>{selectedLabel}</span>
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectGroup>
+          {options.map((option) => {
+            const OptionIcon: LucideIcon = icons[option.value]
+            return (
+              <SelectItem key={option.value} value={option.value}>
+                <span className='flex items-center gap-2'>
+                  <OptionIcon className={controlIconClassName} aria-hidden='true' />
+                  <span>{option.label}</span>
+                </span>
+              </SelectItem>
+            )
+          })}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  )
 }
 
 function getTodayStart() {
@@ -99,18 +183,16 @@ function PickupCalendarPopover({
           <Button
             type='button'
             variant='outline'
-            className='min-h-12 w-full justify-between font-normal'
+            className={`${controlTriggerClassName} justify-between py-2 pr-3 pl-3.5 font-normal hover:text-foreground aria-expanded:bg-muted/50 aria-expanded:text-foreground`}
             aria-label='Pilih tanggal jadwal pengambilan mandiri'
           />
         }
       >
         <span className='flex min-w-0 items-center gap-2'>
-          <CalendarIcon data-icon='inline-start' aria-hidden='true' />
-          <span className={cn('truncate', !selectedDate && 'text-muted-foreground')}>
-            {pickupDateLabel}
-          </span>
+          <CalendarIcon className={controlIconClassName} aria-hidden='true' />
+          <span className='truncate text-foreground'>{pickupDateLabel}</span>
         </span>
-        <ChevronDown data-icon='inline-end' aria-hidden='true' />
+        <ChevronDown className={controlIconClassName} aria-hidden='true' />
       </PopoverTrigger>
 
       <PopoverContent align='start' className='w-auto min-w-80 gap-0 p-0'>
@@ -160,15 +242,6 @@ export function BuyerHeroSearch() {
   const [today, setToday] = useState<Date | undefined>(undefined)
 
   const activeModeMeta = searchModes.find((item) => item.value === mode) ?? searchModes[0]
-  const selectedCategoryLabel =
-    categoryFilterOptions.find((option) => option.value === category)?.label ?? 'Semua kategori'
-  const SelectedCategoryIcon = categoryIcons[category]
-  const selectedRadiusLabel =
-    radiusOptions.find((option) => option.value === radiusKm)?.label ?? 'Radius 10 km'
-  const selectedMinStockLabel =
-    minStockOptions.find((option) => option.value === minStockKg)?.label ?? 'Semua stok'
-  const selectedDeadlineLabel =
-    deadlineOptions.find((option) => option.value === deadlineWindow)?.label ?? 'Semua batas waktu'
 
   function handleModeChange(nextValues: string[]) {
     const next = nextValues[0]
@@ -268,21 +341,21 @@ export function BuyerHeroSearch() {
       >
         <ToggleGroupItem
           value='katalog'
-          className='min-h-10 rounded-full px-4 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-pressed:bg-primary/10 aria-pressed:font-semibold aria-pressed:text-primary'
+          className='min-h-10 rounded-full px-4 text-sm font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <Search data-icon='inline-start' aria-hidden='true' />
           <span>Cari Panen</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value='peta'
-          className='min-h-10 rounded-full px-4 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-pressed:bg-primary/10 aria-pressed:font-semibold aria-pressed:text-primary'
+          className='min-h-10 rounded-full px-4 text-sm font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <MapPin data-icon='inline-start' aria-hidden='true' />
           <span>Peta Radius</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value='segera-ditutup'
-          className='min-h-10 rounded-full px-4 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-pressed:bg-primary/10 aria-pressed:font-semibold aria-pressed:text-primary'
+          className='min-h-10 rounded-full px-4 text-sm font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <Clock data-icon='inline-start' aria-hidden='true' />
           <span>Segera Ditutup</span>
@@ -296,9 +369,9 @@ export function BuyerHeroSearch() {
           aria-label='Pencarian panen surplus'
           className='grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_auto] lg:items-center'
         >
-          <InputGroup className='min-h-12 bg-background sm:col-span-2 lg:col-span-1'>
+          <InputGroup className='min-h-12 border-input bg-background sm:col-span-2 lg:col-span-1 dark:bg-input/30'>
             <InputGroupAddon align='inline-start'>
-              <Search aria-hidden='true' />
+              <Search className={controlIconClassName} aria-hidden='true' />
             </InputGroupAddon>
             <InputGroupInput
               type='search'
@@ -312,38 +385,14 @@ export function BuyerHeroSearch() {
 
           {mode === 'katalog' && (
             <>
-              <Select value={category} onValueChange={handleCategoryChange}>
-                <SelectTrigger
-                  className='min-h-12 w-full bg-background'
-                  aria-label='Pilih kategori komoditas'
-                >
-                  <SelectValue>
-                    <SelectedCategoryIcon
-                      className='size-4 shrink-0 text-muted-foreground'
-                      aria-hidden='true'
-                    />
-                    <span className='truncate'>{selectedCategoryLabel}</span>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {categoryFilterOptions.map((option) => {
-                      const CategoryIcon = categoryIcons[option.value]
-                      return (
-                        <SelectItem key={option.value} value={option.value}>
-                          <span className='flex items-center gap-2'>
-                            <CategoryIcon
-                              className='size-4 shrink-0 text-muted-foreground'
-                              aria-hidden='true'
-                            />
-                            <span>{option.label}</span>
-                          </span>
-                        </SelectItem>
-                      )
-                    })}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <HeroFilterSelect
+                value={category}
+                onValueChange={handleCategoryChange}
+                options={categoryFilterOptions}
+                icons={categoryIcons}
+                ariaLabel='Pilih kategori komoditas'
+                fallbackLabel='Semua kategori'
+              />
 
               <PickupCalendarPopover
                 open={calendarOpen}
@@ -359,63 +408,36 @@ export function BuyerHeroSearch() {
 
           {mode === 'peta' && (
             <>
-              <Select value={radiusKm} onValueChange={handleRadiusChange}>
-                <SelectTrigger
-                  className='min-h-12 w-full bg-background'
-                  aria-label='Pilih radius jarak pencarian'
-                >
-                  <SelectValue>{selectedRadiusLabel}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {radiusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <HeroFilterSelect
+                value={radiusKm}
+                onValueChange={handleRadiusChange}
+                options={radiusOptions}
+                icons={radiusIcons}
+                ariaLabel='Pilih radius jarak pencarian'
+                fallbackLabel='Radius 10 km'
+              />
 
-              <Select value={minStockKg} onValueChange={handleMinStockChange}>
-                <SelectTrigger
-                  className='min-h-12 w-full bg-background'
-                  aria-label='Pilih minimum stok tersedia'
-                >
-                  <SelectValue>{selectedMinStockLabel}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {minStockOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <HeroFilterSelect
+                value={minStockKg}
+                onValueChange={handleMinStockChange}
+                options={minStockOptions}
+                icons={minStockIcons}
+                ariaLabel='Pilih minimum stok tersedia'
+                fallbackLabel='Semua stok'
+              />
             </>
           )}
 
           {mode === 'segera-ditutup' && (
             <>
-              <Select value={deadlineWindow} onValueChange={handleDeadlineChange}>
-                <SelectTrigger
-                  className='min-h-12 w-full bg-background'
-                  aria-label='Pilih batas waktu pemesanan'
-                >
-                  <SelectValue>{selectedDeadlineLabel}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {deadlineOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <HeroFilterSelect
+                value={deadlineWindow}
+                onValueChange={handleDeadlineChange}
+                options={deadlineOptions}
+                icons={deadlineIcons}
+                ariaLabel='Pilih batas waktu pemesanan'
+                fallbackLabel='Semua batas waktu'
+              />
 
               <PickupCalendarPopover
                 open={calendarOpen}
@@ -439,7 +461,7 @@ export function BuyerHeroSearch() {
         </form>
 
         <div className='mt-4 flex flex-col items-center justify-between gap-1.5 border-t border-border/80 pt-3.5 text-center sm:flex-row sm:text-left'>
-          <div className='flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm text-muted-foreground sm:justify-start'>
+          <div className='flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm text-foreground/75 sm:justify-start'>
             <span>
               {hasUpdatedLocation
                 ? `Lokasi Anda kini diatur ke ${selectedLocation.label}`
@@ -450,7 +472,7 @@ export function BuyerHeroSearch() {
               type='button'
               onClick={() => detectCurrentLocation()}
               disabled={locating}
-              className='inline-flex min-h-10 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-primary transition-opacity pointer-coarse:min-h-11 hover:underline underline-offset-4 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              className='inline-flex min-h-10 items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-primary transition-opacity pointer-coarse:min-h-11 hover:underline underline-offset-4 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-sidebar-primary'
             >
               <Navigation className='size-4 shrink-0 fill-current' aria-hidden='true' />
               <span>
@@ -464,7 +486,7 @@ export function BuyerHeroSearch() {
           </div>
 
           {locationMessage && (
-            <p role='status' aria-live='polite' className='text-sm text-muted-foreground'>
+            <p role='status' aria-live='polite' className='text-sm text-foreground/75'>
               {locationMessage}
             </p>
           )}
