@@ -23,6 +23,7 @@ export const mockNeedsBoardData: NeedRequest[] = [
     commodityName: 'Beras Medium atau Ramos',
     category: 'Padi & Biji-bijian',
     neededQuantityKg: 250,
+    fulfilledQuantityKg: 50,
     maxPricePerKg: 13000,
     targetDate: getRelativeDateIso(2),
     targetArea: 'Coblong, Bandung',
@@ -56,7 +57,7 @@ export const mockNeedsBoardData: NeedRequest[] = [
     targetDate: getRelativeDateIso(1),
     targetArea: 'Sukajadi, Bandung',
     notes: 'Bentuk tidak seragam atau grade B diterima untuk bahan dasar saus dan sup.',
-    status: 'partially_fulfilled',
+    status: 'open',
     responses: [
       {
         id: 'resp-002',
@@ -102,7 +103,7 @@ export const mockNeedsBoardData: NeedRequest[] = [
     targetDate: getRelativeDateIso(3),
     targetArea: 'Buahbatu, Bandung',
     notes: 'Ukuran kecil atau campur untuk stok bumbu giling mingguan.',
-    status: 'partially_fulfilled',
+    status: 'open',
     responses: [
       {
         id: 'resp-003',

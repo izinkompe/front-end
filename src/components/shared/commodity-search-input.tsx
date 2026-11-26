@@ -5,6 +5,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/in
 import { cn } from '@/lib/utils'
 
 interface CommoditySearchInputProps {
+  id?: string
   value: string
   onChange: (value: string) => void
   onClear?: () => void
@@ -15,6 +16,7 @@ interface CommoditySearchInputProps {
 }
 
 export function CommoditySearchInput({
+  id,
   value,
   onChange,
   onClear,
@@ -37,6 +39,7 @@ export function CommoditySearchInput({
         <Search className='size-4 shrink-0 text-muted-foreground' aria-hidden='true' />
       </InputGroupAddon>
       <InputGroupInput
+        id={id}
         type='search'
         value={value}
         onChange={(event) => onChange(event.target.value)}

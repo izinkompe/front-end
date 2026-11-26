@@ -22,6 +22,7 @@ const controlTriggerClassName =
 const controlIconClassName = 'size-4 shrink-0 text-muted-foreground'
 
 interface HeroFilterSelectProps<T extends string> {
+  id?: string
   value: T
   onValueChange: (value: string | null) => void
   options: ReadonlyArray<{ value: T; label: string }>
@@ -31,6 +32,7 @@ interface HeroFilterSelectProps<T extends string> {
 }
 
 export function HeroFilterSelect<T extends string>({
+  id,
   value,
   onValueChange,
   options,
@@ -43,7 +45,7 @@ export function HeroFilterSelect<T extends string>({
 
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={controlTriggerClassName} aria-label={ariaLabel}>
+      <SelectTrigger id={id} className={controlTriggerClassName} aria-label={ariaLabel}>
         <SelectValue>
           <SelectedIcon className={controlIconClassName} aria-hidden='true' />
           <span className='truncate text-foreground'>{selectedLabel}</span>
