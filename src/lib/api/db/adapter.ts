@@ -206,16 +206,45 @@ export const tanstackDbAdapter = {
 
     if (endpoint === '/api/offers' && method === 'GET') {
       let items = Array.from(offersCollection.values())
+      if (options.params?.status) {
+        items = items.filter((item) => item.status === options.params?.status)
+      }
       if (options.params?.category) {
         const targetCategory = String(options.params.category)
         items = items.filter((item) => matchesOfferCategory(item.category, targetCategory))
       }
       if (options.params?.search) {
         const query = String(options.params.search).toLowerCase()
-        items = items.filter((item) => item.commodityName.toLowerCase().includes(query))
+        items = items.filter(
+          (item) =>
+            item.commodityName.toLowerCase().includes(query) ||
+            item.pickupAddressArea.toLowerCase().includes(query) ||
+            item.farmerName.toLowerCase().includes(query)
+        )
       }
       if (options.params?.condition) {
         items = items.filter((item) => item.condition === options.params?.condition)
+      }
+      if (options.params?.minPrice !== undefined) {
+        const minPrice = Number(options.params.minPrice)
+        if (Number.isFinite(minPrice)) {
+          items = items.filter((item) => item.pricePerKg >= minPrice)
+        }
+      }
+      if (options.params?.maxPrice !== undefined) {
+        const maxPrice = Number(options.params.maxPrice)
+        if (Number.isFinite(maxPrice)) {
+          items = items.filter((item) => item.pricePerKg <= maxPrice)
+        }
+      }
+      if (options.params?.minStock !== undefined) {
+        const minStock = Number(options.params.minStock)
+        if (Number.isFinite(minStock)) {
+          items = items.filter((item) => item.availableStockKg >= minStock)
+        }
+      }
+      if (options.params?.dynamicOnly === true || options.params?.dynamicOnly === 'true') {
+        items = items.filter((item) => Boolean(item.dynamicPriceRule))
       }
       return items.map(toPublicOffer)
     }
