@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { BuyerAuthDialog } from '@/components/auth/buyer-auth-dialog'
 import type { ShareButtonState } from '@/components/home/buyer-expiring-offer-card'
@@ -44,11 +44,19 @@ interface CatalogViewProps {
   fixedCategory?: BuyerCategorySlug
 }
 
+const emptySubscribe = () => () => {}
+
 export function CatalogView({ fixedCategory }: CatalogViewProps) {
+  const isHydrated = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  )
   const searchParams = useSearchParams()
   const { selectedLocation, setSelectedLocation } = useSelectedLocation()
   const { data: currentUser } = useCurrentUser()
   const { data: offers, isPending, isError, refetch } = useOffers()
+  const effectivePending = !isHydrated || isPending
 
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
@@ -136,13 +144,13 @@ export function CatalogView({ fixedCategory }: CatalogViewProps) {
   const catalogItems = useMemo(
     () =>
       filterAndSortCatalogOffers(
-        offers ?? [],
+        effectivePending ? [] : (offers ?? []),
         filterState,
         referenceCoordinates,
         nowMs,
         fixedCategory
       ),
-    [offers, filterState, referenceCoordinates, nowMs, fixedCategory]
+    [effectivePending, offers, filterState, referenceCoordinates, nowMs, fixedCategory]
   )
 
   const summary = useMemo(() => summarizeCatalogResults(catalogItems), [catalogItems])
@@ -265,9 +273,9 @@ export function CatalogView({ fixedCategory }: CatalogViewProps) {
   }
 
   const statusFallbackNode =
-    isPending || isError || catalogItems.length === 0 ? (
+    effectivePending || isError || catalogItems.length === 0 ? (
       <CatalogStatusFallback
-        isPending={isPending}
+        isPending={effectivePending}
         isError={isError}
         itemCount={catalogItems.length}
         activeFilterCount={activeFilterCount}
@@ -276,13 +284,14 @@ export function CatalogView({ fixedCategory }: CatalogViewProps) {
       />
     ) : null
 
-  const loadMoreNode = hasMore ? (
-    <CatalogLoadMoreFooter
-      visibleCount={visibleItems.length}
-      totalCount={catalogItems.length}
-      onLoadMore={handleLoadMore}
-    />
-  ) : null
+  const loadMoreNode =
+    !effectivePending && hasMore ? (
+      <CatalogLoadMoreFooter
+        visibleCount={visibleItems.length}
+        totalCount={catalogItems.length}
+        onLoadMore={handleLoadMore}
+      />
+    ) : null
 
   return (
     <div className='w-full bg-background text-foreground'>
@@ -336,7 +345,7 @@ export function CatalogView({ fixedCategory }: CatalogViewProps) {
             />
 
             <p className='text-sm leading-relaxed text-muted-foreground tabular-nums sm:text-base'>
-              {isPending
+              {effectivePending
                 ? `Memuat penawaran dari ${selectedLocation.label}.`
                 : `Ditemukan ${summary.count} penawaran (${formatWeightKg(summary.totalAvailableStockKg)}) dari ${selectedLocation.label}.`}
             </p>
