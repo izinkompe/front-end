@@ -36,8 +36,8 @@ export function OfferStickyBars({
   return (
     <>
       {showDesktopSticky && (
-        <div className='offer-sticky-shell sticky top-[109px] z-30 hidden lg:block'>
-          <div className='offer-sticky-bar bg-background/95 shadow-sm backdrop-blur-sm'>
+        <div className='fixed inset-x-0 top-[109px] z-30 hidden lg:block'>
+          <div className='bg-background/95 shadow-[0_4px_12px_rgb(0_0_0/0.08)] backdrop-blur-sm'>
             <div className='mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-8'>
               <div className='flex min-w-0 items-center gap-3'>
                 <Button

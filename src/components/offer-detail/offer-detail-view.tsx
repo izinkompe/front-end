@@ -89,9 +89,9 @@ export function OfferDetailView({ offerId }: OfferDetailViewProps) {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setShowStickySummary(!entry.isIntersecting)
+        setShowStickySummary(!entry.isIntersecting && entry.boundingClientRect.bottom <= 110)
       },
-      { threshold: 0 }
+      { rootMargin: '-110px 0px 0px 0px', threshold: 0 }
     )
 
     observer.observe(sentinel)
