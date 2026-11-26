@@ -8,7 +8,11 @@ import type { MainCategoryMeta } from '@/lib/data/categories'
 import type { ActiveFilterChip, CatalogFilterState } from '@/lib/data/catalog-filters'
 import { CatalogCardsGridSkeleton } from './catalog-loading-skeleton'
 
-export function CatalogBreadcrumb({ categoryMeta }: { categoryMeta: MainCategoryMeta | null }) {
+interface CatalogBreadcrumbProps {
+  categoryMeta: MainCategoryMeta | null
+}
+
+export function CatalogBreadcrumb({ categoryMeta }: CatalogBreadcrumbProps) {
   return (
     <nav aria-label='Breadcrumb'>
       <ol className='flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground'>
@@ -54,15 +58,17 @@ export function CatalogBreadcrumb({ categoryMeta }: { categoryMeta: MainCategory
   )
 }
 
+interface CatalogActiveFilterChipsProps {
+  chips: ReadonlyArray<ActiveFilterChip>
+  onClearChip: (updater: (prev: CatalogFilterState) => CatalogFilterState) => void
+  onClearAll: () => void
+}
+
 export function CatalogActiveFilterChips({
   chips,
   onClearChip,
   onClearAll,
-}: {
-  chips: ReadonlyArray<ActiveFilterChip>
-  onClearChip: (updater: (prev: CatalogFilterState) => CatalogFilterState) => void
-  onClearAll: () => void
-}) {
+}: CatalogActiveFilterChipsProps) {
   if (chips.length === 0) return null
 
   return (
@@ -89,6 +95,15 @@ export function CatalogActiveFilterChips({
   )
 }
 
+interface CatalogStatusFallbackProps {
+  isPending: boolean
+  isError: boolean
+  itemCount: number
+  activeFilterCount: number
+  onRefetch: () => void
+  onClearAll: () => void
+}
+
 export function CatalogStatusFallback({
   isPending,
   isError,
@@ -96,14 +111,7 @@ export function CatalogStatusFallback({
   activeFilterCount,
   onRefetch,
   onClearAll,
-}: {
-  isPending: boolean
-  isError: boolean
-  itemCount: number
-  activeFilterCount: number
-  onRefetch: () => void
-  onClearAll: () => void
-}) {
+}: CatalogStatusFallbackProps) {
   if (isPending) {
     return <CatalogCardsGridSkeleton />
   }
@@ -159,15 +167,17 @@ export function CatalogStatusFallback({
   return null
 }
 
+interface CatalogLoadMoreFooterProps {
+  visibleCount: number
+  totalCount: number
+  onLoadMore: () => void
+}
+
 export function CatalogLoadMoreFooter({
   visibleCount,
   totalCount,
   onLoadMore,
-}: {
-  visibleCount: number
-  totalCount: number
-  onLoadMore: () => void
-}) {
+}: CatalogLoadMoreFooterProps) {
   return (
     <div className='flex flex-col items-center gap-2 pt-2'>
       <p className='text-sm text-muted-foreground tabular-nums'>
