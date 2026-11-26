@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Flame, Layers, MapPin, Scale, Shapes, Sprout, type LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { buildFarmerStoreHref } from '@/lib/data/farmer-store-helpers'
 import { cn } from '@/lib/utils'
 import type { CommodityCondition, Offer } from '@/types/api/offers'
 import {
@@ -135,7 +136,12 @@ export function BuyerCategoryProductCard({ offer, distanceKm }: BuyerCategoryPro
           <Separator />
           <footer className='flex items-center gap-2 text-sm text-muted-foreground'>
             <Sprout className='size-4 shrink-0 text-primary' aria-hidden='true' />
-            <span className='truncate'>{farmerDisplayName}</span>
+            <Link
+              href={buildFarmerStoreHref(offer.farmerId)}
+              className='relative z-1 truncate underline-offset-4 hover:text-foreground hover:underline'
+            >
+              {farmerDisplayName}
+            </Link>
           </footer>
         </div>
       </div>

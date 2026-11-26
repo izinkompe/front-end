@@ -5,6 +5,7 @@ import { AlertCircle, Check, Clock, Lock, Share2, Sprout } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { buildFarmerStoreHref } from '@/lib/data/farmer-store-helpers'
 import { cn } from '@/lib/utils'
 import type { Offer } from '@/types/api/offers'
 import {
@@ -49,6 +50,7 @@ export function BuyerExpiringOfferCard({
   const priceSummary = getDynamicPriceSummary(offer.pricePerKg, offer.dynamicPriceRule)
   const conditionMeta = getCommodityConditionMeta(offer.condition)
   const farmerDisplayName = formatFarmerDisplayName(offer.farmerName)
+  const farmerHref = buildFarmerStoreHref(offer.farmerId)
   const nextPickupSlot = formatNextPickupSlot(offer.pickupScheduleSlots)
   const detailHref = buildOfferDetailHref(offer.id)
   const distanceLabel = distanceKm === null ? null : formatStraightLineDistance(distanceKm)
@@ -151,9 +153,13 @@ export function BuyerExpiringOfferCard({
         <footer className='flex items-center justify-between gap-2'>
           <div className='flex min-w-0 items-center gap-2 text-sm text-muted-foreground'>
             <Sprout className='size-4 shrink-0 text-primary' aria-hidden='true' />
-            <span className='truncate'>
-              {farmerDisplayName}, {conditionMeta.shortLabel}
-            </span>
+            <Link
+              href={farmerHref}
+              className='relative z-1 truncate underline-offset-4 hover:text-foreground hover:underline'
+            >
+              {farmerDisplayName}
+            </Link>
+            <span className='shrink-0 truncate'>, {conditionMeta.shortLabel}</span>
           </div>
 
           <div className='flex shrink-0 items-center gap-1.5'>

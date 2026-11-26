@@ -33,6 +33,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { buildFarmerStoreHref } from '@/lib/data/farmer-store-helpers'
 import { cn } from '@/lib/utils'
 import type { CommodityCondition, Offer } from '@/types/api/offers'
 
@@ -71,6 +72,7 @@ export function CatalogOfferCard({
   const ConditionIcon = conditionIcons[offer.condition]
   const priceSummary = getDynamicPriceSummary(offer.pricePerKg, offer.dynamicPriceRule)
   const farmerDisplayName = formatFarmerDisplayName(offer.farmerName)
+  const farmerHref = buildFarmerStoreHref(offer.farmerId)
   const nextPickupSlot = formatNextPickupSlot(offer.pickupScheduleSlots)
   const detailHref = buildOfferDetailHref(offer.id)
   const distanceLabel = distanceKm === null ? null : formatStraightLineDistance(distanceKm)
@@ -296,10 +298,13 @@ export function CatalogOfferCard({
 
             <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground'>
               <span className='tabular-nums'>Ambil: {nextPickupSlot}</span>
-              <span className='inline-flex items-center gap-1.5 truncate'>
+              <Link
+                href={farmerHref}
+                className='relative z-1 inline-flex items-center gap-1.5 truncate underline-offset-4 hover:text-foreground hover:underline'
+              >
                 <Sprout className='size-3.5 shrink-0 text-primary' aria-hidden='true' />
                 <span className='truncate'>{farmerDisplayName}</span>
-              </span>
+              </Link>
             </div>
           </div>
 
@@ -409,10 +414,13 @@ export function CatalogOfferCard({
         <div className='flex flex-col gap-3'>
           <Separator />
           <footer className='flex items-center justify-between gap-2'>
-            <div className='flex min-w-0 items-center gap-2 text-sm text-muted-foreground'>
+            <Link
+              href={farmerHref}
+              className='relative z-1 flex min-w-0 items-center gap-2 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline'
+            >
               <Sprout className='size-4 shrink-0 text-primary' aria-hidden='true' />
               <span className='truncate'>{farmerDisplayName}</span>
-            </div>
+            </Link>
 
             {shareButtonNode}
           </footer>
