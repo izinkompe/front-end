@@ -31,16 +31,20 @@ export async function generateMetadata({ params }: PasarCategoryPageProps): Prom
   }
 }
 
-export default async function PasarCategoryPage({ params }: PasarCategoryPageProps) {
+async function PasarCategoryContent({ params }: PasarCategoryPageProps) {
   const { category } = await params
   const parsed = BuyerCategorySlugSchema.safeParse(category)
   if (!parsed.success) {
     notFound()
   }
 
+  return <CatalogView fixedCategory={parsed.data} />
+}
+
+export default function PasarCategoryPage({ params }: PasarCategoryPageProps) {
   return (
     <Suspense fallback={<CatalogLoadingSkeleton />}>
-      <CatalogView fixedCategory={parsed.data} />
+      <PasarCategoryContent params={params} />
     </Suspense>
   )
 }
