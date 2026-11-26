@@ -1,23 +1,21 @@
 import { ApiError } from '../errors'
 import { offersCollection } from './collections/offers'
 import { usersCollection } from './collections/users'
-import { notificationsCollection } from './collections/notifications'
-import { needsBoardCollection } from './collections/needs-board'
+import { handleNotificationRoute } from './notification-routes'
+import { handleNeedsBoardRoute } from './needs-board-routes'
+import { handleFavoriteRoute } from './favorite-routes'
+import { handleOfferWriteRoute, toPublicOffer } from './offer-routes'
+import { getBuyerPreferences } from './buyer-preferences'
+import { handleBuyerAuthRoute } from './buyer-auth-routes'
+import { handleComplaintRoute } from './complaint-routes'
 import { handleOrderRoute } from './order-routes'
 import { handleProfileRoute } from './profile-routes'
 import { handleFarmerRoute } from './farmer-routes'
 import type { DistributionStats } from '@/types/api/admin'
-import type { NeedRequest } from '@/types/api/needs-board'
-import type { Offer } from '@/types/api/offers'
 import type { User } from '@/types/api/auth'
 import { matchesOfferCategory } from '@/lib/data/categories'
 
-function toPublicOffer(offer: Offer): Offer {
-  const { pickupAddressFull: _, ...publicOffer } = offer
-  return publicOffer
-}
-
-let activeSessionUserId: string | null = null
+let sessionUserId: string | null = null
 
 interface AdapterOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>
@@ -40,6 +38,7 @@ function parseJsonBody<T = Record<string, unknown>>(body: unknown): T {
 
 export const tanstackDbAdapter = {
   async dispatch(endpoint: string, options: AdapterOptions = {}): Promise<unknown> {
+    const activeSessionUserId = sessionUserId
     await delay(150 + Math.random() * 120)
     const method = (options.method || 'GET').toUpperCase()
 
@@ -49,56 +48,28 @@ export const tanstackDbAdapter = {
       }
       const user = usersCollection.get(activeSessionUserId)
       if (!user) {
-        activeSessionUserId = null
+        if (sessionUserId === activeSessionUserId) sessionUserId = null
         return null
       }
       return user
     }
 
-    if (endpoint === '/api/auth/login' && method === 'POST') {
-      const body = parseJsonBody<{ email?: string; password?: string }>(options.body)
-      const normalizedEmail = (body.email || '').trim().toLowerCase()
-      const user =
-        Array.from(usersCollection.values()).find(
-          (item) => item.email.toLowerCase() === normalizedEmail
-        ) || usersCollection.get('usr-pb-01')
-      if (!user) {
-        throw new ApiError(401, 'Email atau kata sandi tidak sesuai', 'UNAUTHORIZED')
-      }
-      activeSessionUserId = user.id
-      return {
-        token: 'dummy-token-' + Date.now(),
-        user,
-      }
+    const buyerAuth = await handleBuyerAuthRoute({
+      endpoint,
+      method,
+      body: options.body,
+      activeSessionUserId,
+      parseJsonBody,
+    })
+    if (buyerAuth?.user) {
+      const preferences = getBuyerPreferences(buyerAuth.user)
+      usersCollection.update(buyerAuth.user.id, (draft) => {
+        Object.assign(draft, preferences)
+      })
+      sessionUserId = buyerAuth.user.id
+      return { token: 'dummy-token-' + Date.now(), user: usersCollection.get(buyerAuth.user.id) }
     }
-
-    if (endpoint === '/api/auth/register' && method === 'POST') {
-      const body = parseJsonBody<{ name?: string; email?: string; password?: string }>(options.body)
-      const normalizedEmail = (body.email || '').trim().toLowerCase()
-      const existingUser = Array.from(usersCollection.values()).find(
-        (item) => item.email.toLowerCase() === normalizedEmail
-      )
-      if (existingUser) {
-        throw new ApiError(409, 'Email sudah terdaftar, silakan masuk', 'EMAIL_EXISTS')
-      }
-
-      const now = new Date().toISOString()
-      const newUser: User = {
-        id: 'usr-pb-' + Date.now(),
-        name: (body.name || '').trim() || 'Pembeli PanganTani',
-        email: normalizedEmail,
-        phone: '',
-        role: 'buyer',
-        createdAt: now,
-        updatedAt: now,
-      }
-      usersCollection.insert(newUser)
-      activeSessionUserId = newUser.id
-      return {
-        token: 'dummy-token-' + Date.now(),
-        user: newUser,
-      }
-    }
+    if (buyerAuth) return buyerAuth.data
 
     if (endpoint === '/api/auth/login-farmer' && method === 'POST') {
       const body = parseJsonBody<{ email?: string; password?: string }>(options.body)
@@ -120,7 +91,7 @@ export const tanstackDbAdapter = {
           'WRONG_ROLE'
         )
       }
-      activeSessionUserId = user.id
+      sessionUserId = user.id
       return {
         token: 'dummy-token-' + Date.now(),
         user,
@@ -185,7 +156,7 @@ export const tanstackDbAdapter = {
         updatedAt: now,
       }
       usersCollection.insert(newFarmer)
-      activeSessionUserId = newFarmer.id
+      sessionUserId = newFarmer.id
       return {
         token: 'dummy-token-' + Date.now(),
         user: newFarmer,
@@ -193,7 +164,7 @@ export const tanstackDbAdapter = {
     }
 
     if (endpoint === '/api/auth/logout' && method === 'POST') {
-      activeSessionUserId = null
+      sessionUserId = null
       return { success: true }
     }
 
@@ -208,6 +179,19 @@ export const tanstackDbAdapter = {
       return profileResult.data
     }
 
+    const routeContext = {
+      endpoint,
+      method,
+      params: options.params,
+      body: options.body,
+      activeSessionUserId,
+      parseJsonBody,
+    }
+    const favorites = handleFavoriteRoute(routeContext)
+    if (favorites.handled) return favorites.data
+    const offerWrite = handleOfferWriteRoute(routeContext)
+    if (offerWrite.handled) return offerWrite.data
+
     if (endpoint === '/api/offers/expiring-soon') {
       return Array.from(offersCollection.values())
         .filter((item) => item.status === 'active' && item.availableStockKg > 0)
@@ -218,6 +202,8 @@ export const tanstackDbAdapter = {
 
     if (endpoint === '/api/offers' && method === 'GET') {
       let items = Array.from(offersCollection.values())
+        .filter((offer) => offer.status !== 'draft')
+        .map(toPublicOffer)
       if (options.params?.farmerId) {
         const targetFarmerId = String(options.params.farmerId)
         items = items.filter((item) => item.farmerId === targetFarmerId)
@@ -262,13 +248,13 @@ export const tanstackDbAdapter = {
       if (options.params?.dynamicOnly === true || options.params?.dynamicOnly === 'true') {
         items = items.filter((item) => Boolean(item.dynamicPriceRule))
       }
-      return items.map(toPublicOffer)
+      return items
     }
 
     if (endpoint.startsWith('/api/offers/') && method === 'GET') {
       const id = endpoint.replace('/api/offers/', '')
       const offer = offersCollection.get(id)
-      if (!offer) {
+      if (!offer || offer.status === 'draft') {
         throw new ApiError(404, 'Penawaran tidak ditemukan', 'NOT_FOUND')
       }
       return toPublicOffer(offer)
@@ -283,6 +269,16 @@ export const tanstackDbAdapter = {
       return farmerResult.data
     }
 
+    const complaintResult = handleComplaintRoute({
+      endpoint,
+      method,
+      params: options.params,
+      body: options.body,
+      activeSessionUserId,
+      parseJsonBody,
+    })
+    if (complaintResult.handled) return complaintResult.data
+
     const orderResult = handleOrderRoute({
       endpoint,
       method,
@@ -295,60 +291,23 @@ export const tanstackDbAdapter = {
       return orderResult.data
     }
 
-    if (endpoint === '/api/notifications' && method === 'GET') {
-      return Array.from(notificationsCollection.values())
-    }
+    const notificationResult = handleNotificationRoute({
+      endpoint,
+      method,
+      body: options.body,
+      activeSessionUserId,
+      parseJsonBody,
+    })
+    if (notificationResult.handled) return notificationResult.data
 
-    if (
-      endpoint.startsWith('/api/notifications/') &&
-      endpoint.endsWith('/read') &&
-      method === 'PATCH'
-    ) {
-      const parts = endpoint.split('/')
-      const notifId = parts[3]
-      const notif = notificationsCollection.get(notifId)
-      if (notif) {
-        notificationsCollection.update(notifId, (draft) => {
-          draft.isRead = true
-        })
-      }
-      return notificationsCollection.get(notifId)
-    }
-
-    if (endpoint === '/api/needs-board' && method === 'GET') {
-      return Array.from(needsBoardCollection.values())
-    }
-
-    if (endpoint === '/api/needs-board' && method === 'POST') {
-      const body = parseJsonBody<{
-        commodityName?: string
-        category?: string
-        neededQuantityKg?: number
-        maxPricePerKg?: number
-        targetDate?: string
-        targetArea?: string
-        notes?: string
-      }>(options.body)
-      const newNeed: NeedRequest = {
-        id: 'need-' + Date.now(),
-        buyerId: 'usr-pb-01',
-        buyerName: 'Ibu Ratna',
-        organization: 'Dapur Umum Yayasan Kasih',
-        commodityName: body.commodityName || 'Komoditas Baru',
-        category: body.category || 'Sayuran',
-        neededQuantityKg: body.neededQuantityKg || 100,
-        maxPricePerKg: body.maxPricePerKg,
-        targetDate: body.targetDate || '2026-11-28',
-        targetArea: body.targetArea || 'Bandung',
-        notes: body.notes,
-        status: 'open',
-        responses: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-      needsBoardCollection.insert(newNeed)
-      return newNeed
-    }
+    const needsBoardResult = handleNeedsBoardRoute({
+      endpoint,
+      method,
+      body: options.body,
+      activeSessionUserId,
+      parseJsonBody,
+    })
+    if (needsBoardResult.handled) return needsBoardResult.data
 
     if (endpoint === '/api/admin/stats/distribution' && method === 'GET') {
       const stats: DistributionStats = {

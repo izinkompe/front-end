@@ -1,3 +1,5 @@
+import { saveBuyerPreferences } from './buyer-preferences'
+import { requireBuyer } from './route-context'
 import { ApiError } from '../errors'
 import { offersCollection } from './collections/offers'
 import { usersCollection } from './collections/users'
@@ -16,7 +18,6 @@ interface FarmerRouteContext {
   activeSessionUserId: string | null
 }
 
-const followerMembershipByFarmer = new Map<string, Set<string>>()
 const helpfulByUserReview = new Map<string, Set<string>>()
 
 function buildReviewSummary(farmerId: string) {
@@ -76,13 +77,10 @@ function buildReviewSummary(farmerId: string) {
   }
 }
 
-function getFarmerFollowerSet(farmerId: string): Set<string> {
-  let followers = followerMembershipByFarmer.get(farmerId)
-  if (!followers) {
-    followers = new Set<string>()
-    followerMembershipByFarmer.set(farmerId, followers)
-  }
-  return followers
+function countFollowers(farmerId: string) {
+  return Array.from(usersCollection.values()).filter((user) =>
+    user.followedFarmerIds?.includes(farmerId)
+  ).length
 }
 
 function toPublicFarmerStoreProfile(
@@ -100,7 +98,7 @@ function toPublicFarmerStoreProfile(
   const defaultAddress = farmer.addresses?.find((addr) => addr.isDefault) ?? farmer.addresses?.[0]
   const fallbackArea = farmerOffers[0]?.pickupAddressArea ?? 'Jawa Barat'
   const reviewStats = buildReviewSummary(farmer.id).summary
-  const dynamicFollowers = getFarmerFollowerSet(farmer.id)
+  const viewer = activeSessionUserId ? usersCollection.get(activeSessionUserId) : undefined
 
   return {
     id: farmer.id,
@@ -124,10 +122,10 @@ function toPublicFarmerStoreProfile(
       totalReviews: reviewStats.totalReviews,
       satisfactionPercent: reviewStats.satisfactionPercent,
       totalDistributedKg: (meta?.baseDistributedKg ?? 0) + offerSoldKg,
-      followerCount: (meta?.baseFollowerCount ?? 0) + dynamicFollowers.size,
+      followerCount: (meta?.baseFollowerCount ?? 0) + countFollowers(farmer.id),
       activeOffersCount,
     },
-    isFollowing: activeSessionUserId ? dynamicFollowers.has(activeSessionUserId) : false,
+    isFollowing: Boolean(viewer?.followedFarmerIds?.includes(farmer.id)),
   }
 }
 
@@ -173,30 +171,28 @@ export function handleFarmerRoute(ctx: FarmerRouteContext): { handled: boolean; 
 
   const followMatch = /^\/api\/farmers\/([^/]+)\/follow$/.exec(endpoint)
   if (followMatch && method === 'POST') {
-    if (!activeSessionUserId) {
-      throw new ApiError(401, 'Masuk terlebih dahulu untuk mengikuti petani', 'UNAUTHORIZED')
-    }
+    const buyer = requireBuyer(activeSessionUserId)
     const farmerId = decodeURIComponent(followMatch[1])
     const farmer = usersCollection.get(farmerId)
     if (!farmer || farmer.role !== 'farmer') {
       throw new ApiError(404, 'Profil toko petani tidak ditemukan', 'NOT_FOUND')
     }
-    const followers = getFarmerFollowerSet(farmerId)
-    let isFollowing = false
-    if (followers.has(activeSessionUserId)) {
-      followers.delete(activeSessionUserId)
-      isFollowing = false
-    } else {
-      followers.add(activeSessionUserId)
-      isFollowing = true
-    }
+    const ids = buyer.followedFarmerIds ?? []
+    const isFollowing = !ids.includes(farmerId)
+    usersCollection.update(buyer.id, (draft) => {
+      draft.followedFarmerIds = isFollowing
+        ? [...ids, farmerId]
+        : ids.filter((id) => id !== farmerId)
+    })
+    const updated = usersCollection.get(buyer.id)
+    if (updated) saveBuyerPreferences(updated)
     const meta = mockFarmerStoreMeta[farmerId]
     return {
       handled: true,
       data: {
         farmerId,
         isFollowing,
-        followerCount: (meta?.baseFollowerCount ?? 0) + followers.size,
+        followerCount: (meta?.baseFollowerCount ?? 0) + countFollowers(farmer.id),
       },
     }
   }

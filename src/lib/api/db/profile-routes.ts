@@ -1,6 +1,7 @@
 import { ApiError } from '../errors'
 import { usersCollection } from './collections/users'
-import type { User } from '@/types/api/auth'
+import { AccountPreferencesSchema, type User } from '@/types/api/auth'
+import { saveBuyerPreferences } from './buyer-preferences'
 
 interface ProfileRouteContext {
   endpoint: string
@@ -171,6 +172,13 @@ export function handleProfileRoute(ctx: ProfileRouteContext): { handled: boolean
       }
     }
 
+    if (
+      payload.preferences !== undefined &&
+      !AccountPreferencesSchema.safeParse(payload.preferences).success
+    ) {
+      throw new ApiError(400, 'Pilihan pengaturan tidak valid', 'INVALID_PREFERENCES')
+    }
+
     const phoneChanged = payload.phone !== undefined && nextPhone !== user.phone
 
     usersCollection.update(user.id, (draft) => {
@@ -187,7 +195,9 @@ export function handleProfileRoute(ctx: ProfileRouteContext): { handled: boolean
       draft.updatedAt = new Date().toISOString()
     })
 
-    return { handled: true, data: usersCollection.get(user.id) }
+    const updated = usersCollection.get(user.id)
+    if (updated?.role === 'buyer' && payload.preferences) saveBuyerPreferences(updated)
+    return { handled: true, data: updated }
   }
 
   if (endpoint === '/api/profile/verify-phone' && method === 'POST') {

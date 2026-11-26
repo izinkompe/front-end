@@ -58,13 +58,35 @@ export const SaveBuyerAddressRequestSchema = z.object({
 })
 export type SaveBuyerAddressRequest = z.infer<typeof SaveBuyerAddressRequestSchema>
 
+export const ReminderRadiusSchema = z.literal([5, 10, 25, 50])
+
 export const AccountPreferencesSchema = z.object({
   orderStatusUpdates: z.boolean(),
   harvestReminders: z.boolean(),
+  reminderRadiusKm: ReminderRadiusSchema.optional(),
   marketingEmails: z.boolean(),
   showOrganizationOnReceipts: z.boolean(),
 })
 export type AccountPreferences = z.infer<typeof AccountPreferencesSchema>
+
+export const BookmarkListSchema = z.object({
+  id: z.string(),
+  name: z.string().trim().min(1).max(60),
+  description: z.string().trim().max(160).optional(),
+  offerIds: z.array(z.string()),
+  createdAt: z.string(),
+})
+export type BookmarkList = z.infer<typeof BookmarkListSchema>
+
+export const CreateBookmarkListRequestSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Nama daftar minimal 2 karakter')
+    .max(60, 'Nama daftar maksimal 60 karakter'),
+  description: z.string().trim().max(160, 'Catatan maksimal 160 karakter').optional(),
+})
+export type CreateBookmarkListRequest = z.infer<typeof CreateBookmarkListRequestSchema>
 
 export const UserSchema = z.object({
   id: z.string(),
@@ -84,6 +106,9 @@ export const UserSchema = z.object({
   bankAccount: FarmerBankAccountSchema.optional(),
   avatarUrl: z.string().optional(),
   preferences: AccountPreferencesSchema.optional(),
+  favoriteOfferIds: z.array(z.string()).optional(),
+  followedFarmerIds: z.array(z.string()).optional(),
+  bookmarkLists: z.array(BookmarkListSchema).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -268,3 +293,15 @@ export const FarmerRegisterRequestSchema = z.object({
   agreedToTerms: z.literal(true),
 })
 export type FarmerRegisterRequest = z.infer<typeof FarmerRegisterRequestSchema>
+
+export const ForgotPasswordRequestSchema = z.object({ email: z.email().trim().max(254) })
+export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordRequestSchema>
+
+export const ResetPasswordRequestSchema = ForgotPasswordRequestSchema.extend({
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/),
+  password: z.string().min(8).max(128),
+})
+export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>

@@ -1,4 +1,6 @@
 export const queryKeys = {
+  favorites: ['favorites'] as const,
+  favoriteLists: ['favorites', 'lists'] as const,
   auth: {
     me: ['auth', 'me'] as const,
   },
@@ -21,10 +23,14 @@ export const queryKeys = {
     lists: () => [...queryKeys.orders.all, 'list'] as const,
     list: (params?: Record<string, unknown>) => [...queryKeys.orders.lists(), params] as const,
     details: () => [...queryKeys.orders.all, 'detail'] as const,
-    detail: (id: string) => [...queryKeys.orders.details(), id] as const,
+    detail: (id: string, userId?: string) => [...queryKeys.orders.details(), id, userId] as const,
+  },
+  complaints: {
+    all: ['complaints'] as const,
+    list: (userId?: string, orderId?: string) => ['complaints', userId, orderId] as const,
   },
   payments: {
-    detail: (orderId: string) => ['payments', orderId] as const,
+    detail: (orderId: string, userId?: string) => ['payments', orderId, userId] as const,
     adminQueue: (params?: Record<string, unknown>) => ['payments', 'admin-queue', params] as const,
   },
   verifications: {
@@ -34,7 +40,7 @@ export const queryKeys = {
   },
   notifications: {
     all: ['notifications'] as const,
-    list: () => [...queryKeys.notifications.all, 'list'] as const,
+    list: (userId?: string) => [...queryKeys.notifications.all, 'list', userId] as const,
     unreadCount: () => [...queryKeys.notifications.all, 'unread-count'] as const,
   },
   needsBoard: {
@@ -45,7 +51,8 @@ export const queryKeys = {
   },
   farmers: {
     all: ['farmers'] as const,
-    detail: (farmerId: string) => [...queryKeys.farmers.all, 'detail', farmerId] as const,
+    detail: (farmerId: string, userId?: string) =>
+      [...queryKeys.farmers.all, 'detail', farmerId, userId] as const,
     reviews: (farmerId: string) => [...queryKeys.farmers.all, 'reviews', farmerId] as const,
   },
   admin: {
