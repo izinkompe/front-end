@@ -4,6 +4,7 @@ import { usersCollection } from './collections/users'
 import { notificationsCollection } from './collections/notifications'
 import { needsBoardCollection } from './collections/needs-board'
 import { handleOrderRoute } from './order-routes'
+import { handleProfileRoute } from './profile-routes'
 import type { DistributionStats } from '@/types/api/admin'
 import type { NeedRequest } from '@/types/api/needs-board'
 import type { Offer } from '@/types/api/offers'
@@ -195,69 +196,15 @@ export const tanstackDbAdapter = {
       return { success: true }
     }
 
-    if (endpoint === '/api/auth/addresses' && method === 'POST') {
-      if (!activeSessionUserId) {
-        throw new ApiError(401, 'Masuk terlebih dahulu untuk mengubah alamat', 'UNAUTHORIZED')
-      }
-      const user = usersCollection.get(activeSessionUserId)
-      if (!user) {
-        throw new ApiError(404, 'Akun pengguna tidak ditemukan', 'NOT_FOUND')
-      }
-
-      const body = parseJsonBody<{
-        id?: string
-        label?: string
-        areaName?: string
-        fullAddress?: string
-        setAsDefault?: boolean
-      }>(options.body)
-
-      const label = (body.label || '').trim()
-      const areaName = (body.areaName || '').trim()
-      const fullAddress = (body.fullAddress || '').trim()
-      if (label.length < 2 || areaName.length < 3 || fullAddress.length < 8) {
-        throw new ApiError(400, 'Lengkapi label, wilayah, dan alamat lengkap', 'INVALID_ADDRESS')
-      }
-
-      const currentAddresses = user.addresses ?? []
-      const existingIndex = body.id ? currentAddresses.findIndex((item) => item.id === body.id) : -1
-      const shouldBeDefault = body.setAsDefault ?? true
-      const addressId =
-        existingIndex >= 0 ? currentAddresses[existingIndex].id : 'addr-' + Date.now()
-
-      const nextAddress = {
-        id: addressId,
-        label,
-        areaName,
-        fullAddress,
-        latitude: existingIndex >= 0 ? currentAddresses[existingIndex].latitude : -6.9175,
-        longitude: existingIndex >= 0 ? currentAddresses[existingIndex].longitude : 107.6191,
-        isDefault: shouldBeDefault,
-      }
-
-      const nextAddresses =
-        existingIndex >= 0
-          ? currentAddresses.map((item, index) =>
-              index === existingIndex
-                ? nextAddress
-                : shouldBeDefault
-                  ? { ...item, isDefault: false }
-                  : item
-            )
-          : [
-              ...currentAddresses.map((item) =>
-                shouldBeDefault ? { ...item, isDefault: false } : item
-              ),
-              nextAddress,
-            ]
-
-      const now = new Date().toISOString()
-      usersCollection.update(user.id, (draft) => {
-        draft.addresses = nextAddresses
-        draft.updatedAt = now
-      })
-
-      return usersCollection.get(user.id)
+    const profileResult = handleProfileRoute({
+      endpoint,
+      method,
+      body: options.body,
+      activeSessionUserId,
+      parseJsonBody,
+    })
+    if (profileResult.handled) {
+      return profileResult.data
     }
 
     if (endpoint === '/api/offers/expiring-soon') {

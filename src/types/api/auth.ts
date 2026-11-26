@@ -58,6 +58,14 @@ export const SaveBuyerAddressRequestSchema = z.object({
 })
 export type SaveBuyerAddressRequest = z.infer<typeof SaveBuyerAddressRequestSchema>
 
+export const AccountPreferencesSchema = z.object({
+  orderStatusUpdates: z.boolean(),
+  harvestReminders: z.boolean(),
+  marketingEmails: z.boolean(),
+  showOrganizationOnReceipts: z.boolean(),
+})
+export type AccountPreferences = z.infer<typeof AccountPreferencesSchema>
+
 export const UserSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -66,6 +74,8 @@ export const UserSchema = z.object({
   role: UserRoleSchema,
   organization: z.string().optional(),
   addresses: z.array(UserAddressSchema).optional(),
+  isEmailVerified: z.boolean().optional(),
+  isPhoneVerified: z.boolean().optional(),
   isVerifiedFarmer: z.boolean().optional(),
   onboardingCompleted: z.boolean().optional(),
   farmerType: FarmerTypeSchema.optional(),
@@ -73,10 +83,54 @@ export const UserSchema = z.object({
   customCommodity: z.string().optional(),
   bankAccount: FarmerBankAccountSchema.optional(),
   avatarUrl: z.string().optional(),
+  preferences: AccountPreferencesSchema.optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 })
 export type User = z.infer<typeof UserSchema>
+
+export const UpdateProfileRequestSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, 'Nama lengkap minimal 2 karakter')
+    .max(100, 'Nama lengkap maksimal 100 karakter'),
+  phone: z
+    .union([
+      z.literal(''),
+      z
+        .string()
+        .trim()
+        .regex(
+          /^(?:\+62|62|0)8\d{7,12}$/,
+          'Masukkan nomor WhatsApp aktif yang benar, contoh: 081234567890'
+        ),
+    ])
+    .optional(),
+  organization: z
+    .string()
+    .trim()
+    .max(120, 'Nama usaha atau organisasi maksimal 120 karakter')
+    .optional(),
+  avatarUrl: z.string().trim().max(3000000).nullable().optional(),
+  preferences: AccountPreferencesSchema.optional(),
+})
+export type UpdateProfileRequest = z.infer<typeof UpdateProfileRequestSchema>
+
+export const VerifyPhoneRequestSchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .regex(
+      /^(?:\+62|62|0)8\d{7,12}$/,
+      'Masukkan nomor WhatsApp aktif yang benar, contoh: 081234567890'
+    ),
+  otpCode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Kode verifikasi harus berisi 6 angka'),
+})
+export type VerifyPhoneRequest = z.infer<typeof VerifyPhoneRequestSchema>
 
 export const LoginRequestSchema = z.object({
   email: z.string().trim().email('Masukkan alamat email yang benar, contoh: budi@email.com'),

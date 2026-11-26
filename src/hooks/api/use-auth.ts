@@ -10,7 +10,9 @@ import {
   type FarmerRegisterRequest,
   type LoginRequest,
   type SaveBuyerAddressRequest,
+  type UpdateProfileRequest,
   type User,
+  type VerifyPhoneRequest,
 } from '@/types/api/auth'
 
 export function useCurrentUser() {
@@ -111,6 +113,70 @@ export function useSaveBuyerAddress() {
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(queryKeys.auth.me, updatedUser)
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+    },
+  })
+}
+
+export function useDeleteBuyerAddress() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (addressId: string) =>
+      apiClient<User>(`/api/auth/addresses/${encodeURIComponent(addressId)}`, UserSchema, {
+        method: 'DELETE',
+      }),
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(queryKeys.auth.me, updatedUser)
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+    },
+  })
+}
+
+export function useUpdateProfile() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: UpdateProfileRequest) =>
+      apiClient<User>('/api/profile', UserSchema, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(queryKeys.auth.me, updatedUser)
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile.detail })
+    },
+  })
+}
+
+export function useVerifyPhone() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: VerifyPhoneRequest) =>
+      apiClient<User>('/api/profile/verify-phone', UserSchema, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(queryKeys.auth.me, updatedUser)
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+    },
+  })
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () =>
+      apiClient<{ success: boolean }>('/api/auth/logout', undefined, {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      queryClient.setQueryData(queryKeys.auth.me, null)
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
     },
   })
 }
