@@ -20,6 +20,7 @@ interface HeroSearchComboboxProps {
   onSelectCommodity: (commodity: CommoditySuggestion) => void
   onSelectOffer: (offer: OfferSuggestion) => void
   className?: string
+  pill?: boolean
 }
 
 type FlatSuggestionAction =
@@ -52,6 +53,7 @@ export function HeroSearchCombobox({
   onSelectCommodity,
   onSelectOffer,
   className = 'sm:col-span-2 lg:col-span-1',
+  pill = false,
 }: HeroSearchComboboxProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const listboxId = useId()
@@ -143,7 +145,7 @@ export function HeroSearchCombobox({
   const offerStartIndex = 1 + suggestions.commodities.length
 
   return (
-    <div ref={containerRef} className={cn('relative min-h-12', className)}>
+    <div ref={containerRef} className={cn('relative', pill ? 'min-h-11' : 'min-h-12', className)}>
       <div
         className={cn(
           'w-full',
@@ -153,10 +155,11 @@ export function HeroSearchCombobox({
       >
         <InputGroup
           className={cn(
-            'min-h-12 bg-background text-foreground dark:bg-input/30',
+            'bg-background text-foreground dark:bg-input/30',
+            pill ? 'min-h-11' : 'min-h-12',
             isOpen
               ? 'rounded-none border-0 shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0'
-              : 'border-input'
+              : cn('border-input', pill && 'rounded-full')
           )}
         >
           <InputGroupAddon align='inline-start'>

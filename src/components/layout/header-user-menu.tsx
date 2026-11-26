@@ -43,12 +43,12 @@ export function HeaderUserMenu({
           <Button
             variant='ghost'
             size='icon'
-            className={cn('rounded-full', isTransparent && transparentIconClass)}
+            className={cn('size-10 rounded-full p-0', isTransparent && transparentIconClass)}
             aria-label={`Menu akun ${user.name}`}
           />
         }
       >
-        <Avatar>
+        <Avatar size='lg'>
           {avatarSrc && <AvatarImage src={avatarSrc} alt={user.name} />}
           <AvatarFallback>{getUserInitials(user.name)}</AvatarFallback>
         </Avatar>

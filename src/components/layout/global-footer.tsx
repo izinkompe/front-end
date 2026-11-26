@@ -5,46 +5,42 @@ import { cn } from '@/lib/utils'
 
 const footerColumns = [
   {
-    title: 'Layanan Pelanggan',
+    title: 'Bantuan pembeli',
     links: [
-      { label: 'Hubungi Kami', href: '/kontak' },
-      { label: 'Pusat Bantuan (FAQ)', href: '/bantuan' },
-      { label: 'Pesanan & Pengiriman', href: '/pesanan-pengiriman' },
-      { label: 'Pengembalian & Komplain', href: '/pengembalian' },
-      { label: 'Pembayaran & Harga', href: '/pembayaran' },
-      { label: 'Ketentuan Promo', href: '/ketentuan-promo' },
-      { label: 'Jaminan Kesegaran PanganTani', href: '/jaminan-kesegaran' },
+      { label: 'Pusat bantuan', href: '/pusat-informasi?tab=bantuan' },
+      { label: 'Cara memesan', href: '/pusat-informasi?tab=bantuan#pesanan' },
+      { label: 'Pembayaran transfer', href: '/pusat-informasi?tab=bantuan#pembayaran' },
+      { label: 'Pengambilan pesanan', href: '/pusat-informasi?tab=bantuan#pengambilan' },
+      { label: 'Pengaduan dan pengembalian', href: '/pusat-informasi?tab=bantuan#pengembalian' },
+      { label: 'Kontak kami', href: '/pusat-informasi?tab=kontak' },
     ],
   },
   {
-    title: 'Tentang PanganTani',
+    title: 'Pasar Panen',
     links: [
-      { label: 'Tentang Kami', href: '/tentang' },
-      { label: 'Siaran Pers', href: '/pers' },
-      { label: 'Mitra Petani & Kelompok Tani', href: '/kemitraan' },
-      { label: 'Karier', href: '/karier' },
-      { label: 'Aplikasi PanganTani', href: '/aplikasi' },
-      { label: 'Keberlanjutan & Ketahanan Pangan', href: '/keberlanjutan' },
-      { label: 'Peta Situs', href: '/sitemap' },
-    ],
-  },
-  {
-    title: 'Program & Kemitraan',
-    links: [
-      { label: 'Program Mitra Petani', href: '/mitra-petani' },
-      { label: 'Ajak Teman', href: '/referral' },
-      { label: 'Keanggotaan PanganTani', href: '/keanggotaan' },
-      { label: 'Kemitraan Distributor & Resto', href: '/mitra-bisnis' },
+      { label: 'Jelajahi penawaran', href: '/pasar' },
       { label: 'Papan Kebutuhan Pangan', href: '/papan-kebutuhan' },
-      { label: 'Pasar Panen Musiman', href: '/pasar' },
+      { label: 'Favorit', href: '/favorit' },
+      { label: 'Pesanan Saya', href: '/akun' },
+      { label: 'Riwayat transaksi', href: '/akun/transaksi' },
+      { label: 'Pengaduan saya', href: '/akun/pengaduan' },
+    ],
+  },
+  {
+    title: 'Akun petani',
+    links: [
+      { label: 'Masuk sebagai petani', href: '/masuk-petani' },
+      { label: 'Daftar sebagai petani', href: '/daftar-petani' },
     ],
   },
 ]
 
 const legalLinks = [
-  { label: 'Kebijakan Privasi', href: '/privasi' },
-  { label: 'Syarat & Ketentuan', href: '/syarat' },
-  { label: 'Aksesibilitas', href: '/aksesibilitas' },
+  { label: 'Pusat Informasi', href: '/pusat-informasi' },
+  { label: 'Kebijakan Privasi', href: '/pusat-informasi?tab=kebijakan-privasi' },
+  { label: 'Syarat & Ketentuan', href: '/pusat-informasi?tab=syarat' },
+  { label: 'Aksesibilitas', href: '/pusat-informasi?tab=aksesibilitas' },
+  { label: 'Kontak', href: '/pusat-informasi?tab=kontak' },
 ]
 
 function InstagramIcon() {
@@ -150,23 +146,8 @@ export function GlobalFooter({ containerClassName = 'max-w-7xl' }: GlobalFooterP
             </div>
           ))}
 
-          <div className='flex flex-col gap-6'>
-            <div className='flex flex-col gap-3'>
-              <h3 className='text-base font-semibold text-secondary-foreground'>
-                Konten &amp; Layanan
-              </h3>
-              <ul className='flex flex-col gap-0.5 text-sm text-muted-foreground'>
-                <li>
-                  <Link
-                    href='/edukasi'
-                    className='inline-flex min-h-10 items-center rounded-sm py-1.5 leading-snug transition-colors pointer-coarse:min-h-11 hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                  >
-                    Edukasi Tani: panduan budidaya &amp; panen terbaru
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
+          <div className='flex flex-col gap-3'>
+            <h3 className='text-base font-semibold text-secondary-foreground'>PanganTani</h3>
             <div className='flex flex-wrap items-center gap-1'>
               {socialLinks.map((item) => {
                 const Icon = item.icon

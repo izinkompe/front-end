@@ -12,8 +12,16 @@ export function GlobalLayout({
 }: Readonly<GlobalLayoutProps>) {
   return (
     <div className='flex min-h-screen flex-col bg-background text-foreground'>
+      <a
+        href='#konten-utama'
+        className='sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-60 focus:rounded-md focus:bg-background focus:p-3'
+      >
+        Lewati ke konten utama
+      </a>
       <GlobalHeader />
-      <main className='flex-1 flex flex-col'>{children}</main>
+      <main id='konten-utama' tabIndex={-1} className='flex-1 flex flex-col'>
+        {children}
+      </main>
       <GlobalFooter containerClassName={containerClassName} />
     </div>
   )

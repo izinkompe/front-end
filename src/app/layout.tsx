@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist_Mono, IBM_Plex_Sans } from 'next/font/google'
+import { FavoritesSidebarProvider } from '@/components/favorites/favorites-sidebar-provider'
+import { AccessibilityProvider } from '@/components/providers/accessibility-provider'
 import { LocationProvider } from '@/components/providers/location-provider'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { cn } from '@/lib/utils'
@@ -35,7 +37,11 @@ export default function RootLayout({
     >
       <body className='min-h-full flex flex-col font-sans text-base'>
         <QueryProvider>
-          <LocationProvider>{children}</LocationProvider>
+          <AccessibilityProvider>
+            <LocationProvider>
+              <FavoritesSidebarProvider>{children}</FavoritesSidebarProvider>
+            </LocationProvider>
+          </AccessibilityProvider>
         </QueryProvider>
       </body>
     </html>

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import {
   Apple,
-  BookOpen,
+  Accessibility,
   Carrot,
   ChevronRight,
   CircleHelp,
@@ -38,7 +38,7 @@ export const primaryNavLinks: ReadonlyArray<HeaderNavItem> = [
 
 export const moreNavItems: ReadonlyArray<HeaderNavItem> = [
   { href: '/bantuan', label: 'Pusat Bantuan', icon: CircleHelp },
-  { href: '/blog', label: 'Blog PanganTani', icon: BookOpen },
+  { href: '/aksesibilitas', label: 'Aksesibilitas', icon: Accessibility },
   { href: '/syarat', label: 'Syarat dan Ketentuan', icon: FileText },
 ]
 

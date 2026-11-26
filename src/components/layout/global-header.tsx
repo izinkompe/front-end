@@ -3,18 +3,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import {
-  ChevronDown,
-  ChevronRight,
-  Heart,
-  LayoutGrid,
-  Menu,
-  ShoppingBag,
-  Sprout,
-  User,
-  X,
-} from 'lucide-react'
+import { ChevronDown, ChevronRight, Heart, LayoutGrid, Menu, Sprout, X } from 'lucide-react'
+import { HeaderNotificationsPopover } from './header-notifications-popover'
 import { BuyerAuthDialog } from '@/components/auth/buyer-auth-dialog'
+import { useFavoritesSidebar } from '@/components/favorites/favorites-sidebar-provider'
 import { HeroSearchCombobox } from '@/components/home/hero-search-combobox'
 import {
   buildBuyerSearchHref,
@@ -52,9 +44,16 @@ export function GlobalHeader({
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
+  const [authDialogTab, setAuthDialogTab] = useState<'login' | 'register'>('login')
   const [isScrolled, setIsScrolled] = useState(false)
+
+  function openAuthDialog(tab: 'login' | 'register') {
+    setAuthDialogTab(tab)
+    setAuthDialogOpen(true)
+  }
   const [searchQuery, setSearchQuery] = useState('')
   const { selectedLocation, setSelectedLocation } = useSelectedLocation()
+  const { open: favoritesOpen, openFavorites } = useFavoritesSidebar()
   const pathname = usePathname()
   const { data: currentUser } = useCurrentUser()
   const { data: offers = [] } = useOffers()
@@ -126,7 +125,7 @@ export function GlobalHeader({
               'flex min-h-10 items-center justify-between gap-2 py-1 lg:min-h-11 lg:gap-4'
             )}
           >
-            <div className='min-w-0 lg:hidden'>
+            <div className='min-w-0'>
               <LocationPicker
                 selected={selectedLocation}
                 onSelect={setSelectedLocation}
@@ -134,142 +133,17 @@ export function GlobalHeader({
               />
             </div>
 
-            <nav aria-label='Navigasi Utama' className='hidden items-center gap-1 xl:gap-2 lg:flex'>
-              <Popover open={categoryMenuOpen} onOpenChange={setCategoryMenuOpen}>
-                <PopoverTrigger
-                  render={
-                    <button
-                      type='button'
-                      className={cn(
-                        'inline-flex min-h-9 items-center gap-1 rounded-md px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2',
-                        isTransparent
-                          ? 'text-white/90 hover:text-white aria-expanded:text-white focus-visible:ring-white/60'
-                          : isCategoryActive
-                            ? 'text-secondary-foreground focus-visible:ring-ring'
-                            : 'text-secondary-foreground/80 hover:text-secondary-foreground aria-expanded:text-secondary-foreground focus-visible:ring-ring'
-                      )}
-                    />
-                  }
-                >
-                  <span>Kategori</span>
-                  <ChevronDown
-                    className={cn(
-                      'size-4 shrink-0 transition-transform duration-150',
-                      categoryMenuOpen && 'rotate-180'
-                    )}
-                    aria-hidden='true'
-                  />
-                </PopoverTrigger>
-                <PopoverContent
-                  align='start'
-                  sideOffset={8}
-                  positionMethod='fixed'
-                  className='w-64 gap-0.5 p-1.5'
-                >
-                  {categoryNavItems.map((item) => (
-                    <DesktopMenuLink
-                      key={item.href}
-                      item={item}
-                      isActive={pathname === item.href}
-                      onSelect={() => setCategoryMenuOpen(false)}
-                    />
-                  ))}
-                  <Separator className='my-1' />
-                  <DesktopMenuLink
-                    item={{ href: '/pasar', label: 'Semua Panen', icon: LayoutGrid }}
-                    isActive={pathname === '/pasar'}
-                    onSelect={() => setCategoryMenuOpen(false)}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              {primaryNavLinks.map((item) => {
-                const isActive = pathname === item.href
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      'inline-flex min-h-9 items-center rounded-md px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2',
-                      isTransparent
-                        ? 'text-white/90 hover:text-white focus-visible:ring-white/60'
-                        : isActive
-                          ? 'text-secondary-foreground focus-visible:ring-ring'
-                          : 'text-secondary-foreground/80 hover:text-secondary-foreground focus-visible:ring-ring'
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                )
-              })}
-
-              <Popover open={moreMenuOpen} onOpenChange={setMoreMenuOpen}>
-                <PopoverTrigger
-                  render={
-                    <button
-                      type='button'
-                      className={cn(
-                        'inline-flex min-h-9 items-center gap-1 rounded-md px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2',
-                        isTransparent
-                          ? 'text-white/90 hover:text-white aria-expanded:text-white focus-visible:ring-white/60'
-                          : isMoreActive
-                            ? 'text-secondary-foreground focus-visible:ring-ring'
-                            : 'text-secondary-foreground/80 hover:text-secondary-foreground aria-expanded:text-secondary-foreground focus-visible:ring-ring'
-                      )}
-                    />
-                  }
-                >
-                  <span>Lainnya</span>
-                  <ChevronDown
-                    className={cn(
-                      'size-4 shrink-0 transition-transform duration-150',
-                      moreMenuOpen && 'rotate-180'
-                    )}
-                    aria-hidden='true'
-                  />
-                </PopoverTrigger>
-                <PopoverContent
-                  align='start'
-                  sideOffset={8}
-                  positionMethod='fixed'
-                  className='w-60 gap-0.5 p-1.5'
-                >
-                  {moreNavItems.map((item) => (
-                    <DesktopMenuLink
-                      key={item.href}
-                      item={item}
-                      isActive={pathname === item.href}
-                      onSelect={() => setMoreMenuOpen(false)}
-                    />
-                  ))}
-                </PopoverContent>
-              </Popover>
-            </nav>
-
-            <div className='flex shrink-0 items-center gap-3'>
-              <div className='hidden items-center gap-3 lg:flex'>
-                <LocationPicker
-                  selected={selectedLocation}
-                  onSelect={setSelectedLocation}
-                  variant={isTransparent ? 'overlay' : 'banner'}
-                />
-                <span
-                  className={cn('h-4 w-px', isTransparent ? 'bg-white/25' : 'bg-border')}
-                  aria-hidden='true'
-                />
-              </div>
-              <Link
-                href='/daftar-petani'
-                className={cn(
-                  'inline-flex min-h-9 items-center rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap transition-colors hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 sm:px-2.5 sm:py-1.5 sm:text-sm',
-                  isTransparent
-                    ? 'text-white/95 hover:text-white focus-visible:ring-white/60'
-                    : 'text-secondary-foreground/90 hover:text-secondary-foreground focus-visible:ring-ring'
-                )}
-              >
-                Daftar Jadi Petani
-              </Link>
-            </div>
+            <Link
+              href='/daftar-petani'
+              className={cn(
+                'inline-flex min-h-9 shrink-0 items-center rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap transition-colors hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 sm:px-2.5 sm:py-1.5 sm:text-sm',
+                isTransparent
+                  ? 'text-white/95 hover:text-white focus-visible:ring-white/60'
+                  : 'text-secondary-foreground/90 hover:text-secondary-foreground focus-visible:ring-ring'
+              )}
+            >
+              Daftar Jadi Petani
+            </Link>
           </div>
         </div>
 
@@ -283,10 +157,10 @@ export function GlobalHeader({
             <div
               className={cn(
                 containerClass,
-                'flex min-h-16 items-center justify-between gap-3 py-2.5 sm:gap-4 lg:gap-6'
+                'flex min-h-16 items-center justify-between gap-3 py-2.5 sm:gap-4 lg:gap-5'
               )}
             >
-              <div className='flex shrink-0 items-center gap-2'>
+              <div className='flex min-w-0 flex-1 items-center gap-2 lg:gap-5'>
                 <div className='flex items-center lg:hidden'>
                   <CollapsibleTrigger
                     render={
@@ -306,7 +180,7 @@ export function GlobalHeader({
                   href='/'
                   aria-label='PanganTani - Beranda'
                   className={cn(
-                    'inline-flex min-h-11 items-center gap-2.5 rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2',
+                    'inline-flex min-h-11 shrink-0 items-center gap-2.5 rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2',
                     isTransparent ? 'focus-visible:ring-white/60' : 'focus-visible:ring-ring'
                   )}
                 >
@@ -329,63 +203,190 @@ export function GlobalHeader({
                     PanganTani
                   </span>
                 </Link>
+
+                <form
+                  onSubmit={handleSearchSubmit}
+                  role='search'
+                  aria-label='Pencarian panen surplus'
+                  className='hidden min-w-0 flex-1 max-w-sm xl:max-w-md lg:block'
+                >
+                  <HeroSearchCombobox
+                    query={searchQuery}
+                    onQueryChange={setSearchQuery}
+                    offers={offers}
+                    onSubmitQuery={(nextQuery) => navigateSearch(nextQuery)}
+                    onSelectCommodity={handleSelectCommodity}
+                    onSelectOffer={handleSelectOffer}
+                    className='w-full text-foreground'
+                    pill
+                  />
+                </form>
+
+                <nav
+                  aria-label='Navigasi Utama'
+                  className='hidden shrink-0 items-center gap-1 xl:gap-2 lg:flex'
+                >
+                  <Popover open={categoryMenuOpen} onOpenChange={setCategoryMenuOpen}>
+                    <PopoverTrigger
+                      render={
+                        <button
+                          type='button'
+                          className={cn(
+                            'inline-flex min-h-9 items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2',
+                            isTransparent
+                              ? 'text-white/95 hover:text-white aria-expanded:text-white focus-visible:ring-white/60'
+                              : isCategoryActive
+                                ? 'text-foreground focus-visible:ring-ring'
+                                : 'text-foreground/85 hover:text-foreground aria-expanded:text-foreground focus-visible:ring-ring'
+                          )}
+                        />
+                      }
+                    >
+                      <span>Kategori</span>
+                      <ChevronDown
+                        className={cn(
+                          'size-4 shrink-0 transition-transform duration-150',
+                          categoryMenuOpen && 'rotate-180'
+                        )}
+                        aria-hidden='true'
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align='start'
+                      sideOffset={8}
+                      positionMethod='fixed'
+                      className='w-64 gap-0.5 p-1.5'
+                    >
+                      {categoryNavItems.map((item) => (
+                        <DesktopMenuLink
+                          key={item.href}
+                          item={item}
+                          isActive={pathname === item.href}
+                          onSelect={() => setCategoryMenuOpen(false)}
+                        />
+                      ))}
+                      <Separator className='my-1' />
+                      <DesktopMenuLink
+                        item={{ href: '/pasar', label: 'Semua Panen', icon: LayoutGrid }}
+                        isActive={pathname === '/pasar'}
+                        onSelect={() => setCategoryMenuOpen(false)}
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  {primaryNavLinks.map((item) => {
+                    const isActive = pathname === item.href
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          'inline-flex min-h-9 items-center rounded-md px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2',
+                          isTransparent
+                            ? 'text-white/95 hover:text-white focus-visible:ring-white/60'
+                            : isActive
+                              ? 'text-foreground focus-visible:ring-ring'
+                              : 'text-foreground/85 hover:text-foreground focus-visible:ring-ring'
+                        )}
+                      >
+                        {item.label}
+                      </Link>
+                    )
+                  })}
+
+                  <Popover open={moreMenuOpen} onOpenChange={setMoreMenuOpen}>
+                    <PopoverTrigger
+                      render={
+                        <button
+                          type='button'
+                          className={cn(
+                            'inline-flex min-h-9 items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2',
+                            isTransparent
+                              ? 'text-white/95 hover:text-white aria-expanded:text-white focus-visible:ring-white/60'
+                              : isMoreActive
+                                ? 'text-foreground focus-visible:ring-ring'
+                                : 'text-foreground/85 hover:text-foreground aria-expanded:text-foreground focus-visible:ring-ring'
+                          )}
+                        />
+                      }
+                    >
+                      <span>Lainnya</span>
+                      <ChevronDown
+                        className={cn(
+                          'size-4 shrink-0 transition-transform duration-150',
+                          moreMenuOpen && 'rotate-180'
+                        )}
+                        aria-hidden='true'
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align='start'
+                      sideOffset={8}
+                      positionMethod='fixed'
+                      className='w-60 gap-0.5 p-1.5'
+                    >
+                      {moreNavItems.map((item) => (
+                        <DesktopMenuLink
+                          key={item.href}
+                          item={item}
+                          isActive={pathname === item.href}
+                          onSelect={() => setMoreMenuOpen(false)}
+                        />
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                </nav>
               </div>
 
-              <form
-                onSubmit={handleSearchSubmit}
-                role='search'
-                aria-label='Pencarian panen surplus'
-                className='hidden min-w-0 flex-1 max-w-2xl lg:block'
-              >
-                <HeroSearchCombobox
-                  query={searchQuery}
-                  onQueryChange={setSearchQuery}
-                  offers={offers}
-                  onSubmitQuery={(nextQuery) => navigateSearch(nextQuery)}
-                  onSelectCommodity={handleSelectCommodity}
-                  onSelectOffer={handleSelectOffer}
-                  className='w-full text-foreground'
-                />
-              </form>
-
-              <div className='flex shrink-0 items-center justify-end gap-0.5 sm:gap-1.5'>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className={cn(isTransparent && transparentIconClass)}
-                  nativeButton={false}
-                  render={<Link href='/favorit' aria-label='Favorit' />}
-                >
-                  <Heart />
-                </Button>
-
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className={cn(isTransparent && transparentIconClass)}
-                  nativeButton={false}
-                  render={<Link href='/keranjang' aria-label='Keranjang' />}
-                >
-                  <ShoppingBag />
-                </Button>
-
+              <div className='flex shrink-0 items-center justify-end gap-1.5 sm:gap-2'>
                 {currentUser ? (
-                  <HeaderUserMenu
-                    user={currentUser}
-                    pathname={pathname}
-                    isTransparent={isTransparent}
-                    transparentIconClass={transparentIconClass}
-                  />
+                  <>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className={cn(isTransparent && transparentIconClass)}
+                      aria-label='Favorit'
+                      aria-expanded={favoritesOpen}
+                      onClick={openFavorites}
+                    >
+                      <Heart />
+                    </Button>
+
+                    <HeaderNotificationsPopover
+                      signedIn={Boolean(currentUser)}
+                      className={cn('relative', isTransparent && transparentIconClass)}
+                      onSignIn={() => openAuthDialog('login')}
+                    />
+
+                    <HeaderUserMenu
+                      user={currentUser}
+                      pathname={pathname}
+                      isTransparent={isTransparent}
+                      transparentIconClass={transparentIconClass}
+                    />
+                  </>
                 ) : (
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className={cn(isTransparent && transparentIconClass)}
-                    aria-label='Masuk atau daftar akun pembeli'
-                    onClick={() => setAuthDialogOpen(true)}
-                  >
-                    <User />
-                  </Button>
+                  <>
+                    <Button
+                      variant='secondary'
+                      size='sm'
+                      className={cn(
+                        isTransparent &&
+                          'bg-white/15 text-white hover:bg-white/25 hover:text-white focus-visible:ring-white/60'
+                      )}
+                      onClick={() => openAuthDialog('login')}
+                    >
+                      Masuk
+                    </Button>
+                    <Button
+                      variant='default'
+                      size='sm'
+                      className={cn(isTransparent && 'bg-white text-foreground hover:bg-white/90')}
+                      onClick={() => openAuthDialog('register')}
+                    >
+                      Daftar
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
@@ -471,7 +472,11 @@ export function GlobalHeader({
           </CollapsibleContent>
         </Collapsible>
 
-        <BuyerAuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
+        <BuyerAuthDialog
+          open={authDialogOpen}
+          onOpenChange={setAuthDialogOpen}
+          defaultTab={authDialogTab}
+        />
       </header>
       {!isHeroPage && (
         <div aria-hidden='true' className='h-[10.3125rem] shrink-0 lg:h-[6.875rem]' />
