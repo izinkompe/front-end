@@ -31,9 +31,9 @@ import {
   moreNavItems,
   primaryNavLinks,
 } from '@/components/layout/header-nav-links'
+import { HeaderUserMenu } from '@/components/layout/header-user-menu'
 import { LocationPicker } from '@/components/layout/location-picker'
 import { useSelectedLocation } from '@/components/providers/location-provider'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -41,13 +41,6 @@ import { Separator } from '@/components/ui/separator'
 import { useCurrentUser } from '@/hooks/api/use-auth'
 import { useOffers } from '@/hooks/api/use-offers'
 import { cn } from '@/lib/utils'
-
-function getUserInitials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return 'PT'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-}
 
 export function GlobalHeader({
   containerClassName = 'max-w-none',
@@ -377,20 +370,12 @@ export function GlobalHeader({
                 </Button>
 
                 {currentUser ? (
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    className={cn('rounded-full', isTransparent && transparentIconClass)}
-                    nativeButton={false}
-                    render={<Link href='/dashboard' aria-label={`Akun ${currentUser.name}`} />}
-                  >
-                    <Avatar>
-                      {currentUser.avatarUrl && (
-                        <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />
-                      )}
-                      <AvatarFallback>{getUserInitials(currentUser.name)}</AvatarFallback>
-                    </Avatar>
-                  </Button>
+                  <HeaderUserMenu
+                    user={currentUser}
+                    pathname={pathname}
+                    isTransparent={isTransparent}
+                    transparentIconClass={transparentIconClass}
+                  />
                 ) : (
                   <Button
                     variant='ghost'
