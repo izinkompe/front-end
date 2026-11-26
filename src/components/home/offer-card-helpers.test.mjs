@@ -11,6 +11,7 @@ import {
   getDynamicPriceSummary,
   getLocationCoordinates,
   getOfferCountdownState,
+  getSafeOfferPhotoUrl,
 } from './offer-card-helpers'
 
 describe('straight-line distance helpers', () => {
@@ -148,5 +149,22 @@ describe('pricing, weight, pickup, and URL helpers', () => {
         label: 'Bandung Barat (Lembang)',
       })
     ).toBe('/pasar?sort=expiring&province=jawa-barat&region=bandung-barat')
+  })
+
+  test('allows only local image assets and approved Unsplash photo URLs', () => {
+    expect(getSafeOfferPhotoUrl(['/images/commodities/tomat.webp'])).toBe(
+      '/images/commodities/tomat.webp'
+    )
+    expect(
+      getSafeOfferPhotoUrl([
+        'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=640&q=80',
+      ])
+    ).toBe(
+      'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=640&q=80'
+    )
+    expect(getSafeOfferPhotoUrl(['https://evil.test/photo-123.jpg'])).toBeNull()
+    expect(getSafeOfferPhotoUrl(['javascript:alert(1)'])).toBeNull()
+    expect(getSafeOfferPhotoUrl(['/images/../secret.webp'])).toBeNull()
+    expect(getSafeOfferPhotoUrl([])).toBeNull()
   })
 })

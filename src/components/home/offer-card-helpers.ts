@@ -263,3 +263,27 @@ export function buildExpiringCatalogHref(location: SelectedLocation): string {
   }
   return `/pasar?${params.toString()}`
 }
+
+export function getSafeOfferPhotoUrl(photos: ReadonlyArray<string>): string | null {
+  const candidate = photos[0]?.trim()
+  if (!candidate) return null
+
+  if (/^\/images\/[a-zA-Z0-9/_-]+\.(?:webp|png|jpe?g|avif)$/.test(candidate)) {
+    return candidate
+  }
+
+  try {
+    const parsed = new URL(candidate)
+    if (
+      parsed.protocol === 'https:' &&
+      parsed.hostname === 'images.unsplash.com' &&
+      parsed.pathname.startsWith('/photo-')
+    ) {
+      return parsed.toString()
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}

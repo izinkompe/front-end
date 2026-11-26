@@ -7,7 +7,14 @@ import { needsBoardCollection } from './collections/needs-board'
 import type { Order } from '@/types/api/orders'
 import type { DistributionStats } from '@/types/api/admin'
 import type { NeedRequest } from '@/types/api/needs-board'
+import type { Offer } from '@/types/api/offers'
 import type { User } from '@/types/api/auth'
+import { matchesOfferCategory } from '@/lib/data/categories'
+
+function toPublicOffer(offer: Offer): Offer {
+  const { pickupAddressFull: _, ...publicOffer } = offer
+  return publicOffer
+}
 
 let activeSessionUserId: string | null = null
 
@@ -194,12 +201,14 @@ export const tanstackDbAdapter = {
         .filter((item) => item.status === 'active' && item.availableStockKg > 0)
         .sort((a, b) => Date.parse(a.orderDeadline) - Date.parse(b.orderDeadline))
         .slice(0, 6)
+        .map(toPublicOffer)
     }
 
     if (endpoint === '/api/offers' && method === 'GET') {
       let items = Array.from(offersCollection.values())
       if (options.params?.category) {
-        items = items.filter((item) => item.category === options.params?.category)
+        const targetCategory = String(options.params.category)
+        items = items.filter((item) => matchesOfferCategory(item.category, targetCategory))
       }
       if (options.params?.search) {
         const query = String(options.params.search).toLowerCase()
@@ -208,7 +217,7 @@ export const tanstackDbAdapter = {
       if (options.params?.condition) {
         items = items.filter((item) => item.condition === options.params?.condition)
       }
-      return items
+      return items.map(toPublicOffer)
     }
 
     if (endpoint.startsWith('/api/offers/') && method === 'GET') {

@@ -1,4 +1,5 @@
 import type { Offer } from '@/types/api/offers'
+import { regularCatalogOffersData } from './offers-catalog.fixture'
 
 function getRelativeTimestamp(offsetMs: number): string {
   return new Date(Date.now() + offsetMs).toISOString()
@@ -18,7 +19,7 @@ const MINUTE_MS = 60 * 1000
 const todayDate = getRelativeDateIso(0)
 const tomorrowDate = getRelativeDateIso(1)
 
-export const mockOffersData: Offer[] = [
+const urgentOffersData: Offer[] = [
   {
     id: 'off-003',
     farmerId: 'usr-pt-01',
@@ -48,7 +49,9 @@ export const mockOffersData: Offer[] = [
       { id: 'slot-4', date: todayDate, startTime: '13:00', endTime: '16:00', isAvailable: true },
       { id: 'slot-4b', date: todayDate, startTime: '16:30', endTime: '18:00', isAvailable: true },
     ],
-    photos: ['/images/commodities/mangga.webp'],
+    photos: [
+      'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=640&q=80',
+    ],
     status: 'active',
     createdAt: getRelativeTimestamp(-12 * HOUR_MS),
     updatedAt: getRelativeTimestamp(-2 * HOUR_MS),
@@ -81,7 +84,9 @@ export const mockOffersData: Offer[] = [
       { id: 'slot-1', date: todayDate, startTime: '15:00', endTime: '17:00', isAvailable: true },
       { id: 'slot-2', date: tomorrowDate, startTime: '08:00', endTime: '10:00', isAvailable: true },
     ],
-    photos: ['/images/commodities/tomato-cherry.webp'],
+    photos: [
+      'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=640&q=80',
+    ],
     status: 'active',
     createdAt: getRelativeTimestamp(-10 * HOUR_MS),
     updatedAt: getRelativeTimestamp(-1 * HOUR_MS),
@@ -107,7 +112,9 @@ export const mockOffersData: Offer[] = [
     pickupScheduleSlots: [
       { id: 'slot-3', date: todayDate, startTime: '14:00', endTime: '17:00', isAvailable: true },
     ],
-    photos: ['/images/commodities/buncis.webp'],
+    photos: [
+      'https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?auto=format&fit=crop&w=640&q=80',
+    ],
     status: 'active',
     createdAt: getRelativeTimestamp(-7 * HOUR_MS),
     updatedAt: getRelativeTimestamp(-1 * HOUR_MS),
@@ -146,7 +153,9 @@ export const mockOffersData: Offer[] = [
         isAvailable: true,
       },
     ],
-    photos: ['/images/commodities/wortel.webp'],
+    photos: [
+      'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=640&q=80',
+    ],
     status: 'active',
     createdAt: getRelativeTimestamp(-15 * HOUR_MS),
     updatedAt: getRelativeTimestamp(-3 * HOUR_MS),
@@ -179,7 +188,9 @@ export const mockOffersData: Offer[] = [
     pickupScheduleSlots: [
       { id: 'slot-6', date: tomorrowDate, startTime: '07:30', endTime: '10:30', isAvailable: true },
     ],
-    photos: ['/images/commodities/nanas.webp'],
+    photos: [
+      'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?auto=format&fit=crop&w=640&q=80',
+    ],
     status: 'active',
     createdAt: getRelativeTimestamp(-8 * HOUR_MS),
     updatedAt: getRelativeTimestamp(-2 * HOUR_MS),
@@ -212,9 +223,13 @@ export const mockOffersData: Offer[] = [
         isAvailable: true,
       },
     ],
-    photos: ['/images/commodities/ubi.webp'],
+    photos: [
+      'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=640&q=80',
+    ],
     status: 'active',
     createdAt: getRelativeTimestamp(-14 * HOUR_MS),
     updatedAt: getRelativeTimestamp(-4 * HOUR_MS),
   },
 ]
+
+export const mockOffersData: Offer[] = [...urgentOffersData, ...regularCatalogOffersData]
