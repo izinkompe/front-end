@@ -156,7 +156,9 @@
     font-size: max(1rem, 1em);
   }
   input::-ms-reveal,
-  input::-ms-clear {
+  input::-ms-clear,
+  input::-webkit-search-decoration,
+  input::-webkit-search-cancel-button {
     display: none;
   }
   button:not(:disabled),
@@ -174,4 +176,15 @@
 @utility font-base {
   font-size: 1rem;
   line-height: 1.5;
+}
+
+.catalog-containment {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 340px;
+}
+
+@supports not (content-visibility: auto) {
+  .catalog-containment {
+    contain: layout style paint;
+  }
 }
