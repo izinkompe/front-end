@@ -255,7 +255,7 @@ export const tanstackDbAdapter = {
       if (!offer) {
         throw new ApiError(404, 'Penawaran tidak ditemukan', 'NOT_FOUND')
       }
-      return offer
+      return toPublicOffer(offer)
     }
 
     if (endpoint === '/api/orders' && method === 'GET') {
