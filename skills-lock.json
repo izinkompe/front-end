@@ -1,6 +1,13 @@
 {
   "version": 2,
   "skills": {
+    "accessibility-compliance": {
+      "source": "wshobson/agents",
+      "commit": "c96b5f6552dba32e4492307493ee613581430715",
+      "sourceType": "github",
+      "skillPath": "plugins/ui-design/skills/accessibility-compliance/SKILL.md",
+      "computedHash": "c8ad5b5f83e413bb69e7a7ad251662c91e27cdf7db7d104df68b11aab6d3c534"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "commit": "e4bb5d960d87126ff3b3a8af1a104b7db67560ba",
@@ -28,6 +35,13 @@
       "sourceType": "github",
       "skillPath": "skills/programmatic-seo/SKILL.md",
       "computedHash": "f37db3caa28d6e8e7d4bc0b73e65db26cae7dfb15b53d97f58a0f2330bca545b"
+    },
+    "responsive-design": {
+      "source": "wshobson/agents",
+      "commit": "c96b5f6552dba32e4492307493ee613581430715",
+      "sourceType": "github",
+      "skillPath": "plugins/ui-design/skills/responsive-design/SKILL.md",
+      "computedHash": "3ff2c1acd7067b5fbd30dc370364054f7d470d26e288cf3d454fed457478cdc0"
     },
     "security-audit": {
       "source": "cloudflare/security-audit-skill",
@@ -70,6 +84,13 @@
       "sourceType": "github",
       "skillPath": "skills/unslop-ui/SKILL.md",
       "computedHash": "bca7d731d5dda09a73724c8dd65e4826f14686d28a5a981f61a938fc78ae5b97"
+    },
+    "visual-design-foundations": {
+      "source": "wshobson/agents",
+      "commit": "c96b5f6552dba32e4492307493ee613581430715",
+      "sourceType": "github",
+      "skillPath": "plugins/ui-design/skills/visual-design-foundations/SKILL.md",
+      "computedHash": "ca2bebbf7c248e5e32356bc074bc899285243c5a169782f4e163346b758fa1c9"
     }
   }
 }
