@@ -2,7 +2,7 @@
 
 ## Pesan commit
 
-Gunakan format Conventional Commits `type(scope): ringkasan`. Scope opsional dan menyebut area yang berubah, misalnya `cart` atau `auth`. Tulis ringkasan dalam satu baris tanpa titik di akhir dan batasi seluruh header hingga 100 karakter sesuai konfigurasi Commitlint. [Spesifikasi Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+Gunakan format Conventional Commits `type(scope): ringkasan` dengan ringkasan dan body berbahasa Indonesia. Scope opsional dan menyebut area yang berubah, misalnya `cart`, `auth`, `rbac`, `dashboard`, `admin`, `farmer`, atau `ui`. Tulis ringkasan dalam satu baris tanpa titik di akhir dan batasi seluruh header hingga 100 karakter sesuai konfigurasi Commitlint. Pecah perubahan besar menjadi beberapa commit terfokus per lapisan atau fitur agar riwayat mudah ditinjau. [Spesifikasi Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 
 | Tipe                        | Gunakan untuk                                                                |
 | --------------------------- | ---------------------------------------------------------------------------- |
@@ -13,9 +13,10 @@ Gunakan format Conventional Commits `type(scope): ringkasan`. Scope opsional dan
 
 ```text
 feat(catalog): tambah filter kategori
+feat(rbac): terapkan kebijakan akses peran pada dashboard
 fix(cart): perbaiki kalkulasi subtotal
 ci: jalankan smoke test pada build produksi
-docs: perbarui panduan keamanan
+docs(commit): perbarui panduan konvensi commit
 ```
 
 Gunakan body untuk menjelaskan alasan perubahan atau langkah migrasi. Untuk perubahan yang merusak kompatibilitas, gunakan `!` sebelum titik dua pada header atau footer `BREAKING CHANGE:` yang menjelaskan dampaknya. [Spesifikasi Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
