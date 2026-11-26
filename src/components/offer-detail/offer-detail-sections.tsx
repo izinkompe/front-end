@@ -94,7 +94,7 @@ export function OfferDetailSections({
     <div className='flex min-w-0 flex-col gap-10'>
       <nav
         aria-label='Bagian halaman detail komoditas'
-        className='offer-scrollspy-nav flex flex-wrap items-center gap-2'
+        className='offer-scrollspy-nav scroll-strip sticky top-16 z-20 -mx-4 border-b border-border/80 bg-background/95 px-4 py-2.5 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0'
       >
         {sectionAnchors.map((anchor) => {
           const isActive = activeSectionId === anchor.id
@@ -105,7 +105,7 @@ export function OfferDetailSections({
               aria-current={isActive ? 'true' : 'false'}
               onClick={(event) => handleSectionClick(event, anchor.id)}
               className={cn(
-                'inline-flex min-h-10 items-center rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                'inline-flex min-h-10 shrink-0 items-center rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition-colors pointer-coarse:min-h-11 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
                 isActive
                   ? 'target-current bg-secondary font-semibold text-foreground'
                   : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -122,9 +122,7 @@ export function OfferDetailSections({
         tabIndex={-1}
         className='flex scroll-mt-32 flex-col gap-5 outline-none'
       >
-        <h2 className='text-xl leading-snug font-bold text-foreground sm:text-2xl'>
-          Kondisi dan ringkasan panen
-        </h2>
+        <h2 className='type-h2 text-foreground'>Kondisi dan ringkasan panen</h2>
 
         {isLongSurplusText ? (
           <details className='group max-w-[65ch]'>
@@ -181,9 +179,7 @@ export function OfferDetailSections({
 
       {offer.dynamicPriceRule && (
         <section id='harga' tabIndex={-1} className='flex scroll-mt-32 flex-col gap-4 outline-none'>
-          <h2 className='text-xl leading-snug font-bold text-foreground sm:text-2xl'>
-            Jadwal harga dinamis
-          </h2>
+          <h2 className='type-h2 text-foreground'>Jadwal harga dinamis</h2>
 
           <p className='max-w-[65ch] text-base leading-relaxed text-muted-foreground'>
             Harga awal {formatPlainRupiah(offer.dynamicPriceRule.startPrice)}/kg turun{' '}
@@ -218,7 +214,7 @@ export function OfferDetailSections({
                   <span>
                     {stage.hoursFromStart === 0 ? 'Harga awal' : `+${stage.hoursFromStart} jam`}
                   </span>
-                  <span className='text-xs text-muted-foreground'>
+                  <span className='text-sm text-muted-foreground'>
                     {stage.status === 'current'
                       ? 'Berlaku sekarang'
                       : stage.status === 'passed'
@@ -241,9 +237,7 @@ export function OfferDetailSections({
       )}
 
       <section id='lokasi' tabIndex={-1} className='flex scroll-mt-32 flex-col gap-5 outline-none'>
-        <h2 className='text-xl leading-snug font-bold text-foreground sm:text-2xl'>
-          Lokasi dan jadwal ambil mandiri
-        </h2>
+        <h2 className='type-h2 text-foreground'>Lokasi dan jadwal ambil mandiri</h2>
 
         <div className='grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]'>
           <div className='flex flex-col gap-4'>
@@ -260,7 +254,7 @@ export function OfferDetailSections({
             </div>
 
             <div className='flex flex-col gap-2'>
-              <h3 className='text-sm font-semibold text-foreground'>Slot jadwal pengambilan</h3>
+              <h3 className='type-h4 text-foreground'>Slot jadwal pengambilan</h3>
               <ul className='flex flex-col gap-2'>
                 {offer.pickupScheduleSlots.map((slot) => {
                   const available = slot.isAvailable !== false
@@ -275,7 +269,7 @@ export function OfferDetailSections({
                       <span>{formatPickupSlotLabel(slot)}</span>
                       <span
                         className={cn(
-                          'text-xs font-medium',
+                          'text-sm font-medium',
                           available ? 'text-primary' : 'text-muted-foreground'
                         )}
                       >
@@ -298,9 +292,7 @@ export function OfferDetailSections({
       </section>
 
       <section id='petani' tabIndex={-1} className='flex scroll-mt-32 flex-col gap-4 outline-none'>
-        <h2 className='text-xl leading-snug font-bold text-foreground sm:text-2xl'>
-          Petani pengelola panen
-        </h2>
+        <h2 className='type-h2 text-foreground'>Petani pengelola panen</h2>
 
         <div className='flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between'>
           <div className='flex items-center gap-3.5'>

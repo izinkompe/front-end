@@ -282,9 +282,7 @@ export function CatalogView({ fixedCategory }: CatalogViewProps) {
             <div className='flex flex-col gap-3'>
               <CatalogBreadcrumb categoryMeta={categoryMeta} />
               <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-                <h1 className='text-[clamp(1.5rem,1.25rem+0.9vw,2rem)] leading-tight font-bold text-foreground'>
-                  {pageTitle}
-                </h1>
+                <h1 className='type-h1 text-foreground'>{pageTitle}</h1>
                 <form
                   role='search'
                   onSubmit={(event) => event.preventDefault()}
@@ -349,7 +347,11 @@ export function CatalogView({ fixedCategory }: CatalogViewProps) {
         onRetryMap={() => setMapError(null)}
       />
 
-      <CatalogScrollTopButton splitActive={!mapError} />
+      <CatalogScrollTopButton
+        splitActive={!mapError}
+        activeFilterCount={activeFilterCount}
+        onOpenFilterSheet={() => setFilterSheetOpen(true)}
+      />
 
       <CatalogFilterSheet
         open={filterSheetOpen}

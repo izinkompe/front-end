@@ -229,7 +229,7 @@ export function FarmerReviewsTab({
         <aside aria-label='Filter ulasan' className='hidden lg:block'>
           <div className='sticky top-28 rounded-2xl border border-border bg-card p-4'>
             <div className='mb-4 flex items-center justify-between gap-2'>
-              <h2 className='text-sm font-semibold text-foreground'>Filter Ulasan</h2>
+              <h2 className='type-h4 text-foreground'>Filter Ulasan</h2>
               {hasActiveFilter && (
                 <Button type='button' variant='ghost' size='xs' onClick={onResetFilters}>
                   Reset
@@ -259,12 +259,12 @@ export function FarmerReviewsTab({
                   <ListFilter data-icon='inline-start' aria-hidden='true' />
                   <span>Filter ulasan</span>
                 </SheetTrigger>
-                <SheetContent side='left' className='w-80 overflow-y-auto p-5'>
-                  <SheetHeader className='p-0'>
+                <SheetContent side='left' className='sm:max-w-sm'>
+                  <SheetHeader className='px-5 py-4 pr-14'>
                     <SheetTitle>Filter Ulasan</SheetTitle>
                     <SheetDescription>Saring ulasan pembeli untuk {farmName}.</SheetDescription>
                   </SheetHeader>
-                  <div className='mt-4'>
+                  <div className='p-5'>
                     <ReviewFilterControls
                       idPrefix='mobile-review'
                       filters={filters}

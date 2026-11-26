@@ -1,9 +1,25 @@
 'use client'
 
-import { ArrowUpDown, LayoutGrid, Rows3, SlidersHorizontal } from 'lucide-react'
+import {
+  Apple,
+  ArrowUpDown,
+  Carrot,
+  Clock,
+  Flame,
+  Layers,
+  LayoutGrid,
+  Leaf,
+  Package,
+  Rows3,
+  Scale,
+  Shapes,
+  SlidersHorizontal,
+  TrendingDown,
+  Wheat,
+  type LucideIcon,
+} from 'lucide-react'
 import type { BuyerCategoryFilter } from '@/components/home/hero-search-params'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -32,20 +48,16 @@ interface CatalogToolbarProps {
   onStateChange: (updater: (prev: CatalogFilterState) => CatalogFilterState) => void
 }
 
-const controlSurfaceClassName =
-  'min-h-9 rounded-full border border-muted-foreground/45 bg-card px-3 py-1 text-xs font-medium whitespace-nowrap text-foreground transition-colors pointer-coarse:min-h-10 hover:border-foreground/65 hover:bg-muted/70 hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:min-h-10 sm:px-3.5 sm:py-1.5 sm:text-sm'
+const controlSurfaceClassName = 'pill-control border-muted-foreground/45 hover:border-foreground/65'
 
-const quickChipClassName = cn(
-  controlSurfaceClassName,
-  'aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:font-semibold aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary/90'
-)
+const quickChipClassName = 'chip-toggle border-muted-foreground/45 hover:border-foreground/65'
 
 const toolbarSelectTriggerClassName = cn(
   controlSurfaceClassName,
-  'w-full shrink-0 justify-between gap-2 rounded-full! sm:w-auto [&_svg]:text-foreground/80'
+  'w-full min-w-0 max-w-full shrink-0 justify-between gap-2 rounded-full! sm:w-auto [&_svg]:text-foreground/80'
 )
 
-const filterRowWrapClassName = 'flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2'
+const filterRowWrapClassName = 'scroll-strip min-w-0 flex-nowrap gap-1.5 sm:gap-2'
 
 const cardLayoutOptions: ReadonlyArray<{
   value: CatalogViewMode
@@ -54,6 +66,20 @@ const cardLayoutOptions: ReadonlyArray<{
   { value: 'row', label: 'Baris penuh' },
   { value: 'grid', label: 'Grid' },
 ]
+
+const categoryIcons: Record<BuyerCategorySlug, LucideIcon> = {
+  sayuran: Leaf,
+  buah: Apple,
+  'padi-biji': Wheat,
+  'rempah-umbi': Carrot,
+}
+
+const conditionIcons: Record<CommodityCondition, LucideIcon> = {
+  ripe_urgent: Flame,
+  grade_b: Scale,
+  surplus: Layers,
+  imperfect_shape: Shapes,
+}
 
 function isCategoryToken(value: string): value is `cat:${BuyerCategorySlug}` {
   return (
@@ -153,77 +179,84 @@ export function CatalogToolbar({
   }
 
   return (
-    <div className='flex flex-col gap-2'>
-      <div className={filterRowWrapClassName}>
-        <Button
+    <div className='flex flex-col gap-2.5'>
+      <ToggleGroup
+        multiple
+        variant='default'
+        spacing={1}
+        value={primarySelectedTokens}
+        onValueChange={handlePrimaryChange}
+        aria-label={fixedCategory ? 'Filter cepat kondisi' : 'Pilih kategori panen'}
+        className={filterRowWrapClassName}
+      >
+        {!fixedCategory
+          ? mainCategories.map((category) => {
+              const CategoryIcon = categoryIcons[category.slug]
+              return (
+                <ToggleGroupItem
+                  key={category.slug}
+                  value={`cat:${category.slug}`}
+                  className={quickChipClassName}
+                >
+                  <CategoryIcon className='icon-sm' aria-hidden='true' />
+                  <span>{category.shortLabel}</span>
+                </ToggleGroupItem>
+              )
+            })
+          : catalogConditionOptions.map((condition) => {
+              const ConditionIcon = conditionIcons[condition.value]
+              return (
+                <ToggleGroupItem
+                  key={condition.value}
+                  value={`cond:${condition.value}`}
+                  className={quickChipClassName}
+                >
+                  <ConditionIcon className='icon-sm' aria-hidden='true' />
+                  <span>{condition.shortLabel}</span>
+                </ToggleGroupItem>
+              )
+            })}
+      </ToggleGroup>
+
+      <ToggleGroup
+        multiple
+        variant='default'
+        spacing={1}
+        value={secondarySelectedTokens}
+        onValueChange={handleSecondaryChange}
+        aria-label='Filter cepat tambahan'
+        className={filterRowWrapClassName}
+      >
+        <ToggleGroupItem value='expiring' className={quickChipClassName}>
+          <Clock className='icon-sm' aria-hidden='true' />
+          <span>Segera ditutup</span>
+        </ToggleGroupItem>
+        <ToggleGroupItem value='dynamic' className={quickChipClassName}>
+          <TrendingDown className='icon-sm' aria-hidden='true' />
+          <span>Harga turun</span>
+        </ToggleGroupItem>
+        <ToggleGroupItem value='stock50' className={quickChipClassName}>
+          <Package className='icon-sm' aria-hidden='true' />
+          <span>Stok &ge; 50 kg</span>
+        </ToggleGroupItem>
+      </ToggleGroup>
+
+      <div className='flex flex-wrap items-center gap-2'>
+        <button
           type='button'
-          variant='outline'
-          size='sm'
           onClick={onOpenFilterSheet}
-          className={cn(controlSurfaceClassName, 'shrink-0')}
+          className={cn(controlSurfaceClassName, 'shrink-0 cursor-pointer')}
         >
-          <SlidersHorizontal data-icon='inline-start' aria-hidden='true' />
+          <SlidersHorizontal className='icon-sm' aria-hidden='true' />
           <span>Semua filter</span>
           {activeFilterCount > 0 && (
             <Badge variant='default' className='ml-0.5 min-h-5 px-2 py-0 text-xs tabular-nums'>
               {activeFilterCount}
             </Badge>
           )}
-        </Button>
+        </button>
 
-        <ToggleGroup
-          multiple
-          variant='default'
-          spacing={1}
-          value={primarySelectedTokens}
-          onValueChange={handlePrimaryChange}
-          aria-label={fixedCategory ? 'Filter cepat kondisi' : 'Pilih kategori panen'}
-          className={filterRowWrapClassName}
-        >
-          {!fixedCategory
-            ? mainCategories.map((category) => (
-                <ToggleGroupItem
-                  key={category.slug}
-                  value={`cat:${category.slug}`}
-                  className={quickChipClassName}
-                >
-                  {category.shortLabel}
-                </ToggleGroupItem>
-              ))
-            : catalogConditionOptions.map((condition) => (
-                <ToggleGroupItem
-                  key={condition.value}
-                  value={`cond:${condition.value}`}
-                  className={quickChipClassName}
-                >
-                  {condition.shortLabel}
-                </ToggleGroupItem>
-              ))}
-        </ToggleGroup>
-      </div>
-
-      <div className='flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between'>
-        <ToggleGroup
-          multiple
-          variant='default'
-          spacing={1}
-          value={secondarySelectedTokens}
-          onValueChange={handleSecondaryChange}
-          aria-label='Filter cepat tambahan'
-          className={filterRowWrapClassName}
-        >
-          <ToggleGroupItem value='expiring' className={quickChipClassName}>
-            Segera ditutup
-          </ToggleGroupItem>
-          <ToggleGroupItem value='dynamic' className={quickChipClassName}>
-            Harga turun
-          </ToggleGroupItem>
-          <ToggleGroupItem value='stock50' className={quickChipClassName}>
-            Stok &ge; 50 kg
-          </ToggleGroupItem>
-        </ToggleGroup>
-
-        <div className='grid grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:items-center'>
+        <div className='flex min-w-0 flex-1 items-center gap-2 sm:flex-none'>
           <Select
             value={state.sort}
             onValueChange={(value) => {
@@ -270,7 +303,7 @@ export function CatalogToolbar({
             <SelectTrigger
               size='sm'
               aria-label='Pilih tata letak kartu'
-              className={cn(toolbarSelectTriggerClassName, 'sm:min-w-34')}
+              className={cn(toolbarSelectTriggerClassName, 'hidden sm:inline-flex sm:min-w-34')}
             >
               <SelectValue>
                 {state.view === 'grid' ? (

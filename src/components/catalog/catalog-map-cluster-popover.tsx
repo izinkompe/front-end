@@ -48,8 +48,8 @@ export function CatalogMapClusterPopover({
       <header className='flex items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2'>
         <div className='flex min-w-0 items-center gap-1.5'>
           <MapPin className='size-3.5 shrink-0 text-primary' aria-hidden='true' />
-          <p className='truncate text-xs font-semibold text-foreground'>{cluster.primaryArea}</p>
-          <span className='shrink-0 rounded-full bg-primary/12 px-1.5 py-0.5 text-[11px] font-semibold text-primary tabular-nums'>
+          <p className='truncate text-sm font-semibold text-foreground'>{cluster.primaryArea}</p>
+          <span className='shrink-0 rounded-full bg-primary/12 px-1.5 py-0.5 text-xs font-semibold text-primary tabular-nums'>
             {cluster.items.length} panen
           </span>
         </div>

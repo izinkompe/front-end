@@ -129,7 +129,7 @@ export function FarmerOffersTab({
     <div className='grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8'>
       <aside aria-label='Etalase kebun' className='hidden lg:block'>
         <div className='sticky top-28 rounded-2xl border border-border bg-card p-4'>
-          <h2 className='mb-3 px-2 text-sm font-semibold text-foreground'>Etalase Kebun</h2>
+          <h2 className='mb-3 px-2 type-h4 text-foreground'>Etalase Kebun</h2>
           <ShowcaseList
             showcases={showcases}
             selectedShowcase={selectedShowcase}
@@ -148,23 +148,25 @@ export function FarmerOffersTab({
                 <ListFilter data-icon='inline-start' aria-hidden='true' />
                 <span>{activeShowcase?.label ?? 'Etalase'}</span>
               </SheetTrigger>
-              <SheetContent side='left' className='w-72 p-5'>
-                <SheetHeader className='p-0'>
+              <SheetContent side='left' className='sm:max-w-sm'>
+                <SheetHeader className='px-5 py-4 pr-14'>
                   <SheetTitle>Etalase Kebun</SheetTitle>
                   <SheetDescription>Pilih kelompok penawaran dari {farmName}.</SheetDescription>
                 </SheetHeader>
-                <ShowcaseList
-                  showcases={showcases}
-                  selectedShowcase={selectedShowcase}
-                  onSelect={(id) => {
-                    onSelectShowcase(id)
-                    setMobileSheetOpen(false)
-                  }}
-                />
+                <div className='p-5'>
+                  <ShowcaseList
+                    showcases={showcases}
+                    selectedShowcase={selectedShowcase}
+                    onSelect={(id) => {
+                      onSelectShowcase(id)
+                      setMobileSheetOpen(false)
+                    }}
+                  />
+                </div>
               </SheetContent>
             </Sheet>
 
-            <h2 className='text-lg font-bold text-foreground'>
+            <h2 className='type-h3 font-bold text-foreground'>
               {activeShowcase?.label ?? 'Semua Penawaran'}{' '}
               <span className='text-sm font-normal text-muted-foreground tabular-nums'>
                 ({items.length})

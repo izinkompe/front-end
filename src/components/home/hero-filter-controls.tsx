@@ -17,9 +17,9 @@ import { Separator } from '@/components/ui/separator'
 import { formatPickupDateLabel } from './hero-search-params'
 
 const controlTriggerClassName =
-  'min-h-12 w-full border-input bg-background text-foreground hover:bg-muted/50 dark:bg-input/30 dark:hover:bg-input/50'
+  'min-h-12 w-full min-w-0 max-w-full border-input bg-background text-foreground hover:bg-muted/50 dark:bg-input/30 dark:hover:bg-input/50'
 
-const controlIconClassName = 'size-4 shrink-0 text-muted-foreground'
+const controlIconClassName = 'icon-sm text-muted-foreground'
 
 interface HeroFilterSelectProps<T extends string> {
   id?: string
@@ -110,7 +110,10 @@ export function PickupCalendarPopover({
         <ChevronDown className={controlIconClassName} aria-hidden='true' />
       </PopoverTrigger>
 
-      <PopoverContent align='start' className='w-auto min-w-80 gap-0 p-0'>
+      <PopoverContent
+        align='start'
+        className='w-auto max-w-[calc(100vw-2rem)] min-w-72 gap-0 p-0 sm:min-w-80'
+      >
         <Calendar
           mode='single'
           selected={selectedDate}

@@ -40,12 +40,12 @@ export function FarmerStoreInfoDialog({ farmer, open, onOpenChange }: FarmerStor
 
         <div className='grid grid-cols-1 gap-5 py-2 sm:grid-cols-2'>
           <div className='flex flex-col gap-2'>
-            <h2 className='text-sm font-semibold text-foreground'>Deskripsi Kebun</h2>
+            <h2 className='type-h4 text-foreground'>Deskripsi Kebun</h2>
             <p className='text-sm leading-relaxed text-muted-foreground'>{farmer.description}</p>
           </div>
 
           <div className='flex flex-col gap-2'>
-            <h2 className='text-sm font-semibold text-foreground'>Catatan Pengambilan</h2>
+            <h2 className='type-h4 text-foreground'>Catatan Pengambilan</h2>
             <p className='text-sm leading-relaxed text-muted-foreground'>
               {farmer.publicPickupNotes}
             </p>

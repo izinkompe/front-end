@@ -13,10 +13,7 @@ export function BuyerFaqSection() {
     <section className='w-full bg-background text-foreground' aria-labelledby='buyer-faq-heading'>
       <div className='mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-12 lg:gap-12 lg:px-8'>
         <div className='lg:col-span-4'>
-          <h2
-            id='buyer-faq-heading'
-            className='text-[clamp(1.5rem,1.25rem+0.9vw,2rem)] leading-tight font-bold text-foreground'
-          >
+          <h2 id='buyer-faq-heading' className='type-h2 text-foreground'>
             Pertanyaan umum
           </h2>
         </div>

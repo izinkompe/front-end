@@ -151,10 +151,7 @@ export function BuyerNeedsBoardSection() {
       <div className='mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-12 lg:items-start lg:px-8'>
         <div className='flex flex-col gap-5 lg:col-span-4'>
           <div className='flex flex-col gap-2'>
-            <h2
-              id='needs-board-heading'
-              className='text-[clamp(1.5rem,1.25rem+0.9vw,2rem)] leading-tight font-bold text-foreground'
-            >
+            <h2 id='needs-board-heading' className='type-h2 text-foreground'>
               Papan Kebutuhan Pangan
             </h2>
             <p className='max-w-[60ch] text-base leading-relaxed text-muted-foreground'>
