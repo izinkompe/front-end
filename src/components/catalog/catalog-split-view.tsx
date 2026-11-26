@@ -7,6 +7,7 @@ import type { BuyerRadiusOption } from '@/components/home/hero-search-params'
 import type { Coordinates } from '@/components/home/offer-card-helpers'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import type { CatalogOfferItem, CatalogViewMode } from '@/lib/data/catalog-filters'
 import { cn } from '@/lib/utils'
 import type { Offer } from '@/types/api/offers'
@@ -88,7 +89,7 @@ export function CatalogSplitView({
     >
       <div
         className={cn(
-          'flex min-w-0 flex-col gap-4 px-4 py-5 sm:px-6 lg:py-6',
+          'flex min-w-0 flex-col gap-3.5 px-4 py-3 sm:gap-4 sm:px-6 sm:py-5 lg:py-6',
           hasMap ? 'lg:pr-6 lg:pl-8' : 'lg:px-8'
         )}
       >
@@ -120,34 +121,85 @@ export function CatalogSplitView({
               type='button'
               variant='outline'
               size='sm'
-              onClick={() => setMobileMapOpen((prev) => !prev)}
-              className='w-full bg-card'
+              onClick={() => setMobileMapOpen(true)}
+              className='min-h-11 w-full bg-card'
             >
-              {mobileMapOpen ? (
-                <X data-icon='inline-start' aria-hidden='true' />
-              ) : (
-                <MapIcon data-icon='inline-start' aria-hidden='true' />
-              )}
-              <span>{mobileMapOpen ? 'Sembunyikan peta' : 'Tampilkan peta radius'}</span>
+              <MapIcon data-icon='inline-start' aria-hidden='true' />
+              <span>
+                Buka peta radius ({mapItems.length}
+                {radiusKm ? ` • ${radiusKm} km` : ''})
+              </span>
             </Button>
           </div>
         )}
 
-        {hasMap && mobileMapOpen && (
-          <div className='lg:hidden'>
-            <CatalogRadiusMap
-              items={mapItems}
-              referenceCoordinates={referenceCoordinates}
-              radiusKm={radiusKm}
-              selectedOfferId={selectedOfferId}
-              hoveredOfferId={hoveredOfferId}
-              onRadiusChange={onRadiusChange}
-              onSelectOffer={handleSelectOfferFromMap}
-              onHoverOffer={setHoveredOfferId}
-              onMapFailure={onMapFailure}
-            />
-          </div>
-        )}
+        <Dialog open={hasMap && mobileMapOpen} onOpenChange={setMobileMapOpen}>
+          <DialogContent
+            showCloseButton={false}
+            className='fixed inset-0 top-0 left-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 bg-background p-0 lg:hidden'
+          >
+            <div className='flex items-center justify-between gap-3 border-b border-border bg-background px-4 py-3'>
+              <div className='min-w-0'>
+                <DialogTitle className='text-base font-bold text-foreground'>
+                  Peta radius panen
+                </DialogTitle>
+                <DialogDescription className='truncate text-xs text-muted-foreground tabular-nums'>
+                  {mapItems.length} penawaran tersedia • pilih pin atau atur radius
+                </DialogDescription>
+              </div>
+              <Button
+                type='button'
+                variant='ghost'
+                size='icon'
+                onClick={() => setMobileMapOpen(false)}
+                aria-label='Tutup peta radius'
+                className='shrink-0'
+              >
+                <X aria-hidden='true' />
+              </Button>
+            </div>
+
+            <div className='relative min-h-0 flex-1'>
+              <CatalogRadiusMap
+                items={mapItems}
+                referenceCoordinates={referenceCoordinates}
+                radiusKm={radiusKm}
+                selectedOfferId={selectedOfferId}
+                hoveredOfferId={hoveredOfferId}
+                fullBleed
+                onRadiusChange={onRadiusChange}
+                onSelectOffer={handleSelectOfferFromMap}
+                onHoverOffer={setHoveredOfferId}
+                onMapFailure={(reason) => {
+                  setMobileMapOpen(false)
+                  onMapFailure(reason)
+                }}
+              />
+            </div>
+
+            <div className='flex items-center justify-between gap-2 border-t border-border bg-background px-4 py-3'>
+              <p className='text-xs text-muted-foreground'>
+                {selectedOfferId
+                  ? 'Penawaran dipilih. Lihat di daftar atau buka detailnya.'
+                  : 'Ketuk pin atau klaster pada peta untuk memilih panen.'}
+              </p>
+              <Button
+                type='button'
+                size='sm'
+                onClick={() => {
+                  const targetId = selectedOfferId
+                  setMobileMapOpen(false)
+                  if (targetId) {
+                    handleSelectOfferFromMap(targetId)
+                  }
+                }}
+                className='shrink-0'
+              >
+                {selectedOfferId ? 'Lihat di daftar' : 'Selesai'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {listBodyFallback ? (
           listBodyFallback

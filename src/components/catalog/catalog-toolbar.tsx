@@ -33,7 +33,7 @@ interface CatalogToolbarProps {
 }
 
 const controlSurfaceClassName =
-  'min-h-10 rounded-full border border-muted-foreground/45 bg-card px-3.5 py-1.5 text-sm font-medium whitespace-nowrap text-foreground transition-colors pointer-coarse:min-h-11 hover:border-foreground/65 hover:bg-muted/70 hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring'
+  'min-h-9 rounded-full border border-muted-foreground/45 bg-card px-3 py-1 text-xs font-medium whitespace-nowrap text-foreground transition-colors pointer-coarse:min-h-10 hover:border-foreground/65 hover:bg-muted/70 hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:min-h-10 sm:px-3.5 sm:py-1.5 sm:text-sm'
 
 const quickChipClassName = cn(
   controlSurfaceClassName,
@@ -42,8 +42,10 @@ const quickChipClassName = cn(
 
 const toolbarSelectTriggerClassName = cn(
   controlSurfaceClassName,
-  'w-auto shrink-0 gap-2 rounded-full! [&_svg]:text-foreground/80'
+  'w-full shrink-0 justify-between gap-2 rounded-full! sm:w-auto [&_svg]:text-foreground/80'
 )
+
+const filterRowWrapClassName = 'flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2'
 
 const cardLayoutOptions: ReadonlyArray<{
   value: CatalogViewMode
@@ -151,8 +153,8 @@ export function CatalogToolbar({
   }
 
   return (
-    <div className='flex flex-col gap-2.5'>
-      <div className='flex min-w-0 items-center gap-2 overflow-x-auto py-0.5'>
+    <div className='flex flex-col gap-2'>
+      <div className={filterRowWrapClassName}>
         <Button
           type='button'
           variant='outline'
@@ -172,11 +174,11 @@ export function CatalogToolbar({
         <ToggleGroup
           multiple
           variant='default'
-          spacing={2}
+          spacing={1}
           value={primarySelectedTokens}
           onValueChange={handlePrimaryChange}
           aria-label={fixedCategory ? 'Filter cepat kondisi' : 'Pilih kategori panen'}
-          className='flex shrink-0 items-center gap-2'
+          className={filterRowWrapClassName}
         >
           {!fixedCategory
             ? mainCategories.map((category) => (
@@ -200,15 +202,15 @@ export function CatalogToolbar({
         </ToggleGroup>
       </div>
 
-      <div className='flex flex-wrap items-center justify-between gap-2'>
+      <div className='flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between'>
         <ToggleGroup
           multiple
           variant='default'
-          spacing={2}
+          spacing={1}
           value={secondarySelectedTokens}
           onValueChange={handleSecondaryChange}
           aria-label='Filter cepat tambahan'
-          className='flex flex-wrap items-center gap-2'
+          className={filterRowWrapClassName}
         >
           <ToggleGroupItem value='expiring' className={quickChipClassName}>
             Segera ditutup
@@ -221,7 +223,7 @@ export function CatalogToolbar({
           </ToggleGroupItem>
         </ToggleGroup>
 
-        <div className='flex shrink-0 flex-wrap items-center gap-2'>
+        <div className='grid grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:items-center'>
           <Select
             value={state.sort}
             onValueChange={(value) => {
@@ -239,7 +241,7 @@ export function CatalogToolbar({
             <SelectTrigger
               size='sm'
               aria-label='Urutkan penawaran'
-              className={cn(toolbarSelectTriggerClassName, 'min-w-36')}
+              className={cn(toolbarSelectTriggerClassName, 'sm:min-w-36')}
             >
               <SelectValue>
                 <ArrowUpDown className='size-4 shrink-0' aria-hidden='true' />
@@ -268,7 +270,7 @@ export function CatalogToolbar({
             <SelectTrigger
               size='sm'
               aria-label='Pilih tata letak kartu'
-              className={cn(toolbarSelectTriggerClassName, 'min-w-34')}
+              className={cn(toolbarSelectTriggerClassName, 'sm:min-w-34')}
             >
               <SelectValue>
                 {state.view === 'grid' ? (
