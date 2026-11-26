@@ -19,6 +19,7 @@ interface OrderCommodityCardProps {
     | 'commodityPhotoUrl'
     | 'farmerName'
     | 'quantityKg'
+    | 'confirmedWeightKg'
     | 'pricePerKg'
     | 'totalPrice'
   >
@@ -76,6 +77,15 @@ export function OrderCommodityCard({ order }: OrderCommodityCardProps) {
               {formatPlainRupiah(order.totalPrice)}
             </dd>
           </div>
+
+          {typeof order.confirmedWeightKg === 'number' && (
+            <div className='flex items-baseline justify-between gap-2'>
+              <dt className='text-muted-foreground'>Berat aktual diterima</dt>
+              <dd className='font-medium text-foreground tabular-nums'>
+                {formatWeightKg(order.confirmedWeightKg)}
+              </dd>
+            </div>
+          )}
 
           <div className='flex items-baseline justify-between gap-2'>
             <dt className='text-muted-foreground'>Biaya pengambilan mandiri</dt>

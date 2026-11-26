@@ -1,9 +1,17 @@
 import { ApiError } from '../errors'
+import { getOfferPriceSchedule } from '@/lib/data/offer-price-schedule'
+import { analyzeWeightDiscrepancy } from '@/lib/data/order-pickup-helpers'
 import { isSafeProofImageUrl } from '@/lib/data/checkout-helpers'
 import { offersCollection } from './collections/offers'
+import { notificationsCollection } from './collections/notifications'
 import { ordersCollection } from './collections/orders'
 import { usersCollection } from './collections/users'
-import type { Order } from '@/types/api/orders'
+import {
+  ConfirmReceiptRequestSchema,
+  CreateOrderRequestSchema,
+  RespondScheduleProposalRequestSchema,
+  type Order,
+} from '@/types/api/orders'
 import type { PaymentDetail } from '@/types/api/payments'
 
 interface OrderRouteContext {
@@ -18,8 +26,32 @@ interface OrderRouteContext {
 export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; data?: unknown } {
   const { endpoint, method, params, body, activeSessionUserId, parseJsonBody } = ctx
 
+  const route =
+    /^\/api\/orders(?:\/([\w-]+)(?:\/(?:cancel|payment|payments|schedule-proposal|confirm-receipt|ready-for-pickup))?)?$/.exec(
+      endpoint
+    )
+  if (!route) {
+    return { handled: false }
+  }
+  const activeUser = activeSessionUserId ? usersCollection.get(activeSessionUserId) : undefined
+  if (!activeUser) {
+    throw new ApiError(401, 'Masuk untuk mengakses pesanan', 'UNAUTHORIZED')
+  }
+  const isFarmerPickup =
+    activeUser.role === 'farmer' && method === 'POST' && endpoint.endsWith('/ready-for-pickup')
+  if (activeUser.role !== 'buyer' && !isFarmerPickup) {
+    throw new ApiError(403, 'Gunakan akun pembeli untuk mengakses pesanan ini', 'FORBIDDEN')
+  }
+  const requestedOrderId = route[1]
+  const ownerField = isFarmerPickup ? 'farmerId' : 'buyerId'
+  if (requestedOrderId && ordersCollection.get(requestedOrderId)?.[ownerField] !== activeUser.id) {
+    throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
+  }
+
   if (endpoint === '/api/orders' && method === 'GET') {
-    let items = Array.from(ordersCollection.values())
+    let items = Array.from(ordersCollection.values()).filter(
+      (item) => item.buyerId === activeUser.id
+    )
     if (params?.status) {
       items = items.filter((item) => item.status === params?.status)
     }
@@ -27,20 +59,11 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
   }
 
   if (endpoint === '/api/orders' && method === 'POST') {
-    const payload = parseJsonBody<{
-      offerId: string
-      quantityKg: number
-      scheduleSlotId?: string
-      notes?: string
-      contactName?: string
-      contactPhone?: string
-      buyerAddress?: {
-        label: string
-        fullAddress: string
-        areaName: string
-      }
-      acceptedPricePerKg?: number
-    }>(body)
+    const result = CreateOrderRequestSchema.safeParse(parseJsonBody(body))
+    if (!result.success) {
+      throw new ApiError(400, 'Periksa berat, kontak, dan jadwal pesanan', 'INVALID_ORDER')
+    }
+    const payload = result.data
 
     const offer = offersCollection.get(payload.offerId)
     if (!offer) {
@@ -53,9 +76,10 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
         'OFFER_EXPIRED'
       )
     }
+    const { currentPricePerKg } = getOfferPriceSchedule(offer, Date.now())
     if (
       typeof payload.acceptedPricePerKg === 'number' &&
-      Math.round(payload.acceptedPricePerKg) !== Math.round(offer.pricePerKg)
+      Math.round(payload.acceptedPricePerKg) !== Math.round(currentPricePerKg)
     ) {
       throw new ApiError(
         409,
@@ -63,31 +87,15 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
         'PRICE_CHANGED'
       )
     }
-    if (
-      typeof payload.quantityKg !== 'number' ||
-      !Number.isFinite(payload.quantityKg) ||
-      payload.quantityKg < 0.001
-    ) {
-      throw new ApiError(400, 'Berat pesanan tidak valid', 'INVALID_QUANTITY')
-    }
     if (offer.availableStockKg < payload.quantityKg) {
       throw new ApiError(400, 'Stok tidak mencukupi untuk pemesanan ini', 'INSUFFICIENT_STOCK')
     }
 
-    offersCollection.update(offer.id, (draft) => {
-      draft.availableStockKg -= payload.quantityKg
-      draft.reservedStockKg += payload.quantityKg
-    })
-
     const selectedSlot = offer.pickupScheduleSlots.find(
-      (slot) => slot.id === payload.scheduleSlotId
-    ) ||
-      offer.pickupScheduleSlots[0] || {
-        id: 'slot-default',
-        date: '2026-11-25',
-        startTime: '08:00',
-        endTime: '10:00',
-      }
+      (slot) => slot.id === payload.scheduleSlotId && slot.isAvailable !== false
+    )
+    if (!selectedSlot)
+      throw new ApiError(400, 'Pilih jadwal pengambilan yang masih tersedia', 'INVALID_PICKUP_SLOT')
 
     const farmer = usersCollection.get(offer.farmerId)
     const farmerAddressNotes = farmer?.addresses?.find((addr) => addr.isDefault)?.notes
@@ -97,7 +105,6 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
       accountNumber: '123401002345501',
       accountHolderName: offer.farmerName,
     }
-    const activeUser = activeSessionUserId ? usersCollection.get(activeSessionUserId) : undefined
     const defaultBuyerAddress =
       activeUser?.addresses?.find((addr) => addr.isDefault) ?? activeUser?.addresses?.[0]
     const resolvedBuyerAddress = payload.buyerAddress
@@ -115,23 +122,23 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
         : undefined
 
     const newOrder: Order = {
-      id: 'ord-' + Date.now(),
-      buyerId: activeUser?.id ?? 'usr-pb-01',
+      id: 'ord-' + crypto.randomUUID(),
+      buyerId: activeUser.id,
       farmerId: offer.farmerId,
       farmerName: offer.farmerName,
       offerId: offer.id,
       commodityName: offer.commodityName,
       commodityPhotoUrl: offer.photos[0],
       quantityKg: payload.quantityKg,
-      pricePerKg: offer.pricePerKg,
-      totalPrice: Math.round(payload.quantityKg * offer.pricePerKg),
+      pricePerKg: currentPricePerKg,
+      totalPrice: Math.round(payload.quantityKg * currentPricePerKg),
       scheduleSlot: selectedSlot,
       paymentDeadline: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
       status: 'pending_payment',
       pickupLocation: {
         address: offer.pickupAddressFull || offer.pickupAddressArea,
-        latitude: offer.latitude || -6.8167,
-        longitude: offer.longitude || 107.6167,
+        latitude: offer.latitude ?? -6.8167,
+        longitude: offer.longitude ?? 107.6167,
         notes: locationNotes || undefined,
       },
       buyerContactName: payload.contactName?.trim() || activeUser?.name,
@@ -144,6 +151,11 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
     }
 
     ordersCollection.insert(newOrder)
+    offersCollection.update(offer.id, (draft) => {
+      draft.availableStockKg =
+        Math.round((draft.availableStockKg - payload.quantityKg) * 1000) / 1000
+      draft.reservedStockKg = Math.round((draft.reservedStockKg + payload.quantityKg) * 1000) / 1000
+    })
     return { handled: true, data: newOrder }
   }
 
@@ -152,6 +164,15 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
     const order = ordersCollection.get(orderId)
     if (!order) {
       throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
+    }
+
+    if (order.status === 'cancelled') return { handled: true, data: order }
+    if (order.status !== 'pending_payment' || order.paymentProofUrl) {
+      throw new ApiError(
+        409,
+        'Ajukan peninjauan untuk pembatalan setelah pembayaran',
+        'INVALID_ORDER_STATUS'
+      )
     }
 
     const offer = offersCollection.get(order.offerId)
@@ -177,8 +198,12 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
     if (!order) {
       throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
     }
-    if (order.status === 'cancelled') {
-      throw new ApiError(400, 'Pesanan ini telah dibatalkan', 'ORDER_CANCELLED')
+    if (!['pending_payment', 'payment_submitted'].includes(order.status)) {
+      throw new ApiError(
+        409,
+        'Bukti pembayaran tidak dapat diubah pada status ini',
+        'INVALID_ORDER_STATUS'
+      )
     }
     if (Date.parse(order.paymentDeadline) <= Date.now()) {
       throw new ApiError(
@@ -208,16 +233,77 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
     return { handled: true, data: ordersCollection.get(orderId) }
   }
 
-  if (endpoint.startsWith('/api/orders/') && endpoint.endsWith('/ready-for-pickup')) {
+  if (isFarmerPickup) {
     const orderId = endpoint.split('/')[3]
     const order = ordersCollection.get(orderId)
     if (!order) {
       throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
     }
 
+    if (order.status !== 'processing') {
+      throw new ApiError(409, 'Pesanan belum dapat ditandai siap diambil', 'INVALID_ORDER_STATUS')
+    }
     ordersCollection.update(orderId, (draft) => {
       draft.status = 'ready_for_pickup'
       draft.updatedAt = new Date().toISOString()
+    })
+
+    const buyer = usersCollection.get(order.buyerId)
+    if (buyer && buyer.preferences?.orderStatusUpdates !== false) {
+      const id = 'order-ready-' + order.id
+      if (!notificationsCollection.get(id))
+        notificationsCollection.insert({
+          id,
+          userId: buyer.id,
+          type: 'order_update',
+          title: 'Pesanan siap diambil',
+          message: 'Lihat jadwal dan lokasi pengambilan ' + order.commodityName + '.',
+          link: '/pesanan/' + order.id,
+          isRead: false,
+          createdAt: new Date().toISOString(),
+        })
+    }
+    return { handled: true, data: ordersCollection.get(orderId) }
+  }
+
+  if (
+    endpoint.startsWith('/api/orders/') &&
+    endpoint.endsWith('/schedule-proposal') &&
+    method === 'POST'
+  ) {
+    const orderId = endpoint.split('/')[3]
+    const rawPayload = parseJsonBody<Record<string, unknown>>(body)
+    const parsed = RespondScheduleProposalRequestSchema.safeParse(rawPayload)
+    if (!parsed.success) {
+      throw new ApiError(400, 'Tindakan peninjauan jadwal tidak valid', 'INVALID_PROPOSAL_ACTION')
+    }
+
+    const order = ordersCollection.get(orderId)
+    if (!order) {
+      throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
+    }
+    if (!order.proposedScheduleSlot) {
+      throw new ApiError(400, 'Tidak ada usulan jadwal baru untuk pesanan ini', 'NO_PROPOSAL')
+    }
+    if (!['processing', 'ready_for_pickup'].includes(order.status)) {
+      throw new ApiError(400, 'Jadwal pesanan ini tidak lagi dapat diubah', 'ORDER_FINALIZED')
+    }
+
+    const now = new Date().toISOString()
+    ordersCollection.update(orderId, (draft) => {
+      if (parsed.data.action === 'accept' && order.proposedScheduleSlot) {
+        draft.scheduleSlot = order.proposedScheduleSlot
+        draft.proposedScheduleSlot = undefined
+        draft.scheduleProposalStatus = 'accepted'
+        draft.scheduleProposalNote = undefined
+      } else {
+        draft.proposedScheduleSlot = undefined
+        draft.scheduleProposalStatus = 'rejected'
+        draft.scheduleProposalNote =
+          parsed.data.reason?.trim() ||
+          'Pembeli menolak usulan jadwal baru; jadwal awal tetap digunakan.'
+      }
+      draft.updatedAt = now
     })
 
     return { handled: true, data: ordersCollection.get(orderId) }
@@ -229,24 +315,55 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
     method === 'POST'
   ) {
     const orderId = endpoint.split('/')[3]
-    const payload = parseJsonBody<{ confirmedWeightKg?: number }>(body)
+    const rawPayload = parseJsonBody<Record<string, unknown>>(body)
+    const parsed = ConfirmReceiptRequestSchema.safeParse(rawPayload)
+    if (!parsed.success) {
+      throw new ApiError(400, 'Berat aktual yang diterima tidak valid', 'INVALID_ACTUAL_WEIGHT')
+    }
+
     const order = ordersCollection.get(orderId)
     if (!order) {
       throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
     }
+    const actualWeightKg = parsed.data.confirmedWeightKg
+    if (order.receiptConfirmedAt && order.confirmedWeightKg === actualWeightKg) {
+      return { handled: true, data: order }
+    }
+    if (order.status !== 'ready_for_pickup') {
+      throw new ApiError(
+        409,
+        'Konfirmasi hanya tersedia untuk pesanan siap diambil',
+        'INVALID_ORDER_STATUS'
+      )
+    }
+
+    const { isShortage, isSurplus } = analyzeWeightDiscrepancy(
+      order.quantityKg,
+      actualWeightKg,
+      order.pricePerKg
+    )
+    const now = new Date().toISOString()
 
     const offer = offersCollection.get(order.offerId)
     if (offer) {
       offersCollection.update(offer.id, (draft) => {
         draft.reservedStockKg = Math.max(0, draft.reservedStockKg - order.quantityKg)
-        draft.soldStockKg += payload.confirmedWeightKg || order.quantityKg
+        draft.soldStockKg += actualWeightKg
       })
     }
 
     ordersCollection.update(orderId, (draft) => {
-      draft.status = 'completed'
-      draft.confirmedWeightKg = payload.confirmedWeightKg || order.quantityKg
-      draft.updatedAt = new Date().toISOString()
+      draft.confirmedWeightKg = actualWeightKg
+      draft.receiptConfirmedAt = now
+      draft.status = isShortage ? 'disputed' : 'completed'
+      draft.weightDiscrepancyNote =
+        parsed.data.note?.trim() ||
+        (isShortage
+          ? 'Selisih berat kurang tercatat saat serah terima dan menunggu peninjauan.'
+          : isSurplus
+            ? 'Berat diterima melebihi pesanan tanpa biaya tambahan.'
+            : undefined)
+      draft.updatedAt = now
     })
 
     return { handled: true, data: ordersCollection.get(orderId) }

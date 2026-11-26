@@ -1,10 +1,22 @@
-import { describe, expect, it } from 'bun:test'
+import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { apiClient } from '../../client'
+import { ordersCollection } from './orders'
 import { offersCollection } from './offers'
 import { OrderSchema } from '../../../../types/api/orders'
 import { PaymentDetailSchema } from '../../../../types/api/payments'
 
 describe('TanStack DB Atomic Orders & Stock Mutation', () => {
+  beforeAll(async () => {
+    await apiClient('/api/auth/login', undefined, {
+      method: 'POST',
+      body: JSON.stringify({ email: 'ratna@dapurkasih.org', password: 'password123' }),
+    })
+  })
+
+  afterAll(async () => {
+    await apiClient('/api/auth/logout', undefined, { method: 'POST' })
+  })
+
   it('deducts available stock and reserves stock atomically upon order creation', async () => {
     const initialOffer = offersCollection.get('off-002')
     expect(initialOffer).toBeDefined()
@@ -160,6 +172,10 @@ describe('TanStack DB Atomic Orders & Stock Mutation', () => {
       }),
     })
 
+    ordersCollection.update(testOrder.id, (draft) => {
+      draft.status = 'ready_for_pickup'
+    })
+
     const completedOrder = await apiClient(
       '/api/orders/' + testOrder.id + '/confirm-receipt',
       OrderSchema,
@@ -171,5 +187,83 @@ describe('TanStack DB Atomic Orders & Stock Mutation', () => {
 
     expect(completedOrder.status).toBe('completed')
     expect(completedOrder.confirmedWeightKg).toBe(8)
+  })
+
+  it('marks order as disputed when confirmed actual weight is less than ordered weight', async () => {
+    const offerBefore = offersCollection.get('off-002')
+    const testOrder = await apiClient('/api/orders', OrderSchema, {
+      method: 'POST',
+      body: JSON.stringify({
+        offerId: 'off-002',
+        quantityKg: 10,
+        scheduleSlotId: 'slot-3',
+      }),
+    })
+
+    ordersCollection.update(testOrder.id, (draft) => {
+      draft.status = 'ready_for_pickup'
+    })
+
+    const disputedOrder = await apiClient(
+      '/api/orders/' + testOrder.id + '/confirm-receipt',
+      OrderSchema,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          confirmedWeightKg: 8.25,
+          note: 'Sebagian buah rusak saat ditimbang bersama',
+        }),
+      }
+    )
+
+    expect(disputedOrder.status).toBe('disputed')
+    expect(disputedOrder.confirmedWeightKg).toBe(8.25)
+    expect(disputedOrder.weightDiscrepancyNote).toContain('Sebagian buah rusak')
+    const offerAfter = offersCollection.get('off-002')
+    expect(offerAfter.reservedStockKg).toBeCloseTo(offerBefore.reservedStockKg, 3)
+  })
+
+  it('completes order directly when confirmed actual weight exceeds ordered weight', async () => {
+    const offerBefore = offersCollection.get('off-002')
+    const testOrder = await apiClient('/api/orders', OrderSchema, {
+      method: 'POST',
+      body: JSON.stringify({
+        offerId: 'off-002',
+        quantityKg: 6,
+        scheduleSlotId: 'slot-3',
+      }),
+    })
+
+    ordersCollection.update(testOrder.id, (draft) => {
+      draft.status = 'ready_for_pickup'
+    })
+
+    const surplusOrder = await apiClient(
+      '/api/orders/' + testOrder.id + '/confirm-receipt',
+      OrderSchema,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          confirmedWeightKg: 6.5,
+        }),
+      }
+    )
+
+    expect(surplusOrder.status).toBe('completed')
+    expect(surplusOrder.confirmedWeightKg).toBe(6.5)
+    const offerAfter = offersCollection.get('off-002')
+    expect(offerAfter.reservedStockKg).toBeCloseTo(offerBefore.reservedStockKg, 3)
+    expect(offerAfter.soldStockKg).toBeCloseTo(offerBefore.soldStockKg + 6.5, 3)
+  })
+
+  it('accepts or rejects proposed pickup schedules on seeded orders', async () => {
+    const accepted = await apiClient('/api/orders/ord-demo-002/schedule-proposal', OrderSchema, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'accept' }),
+    })
+
+    expect(accepted.scheduleSlot.id).toBe('slot-8b')
+    expect(accepted.proposedScheduleSlot).toBeUndefined()
+    expect(accepted.scheduleProposalStatus).toBe('accepted')
   })
 })

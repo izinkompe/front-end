@@ -34,6 +34,9 @@ export const OrderBuyerAddressSchema = z.object({
 })
 export type OrderBuyerAddress = z.infer<typeof OrderBuyerAddressSchema>
 
+export const ScheduleProposalStatusSchema = z.enum(['pending', 'accepted', 'rejected'])
+export type ScheduleProposalStatus = z.infer<typeof ScheduleProposalStatusSchema>
+
 export const OrderSchema = z.object({
   id: z.string(),
   buyerId: z.string(),
@@ -47,9 +50,13 @@ export const OrderSchema = z.object({
   totalPrice: z.number().positive(),
   scheduleSlot: ScheduleSlotSchema,
   proposedScheduleSlot: ScheduleSlotSchema.optional(),
+  scheduleProposalStatus: ScheduleProposalStatusSchema.optional(),
+  scheduleProposalNote: z.string().optional(),
   paymentDeadline: z.string(),
   status: OrderStatusSchema,
-  confirmedWeightKg: z.number().positive().optional(),
+  confirmedWeightKg: z.number().nonnegative().optional(),
+  receiptConfirmedAt: z.string().optional(),
+  weightDiscrepancyNote: z.string().optional(),
   pickupLocation: OrderPickupLocationSchema,
   buyerContactName: z.string().optional(),
   buyerContactPhone: z.string().optional(),
@@ -65,9 +72,21 @@ export const OrderSchema = z.object({
 })
 export type Order = z.infer<typeof OrderSchema>
 
+export const RespondScheduleProposalRequestSchema = z.object({
+  action: z.enum(['accept', 'reject']),
+  reason: z.string().trim().max(300).optional(),
+})
+export type RespondScheduleProposalRequest = z.infer<typeof RespondScheduleProposalRequestSchema>
+
+export const ConfirmReceiptRequestSchema = z.object({
+  confirmedWeightKg: z.number().min(0.001).max(100_000).multipleOf(0.001),
+  note: z.string().trim().max(300).optional(),
+})
+export type ConfirmReceiptRequest = z.infer<typeof ConfirmReceiptRequestSchema>
+
 export const CreateOrderRequestSchema = z.object({
   offerId: z.string(),
-  quantityKg: z.number().positive(),
+  quantityKg: z.number().min(0.001).multipleOf(0.001),
   scheduleSlotId: z.string(),
   notes: z.string().optional(),
   contactName: z.string().trim().min(2).optional(),

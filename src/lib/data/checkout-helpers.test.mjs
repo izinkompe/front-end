@@ -134,5 +134,19 @@ describe('checkout-helpers', () => {
     })
     expect(submittedSteps[1].state).toBe('current')
     expect(submittedSteps[1].label).toBe('Menunggu verifikasi admin')
+
+    const disputedSteps = buildOrderTimelineSteps({
+      status: 'disputed',
+      createdAt: '2026-11-26T10:00:00Z',
+      paymentSubmittedAt: '2026-11-26T10:04:00Z',
+      receiptConfirmedAt: '2026-11-26T11:00:00Z',
+      updatedAt: '2026-11-26T11:05:00Z',
+    })
+    expect(disputedSteps.map((step) => step.state)).toEqual([
+      'completed',
+      'completed',
+      'completed',
+      'current',
+    ])
   })
 })

@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { z } from 'zod'
+import { BuyerOrderAccess } from '@/components/checkout/buyer-order-access'
 import { CheckoutSkeleton } from '@/components/checkout/checkout-skeleton'
 import { OrderDetailView } from '@/components/order-detail/order-detail-view'
 
@@ -28,7 +29,11 @@ async function OrderDetailContent({ params }: OrderDetailPageProps) {
     notFound()
   }
 
-  return <OrderDetailView orderId={parsed.data} />
+  return (
+    <BuyerOrderAccess>
+      <OrderDetailView orderId={parsed.data} />
+    </BuyerOrderAccess>
+  )
 }
 
 export default function OrderDetailPage({ params }: OrderDetailPageProps) {

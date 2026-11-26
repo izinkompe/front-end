@@ -275,7 +275,12 @@ export function validateBuyerAddress(input: {
 export function buildOrderTimelineSteps(
   order: Pick<
     Order,
-    'status' | 'createdAt' | 'paymentSubmittedAt' | 'updatedAt' | 'rejectionReason'
+    | 'status'
+    | 'createdAt'
+    | 'paymentSubmittedAt'
+    | 'updatedAt'
+    | 'rejectionReason'
+    | 'receiptConfirmedAt'
   >
 ): OrderTimelineStep[] {
   if (order.status === 'cancelled') {
@@ -305,6 +310,35 @@ export function buildOrderTimelineSteps(
     })
 
     return steps
+  }
+
+  if (order.status === 'disputed') {
+    return [
+      {
+        id: 'created',
+        label: 'Pesanan dibuat',
+        timestamp: order.createdAt,
+        state: 'completed',
+      },
+      {
+        id: 'payment',
+        label: order.paymentSubmittedAt ? 'Pembayaran diverifikasi' : 'Verifikasi pembayaran',
+        timestamp: order.paymentSubmittedAt,
+        state: 'completed',
+      },
+      {
+        id: 'pickup',
+        label: 'Serah terima panen',
+        timestamp: order.receiptConfirmedAt ?? order.updatedAt,
+        state: 'completed',
+      },
+      {
+        id: 'disputed',
+        label: 'Penanganan selisih berat atau kendala',
+        timestamp: order.updatedAt,
+        state: 'current',
+      },
+    ]
   }
 
   const isPaymentSubmitted =
@@ -352,7 +386,7 @@ export function buildOrderTimelineSteps(
     {
       id: 'completed',
       label: 'Selesai diterima',
-      timestamp: isCompleted ? order.updatedAt : undefined,
+      timestamp: isCompleted ? (order.receiptConfirmedAt ?? order.updatedAt) : undefined,
       state: isCompleted ? 'completed' : 'upcoming',
     },
   ]

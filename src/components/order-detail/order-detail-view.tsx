@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
   AlertCircle,
-  CalendarClock,
   CheckCircle2,
   Clock,
   CreditCard,
@@ -13,10 +12,10 @@ import {
   Phone,
   RefreshCw,
   RotateCcw,
-  Store,
   User as UserIcon,
   XCircle,
 } from 'lucide-react'
+import { OrderComplaints } from '@/components/complaints/order-complaints'
 import { CheckoutHeader } from '@/components/checkout/checkout-header'
 import { CheckoutSkeleton } from '@/components/checkout/checkout-skeleton'
 import { formatWeightKg } from '@/components/home/offer-card-helpers'
@@ -38,6 +37,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
+import { useCurrentUser } from '@/hooks/api/use-auth'
 import { useCancelOrder, useOrderDetail } from '@/hooks/api/use-orders'
 import { usePaymentDetail } from '@/hooks/api/use-payments'
 import {
@@ -46,8 +46,13 @@ import {
   getOrderBankAccount,
   isSafeProofImageUrl,
 } from '@/lib/data/checkout-helpers'
-import { formatDateTimeId, formatPickupSlotLabel } from '@/lib/data/offer-detail-helpers'
+import { formatDateTimeId } from '@/lib/data/offer-detail-helpers'
 import { OrderCommodityCard } from './order-commodity-card'
+import { OrderCompletedReceiptCard } from './order-completed-receipt-card'
+import { OrderPickupLocationCard } from './order-pickup-location-card'
+import { OrderPrintSheet, type OrderPrintMode } from './order-print-sheet'
+import { OrderReceiptConfirmationCard } from './order-receipt-confirmation-card'
+import { OrderScheduleProposalCard } from './order-schedule-proposal-card'
 import { OrderStatusTimeline } from './order-status-timeline'
 
 interface OrderDetailViewProps {
@@ -55,10 +60,34 @@ interface OrderDetailViewProps {
 }
 
 export function OrderDetailView({ orderId }: OrderDetailViewProps) {
+  const { data: currentUser } = useCurrentUser()
   const { data: order, isPending, isError, refetch } = useOrderDetail(orderId)
   const { data: paymentDetail } = usePaymentDetail(orderId)
   const cancelOrderMutation = useCancelOrder()
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
+  const [printMode, setPrintMode] = useState<OrderPrintMode | null>(null)
+  const printTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (printTimerRef.current) {
+        clearTimeout(printTimerRef.current)
+      }
+    }
+  }, [])
+
+  function handleTriggerPrint(mode: OrderPrintMode) {
+    if (printTimerRef.current) {
+      clearTimeout(printTimerRef.current)
+    }
+    setPrintMode(mode)
+    printTimerRef.current = setTimeout(() => {
+      if (typeof window !== 'undefined' && typeof window.print === 'function') {
+        window.print()
+      }
+      printTimerRef.current = null
+    }, 60)
+  }
 
   if (isPending) {
     return (
@@ -107,6 +136,7 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
 
   const statusLabel = formatOrderStatusLabel(order.status, order.rejectionReason)
   const isCancelled = order.status === 'cancelled'
+  const isDisputed = order.status === 'disputed'
   const isPendingPayment = order.status === 'pending_payment'
   const isPaymentSubmitted = order.status === 'payment_submitted'
   const isApprovedOrBeyond =
@@ -116,17 +146,22 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
 
   const statusVariant = isApprovedOrBeyond
     ? 'default'
-    : isCancelled || (isPendingPayment && Boolean(order.rejectionReason))
+    : isCancelled || isDisputed || (isPendingPayment && Boolean(order.rejectionReason))
       ? 'destructive'
       : 'secondary'
 
   const safeProofUrl = isSafeProofImageUrl(paymentDetail?.proofUrl ?? order.paymentProofUrl)
+  const showOrganization = currentUser?.preferences?.showOrganizationOnReceipts ?? true
+  const resolvedPrintMode: OrderPrintMode =
+    printMode ?? (order.status === 'completed' ? 'receipt' : 'pickup-pass')
 
   return (
     <>
-      <CheckoutHeader backHref='/pasar' backLabel='Pasar panen' />
+      <div className='print:hidden'>
+        <CheckoutHeader backHref='/pasar' backLabel='Pasar panen' />
+      </div>
 
-      <main className='mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-8'>
+      <main className='mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 print:hidden'>
         <div className='grid grid-cols-1 gap-6 rounded-xl border border-border bg-card p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8'>
           <div className='flex flex-col gap-5'>
             <div className='flex flex-col gap-2'>
@@ -137,7 +172,7 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
                 </span>
               </div>
 
-              <h1 className='font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl'>
+              <h1 className='font-heading text-2xl font-bold text-foreground sm:text-3xl'>
                 Detail pesanan
               </h1>
             </div>
@@ -234,15 +269,21 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
                             penawaran petani dan pesanan ini ditandai dibatalkan.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
+                        {cancelOrderMutation.isError && (
+                          <Alert variant='destructive'>
+                            <AlertDescription>{cancelOrderMutation.error.message}</AlertDescription>
+                          </Alert>
+                        )}
                         <AlertDialogFooter>
                           <AlertDialogCancel>Tetap lanjut</AlertDialogCancel>
                           <AlertDialogAction
                             variant='destructive'
                             disabled={cancelOrderMutation.isPending}
-                            onClick={async () => {
-                              await cancelOrderMutation.mutateAsync(order.id)
-                              setCancelDialogOpen(false)
-                            }}
+                            onClick={() =>
+                              cancelOrderMutation.mutate(order.id, {
+                                onSuccess: () => setCancelDialogOpen(false),
+                              })
+                            }
                           >
                             {cancelOrderMutation.isPending && <Spinner data-icon='inline-start' />}
                             <span>Ya, batalkan</span>
@@ -277,8 +318,23 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
                 <CheckCircle2 aria-hidden='true' />
                 <AlertTitle>{statusLabel}</AlertTitle>
                 <AlertDescription>
-                  Tunjukkan nomor pesanan {order.id} saat mengambil hasil panen di lokasi petani
-                  sesuai jadwal terpilih.
+                  {order.status === 'completed'
+                    ? `Penerimaan panen selesai dicatat sebesar ${formatWeightKg(order.confirmedWeightKg ?? order.quantityKg)}.`
+                    : `Tunjukkan kartu pengambilan atau nomor pesanan ${order.id} di lokasi petani sesuai jadwal.`}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {isDisputed && (
+              <Alert variant='destructive'>
+                <AlertCircle aria-hidden='true' />
+                <AlertTitle>Pesanan dalam peninjauan</AlertTitle>
+                <AlertDescription>
+                  {typeof order.confirmedWeightKg === 'number'
+                    ? `Berat aktual tercatat ${formatWeightKg(order.confirmedWeightKg)} dari ${formatWeightKg(order.quantityKg)} dipesan. `
+                    : ''}
+                  {order.weightDiscrepancyNote ||
+                    'Lihat status laporan di bagian pengaduan pesanan.'}
                 </AlertDescription>
               </Alert>
             )}
@@ -291,41 +347,22 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
 
         <div className='grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10'>
           <div className='flex flex-col gap-6'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Lokasi pengambilan</CardTitle>
-                <CardDescription>Titik serah terima panen di lahan petani.</CardDescription>
-              </CardHeader>
-              <CardContent className='flex flex-col gap-3 text-sm'>
-                <div className='flex items-start gap-2.5'>
-                  <Store className='mt-0.5 size-4 shrink-0 text-primary' aria-hidden='true' />
-                  <div className='flex flex-col gap-0.5'>
-                    <span className='font-semibold text-foreground'>
-                      {order.farmerName || 'Petani mitra PanganTani'}
-                    </span>
-                    <span className='text-foreground'>{order.pickupLocation.address}</span>
-                    {order.pickupLocation.notes && (
-                      <span className='text-muted-foreground'>{order.pickupLocation.notes}</span>
-                    )}
-                  </div>
-                </div>
+            <OrderScheduleProposalCard key={`schedule-${order.id}`} order={order} />
 
-                <Separator />
+            <OrderReceiptConfirmationCard key={`receipt-${order.id}`} order={order} />
 
-                <div className='flex items-start gap-2.5'>
-                  <CalendarClock
-                    className='mt-0.5 size-4 shrink-0 text-primary'
-                    aria-hidden='true'
-                  />
-                  <div className='flex flex-col gap-0.5'>
-                    <span className='text-xs text-muted-foreground'>Jadwal ambil</span>
-                    <span className='font-medium text-foreground tabular-nums'>
-                      {formatPickupSlotLabel(order.scheduleSlot)}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <OrderCompletedReceiptCard
+              order={order}
+              showOrganization={showOrganization}
+              onPrintReceipt={() => handleTriggerPrint('receipt')}
+            />
+
+            <OrderPickupLocationCard
+              order={order}
+              showPickupActions={isApprovedOrBeyond || isDisputed}
+              showOrganization={showOrganization}
+              onPrintPickupPass={() => handleTriggerPrint('pickup-pass')}
+            />
 
             <Card>
               <CardHeader>
@@ -433,11 +470,16 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
 
           <div className='flex flex-col gap-6'>
             <OrderCommodityCard order={order} />
+            <OrderComplaints order={order} />
           </div>
         </div>
       </main>
 
-      <GlobalFooter />
+      <OrderPrintSheet order={order} mode={resolvedPrintMode} showOrganization={showOrganization} />
+
+      <div className='print:hidden'>
+        <GlobalFooter />
+      </div>
     </>
   )
 }

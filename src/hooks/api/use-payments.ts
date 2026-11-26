@@ -10,12 +10,15 @@ import {
   type SubmitPaymentProof,
 } from '@/types/api/payments'
 
+import { useCurrentUser } from './use-auth'
+
 export function usePaymentDetail(orderId: string) {
+  const { data: user } = useCurrentUser()
   return useQuery({
-    queryKey: queryKeys.payments.detail(orderId),
+    queryKey: queryKeys.payments.detail(orderId, user?.id),
     queryFn: () =>
       apiClient<PaymentDetail>('/api/orders/' + orderId + '/payment', PaymentDetailSchema),
-    enabled: Boolean(orderId),
+    enabled: Boolean(orderId) && user?.role === 'buyer',
     refetchInterval: (query) => {
       const status = query.state.data?.status
       if (status === 'pending' || status === 'under_review') {
@@ -36,8 +39,10 @@ export function useSubmitPaymentProof(orderId: string) {
         body: JSON.stringify(payload),
       }),
     onSuccess: (updatedOrder) => {
-      queryClient.setQueryData(queryKeys.orders.detail(orderId), updatedOrder)
-      queryClient.invalidateQueries({ queryKey: queryKeys.payments.detail(orderId) })
+      queryClient.setQueryData(queryKeys.orders.detail(orderId, updatedOrder.buyerId), updatedOrder)
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.payments.detail(orderId, updatedOrder.buyerId),
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
     },
   })

@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { z } from 'zod'
+import { BuyerOrderAccess } from '@/components/checkout/buyer-order-access'
 import { CheckoutSkeleton } from '@/components/checkout/checkout-skeleton'
 import { OrderPaymentView } from '@/components/checkout/order-payment-view'
 
@@ -27,7 +28,11 @@ async function OrderPaymentContent({ params }: OrderPaymentPageProps) {
     notFound()
   }
 
-  return <OrderPaymentView orderId={parsed.data} />
+  return (
+    <BuyerOrderAccess>
+      <OrderPaymentView orderId={parsed.data} />
+    </BuyerOrderAccess>
+  )
 }
 
 export default function OrderPaymentPage({ params }: OrderPaymentPageProps) {
