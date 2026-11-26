@@ -49,6 +49,15 @@ export const UserAddressSchema = z.object({
 })
 export type UserAddress = z.infer<typeof UserAddressSchema>
 
+export const SaveBuyerAddressRequestSchema = z.object({
+  id: z.string().optional(),
+  label: z.string().trim().min(2, 'Label alamat minimal 2 karakter').max(60),
+  areaName: z.string().trim().min(3, 'Isi kecamatan atau kota tujuan minimal 3 karakter').max(120),
+  fullAddress: z.string().trim().min(8, 'Alamat lengkap minimal 8 karakter').max(300),
+  setAsDefault: z.boolean().optional(),
+})
+export type SaveBuyerAddressRequest = z.infer<typeof SaveBuyerAddressRequestSchema>
+
 export const UserSchema = z.object({
   id: z.string(),
   name: z.string(),

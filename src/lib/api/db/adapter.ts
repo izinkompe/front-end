@@ -1,10 +1,9 @@
 import { ApiError } from '../errors'
 import { offersCollection } from './collections/offers'
-import { ordersCollection } from './collections/orders'
 import { usersCollection } from './collections/users'
 import { notificationsCollection } from './collections/notifications'
 import { needsBoardCollection } from './collections/needs-board'
-import type { Order } from '@/types/api/orders'
+import { handleOrderRoute } from './order-routes'
 import type { DistributionStats } from '@/types/api/admin'
 import type { NeedRequest } from '@/types/api/needs-board'
 import type { Offer } from '@/types/api/offers'
@@ -196,6 +195,71 @@ export const tanstackDbAdapter = {
       return { success: true }
     }
 
+    if (endpoint === '/api/auth/addresses' && method === 'POST') {
+      if (!activeSessionUserId) {
+        throw new ApiError(401, 'Masuk terlebih dahulu untuk mengubah alamat', 'UNAUTHORIZED')
+      }
+      const user = usersCollection.get(activeSessionUserId)
+      if (!user) {
+        throw new ApiError(404, 'Akun pengguna tidak ditemukan', 'NOT_FOUND')
+      }
+
+      const body = parseJsonBody<{
+        id?: string
+        label?: string
+        areaName?: string
+        fullAddress?: string
+        setAsDefault?: boolean
+      }>(options.body)
+
+      const label = (body.label || '').trim()
+      const areaName = (body.areaName || '').trim()
+      const fullAddress = (body.fullAddress || '').trim()
+      if (label.length < 2 || areaName.length < 3 || fullAddress.length < 8) {
+        throw new ApiError(400, 'Lengkapi label, wilayah, dan alamat lengkap', 'INVALID_ADDRESS')
+      }
+
+      const currentAddresses = user.addresses ?? []
+      const existingIndex = body.id ? currentAddresses.findIndex((item) => item.id === body.id) : -1
+      const shouldBeDefault = body.setAsDefault ?? true
+      const addressId =
+        existingIndex >= 0 ? currentAddresses[existingIndex].id : 'addr-' + Date.now()
+
+      const nextAddress = {
+        id: addressId,
+        label,
+        areaName,
+        fullAddress,
+        latitude: existingIndex >= 0 ? currentAddresses[existingIndex].latitude : -6.9175,
+        longitude: existingIndex >= 0 ? currentAddresses[existingIndex].longitude : 107.6191,
+        isDefault: shouldBeDefault,
+      }
+
+      const nextAddresses =
+        existingIndex >= 0
+          ? currentAddresses.map((item, index) =>
+              index === existingIndex
+                ? nextAddress
+                : shouldBeDefault
+                  ? { ...item, isDefault: false }
+                  : item
+            )
+          : [
+              ...currentAddresses.map((item) =>
+                shouldBeDefault ? { ...item, isDefault: false } : item
+              ),
+              nextAddress,
+            ]
+
+      const now = new Date().toISOString()
+      usersCollection.update(user.id, (draft) => {
+        draft.addresses = nextAddresses
+        draft.updatedAt = now
+      })
+
+      return usersCollection.get(user.id)
+    }
+
     if (endpoint === '/api/offers/expiring-soon') {
       return Array.from(offersCollection.values())
         .filter((item) => item.status === 'active' && item.availableStockKg > 0)
@@ -258,169 +322,16 @@ export const tanstackDbAdapter = {
       return toPublicOffer(offer)
     }
 
-    if (endpoint === '/api/orders' && method === 'GET') {
-      let items = Array.from(ordersCollection.values())
-      if (options.params?.status) {
-        items = items.filter((item) => item.status === options.params?.status)
-      }
-      return items
-    }
-
-    if (endpoint === '/api/orders' && method === 'POST') {
-      const body = parseJsonBody<{
-        offerId: string
-        quantityKg: number
-        scheduleSlotId?: string
-        notes?: string
-      }>(options.body)
-      const offer = offersCollection.get(body.offerId)
-      if (!offer) {
-        throw new ApiError(404, 'Penawaran komoditas tidak ditemukan', 'NOT_FOUND')
-      }
-      if (offer.availableStockKg < body.quantityKg) {
-        throw new ApiError(400, 'Stok tidak mencukupi untuk pemesanan ini', 'INSUFFICIENT_STOCK')
-      }
-
-      offersCollection.update(offer.id, (draft) => {
-        draft.availableStockKg -= body.quantityKg
-        draft.reservedStockKg += body.quantityKg
-      })
-
-      const selectedSlot = offer.pickupScheduleSlots.find(
-        (slot) => slot.id === body.scheduleSlotId
-      ) ||
-        offer.pickupScheduleSlots[0] || {
-          id: 'slot-default',
-          date: '2026-11-25',
-          startTime: '08:00',
-          endTime: '10:00',
-        }
-
-      const newOrder: Order = {
-        id: 'ord-' + Date.now(),
-        buyerId: 'usr-pb-01',
-        farmerId: offer.farmerId,
-        offerId: offer.id,
-        commodityName: offer.commodityName,
-        quantityKg: body.quantityKg,
-        pricePerKg: offer.pricePerKg,
-        totalPrice: Math.round(body.quantityKg * offer.pricePerKg),
-        scheduleSlot: selectedSlot,
-        paymentDeadline: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-        status: 'pending_payment',
-        pickupLocation: {
-          address: offer.pickupAddressFull || offer.pickupAddressArea,
-          latitude: offer.latitude || -6.8167,
-          longitude: offer.longitude || 107.6167,
-          notes: body.notes,
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      ordersCollection.insert(newOrder)
-      return newOrder
-    }
-
-    if (endpoint.startsWith('/api/orders/') && endpoint.endsWith('/cancel') && method === 'POST') {
-      const parts = endpoint.split('/')
-      const orderId = parts[3]
-      const order = ordersCollection.get(orderId)
-      if (!order) {
-        throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
-      }
-
-      const offer = offersCollection.get(order.offerId)
-      if (offer) {
-        offersCollection.update(offer.id, (draft) => {
-          draft.reservedStockKg = Math.max(0, draft.reservedStockKg - order.quantityKg)
-          draft.availableStockKg += order.quantityKg
-        })
-      }
-
-      ordersCollection.update(orderId, (draft) => {
-        draft.status = 'cancelled'
-        draft.updatedAt = new Date().toISOString()
-      })
-
-      return ordersCollection.get(orderId)
-    }
-
-    if (
-      endpoint.startsWith('/api/orders/') &&
-      endpoint.endsWith('/payments') &&
-      method === 'POST'
-    ) {
-      const parts = endpoint.split('/')
-      const orderId = parts[3]
-      const body = parseJsonBody<{ proofUrl?: string }>(options.body)
-      const order = ordersCollection.get(orderId)
-      if (!order) {
-        throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
-      }
-
-      ordersCollection.update(orderId, (draft) => {
-        draft.status = 'payment_submitted'
-        draft.paymentProofUrl = body.proofUrl || 'https://images.example.com/proof.jpg'
-        draft.updatedAt = new Date().toISOString()
-      })
-
-      return ordersCollection.get(orderId)
-    }
-
-    if (endpoint.startsWith('/api/orders/') && endpoint.endsWith('/ready-for-pickup')) {
-      const parts = endpoint.split('/')
-      const orderId = parts[3]
-      const order = ordersCollection.get(orderId)
-      if (!order) {
-        throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
-      }
-
-      ordersCollection.update(orderId, (draft) => {
-        draft.status = 'ready_for_pickup'
-        draft.updatedAt = new Date().toISOString()
-      })
-
-      return ordersCollection.get(orderId)
-    }
-
-    if (
-      endpoint.startsWith('/api/orders/') &&
-      endpoint.endsWith('/confirm-receipt') &&
-      method === 'POST'
-    ) {
-      const parts = endpoint.split('/')
-      const orderId = parts[3]
-      const body = parseJsonBody<{ confirmedWeightKg?: number }>(options.body)
-      const order = ordersCollection.get(orderId)
-      if (!order) {
-        throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
-      }
-
-      const offer = offersCollection.get(order.offerId)
-      if (offer) {
-        offersCollection.update(offer.id, (draft) => {
-          draft.reservedStockKg = Math.max(0, draft.reservedStockKg - order.quantityKg)
-          draft.soldStockKg += body.confirmedWeightKg || order.quantityKg
-        })
-      }
-
-      ordersCollection.update(orderId, (draft) => {
-        draft.status = 'completed'
-        draft.confirmedWeightKg = body.confirmedWeightKg || order.quantityKg
-        draft.updatedAt = new Date().toISOString()
-      })
-
-      return ordersCollection.get(orderId)
-    }
-
-    if (endpoint.startsWith('/api/orders/') && method === 'GET') {
-      const id = endpoint.replace('/api/orders/', '')
-      const order = ordersCollection.get(id)
-      if (!order) {
-        throw new ApiError(404, 'Pesanan tidak ditemukan', 'NOT_FOUND')
-      }
-      return order
+    const orderResult = handleOrderRoute({
+      endpoint,
+      method,
+      params: options.params,
+      body: options.body,
+      activeSessionUserId,
+      parseJsonBody,
+    })
+    if (orderResult.handled) {
+      return orderResult.data
     }
 
     if (endpoint === '/api/notifications' && method === 'GET') {

@@ -9,6 +9,7 @@ import {
   type BuyerRegisterRequest,
   type FarmerRegisterRequest,
   type LoginRequest,
+  type SaveBuyerAddressRequest,
   type User,
 } from '@/types/api/auth'
 
@@ -94,6 +95,22 @@ export function useRegisterFarmer() {
       queryClient.setQueryData(queryKeys.auth.me, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
       queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
+    },
+  })
+}
+
+export function useSaveBuyerAddress() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: SaveBuyerAddressRequest) =>
+      apiClient<User>('/api/auth/addresses', UserSchema, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(queryKeys.auth.me, updatedUser)
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
     },
   })
 }

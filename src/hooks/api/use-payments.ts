@@ -1,10 +1,30 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api/client'
 import { queryKeys } from '@/lib/api/query-keys'
 import { OrderSchema, type Order } from '@/types/api/orders'
-import type { SubmitPaymentProof } from '@/types/api/payments'
+import {
+  PaymentDetailSchema,
+  type PaymentDetail,
+  type SubmitPaymentProof,
+} from '@/types/api/payments'
+
+export function usePaymentDetail(orderId: string) {
+  return useQuery({
+    queryKey: queryKeys.payments.detail(orderId),
+    queryFn: () =>
+      apiClient<PaymentDetail>('/api/orders/' + orderId + '/payment', PaymentDetailSchema),
+    enabled: Boolean(orderId),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status
+      if (status === 'pending' || status === 'under_review') {
+        return 10 * 1000
+      }
+      return false
+    },
+  })
+}
 
 export function useSubmitPaymentProof(orderId: string) {
   const queryClient = useQueryClient()
@@ -17,6 +37,7 @@ export function useSubmitPaymentProof(orderId: string) {
       }),
     onSuccess: (updatedOrder) => {
       queryClient.setQueryData(queryKeys.orders.detail(orderId), updatedOrder)
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.detail(orderId) })
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
     },
   })
