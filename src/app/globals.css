@@ -188,3 +188,28 @@
     contain: layout style paint;
   }
 }
+
+.offer-sticky-parent {
+  overflow-anchor: none;
+}
+
+.offer-sticky-shell {
+  container-type: scroll-state;
+  container-name: offer-sticky;
+}
+
+@container offer-sticky scroll-state(stuck: top) {
+  .offer-sticky-bar {
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+  }
+}
+
+.offer-scrollspy-nav {
+  scroll-target-group: auto;
+}
+
+.offer-scrollspy-nav a[aria-current='true'] {
+  background-color: var(--secondary);
+  color: var(--foreground);
+  font-weight: 600;
+}
