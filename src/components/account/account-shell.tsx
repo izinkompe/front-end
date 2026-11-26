@@ -93,7 +93,14 @@ export function AccountShell({ children }: { children: ReactNode }) {
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
 
   if (!isHydrated || isPending) {
-    return <AccountShellSkeleton />
+    return (
+      <>
+        <AccountShellSkeleton />
+        <div className='hidden' aria-hidden='true'>
+          {children}
+        </div>
+      </>
+    )
   }
 
   const activeLabel = getBreadcrumbLabel(pathname)
@@ -142,6 +149,10 @@ export function AccountShell({ children }: { children: ReactNode }) {
             </Empty>
           </CardContent>
         </Card>
+
+        <div className='hidden' aria-hidden='true'>
+          {children}
+        </div>
 
         <BuyerAuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
       </div>
