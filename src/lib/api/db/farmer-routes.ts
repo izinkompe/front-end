@@ -5,6 +5,7 @@ import { offersCollection } from './collections/offers'
 import { usersCollection } from './collections/users'
 import { farmerReviewsCollection } from './collections/farmer-reviews'
 import { mockFarmerStoreMeta } from './fixtures/farmer-stores.fixture'
+import { ensureFarmerStoreSettings, farmerFarmsCollection } from './collections/farmer-management'
 import {
   FarmerReviewTopicSchema,
   type FarmerReviewsResponse,
@@ -88,6 +89,10 @@ function toPublicFarmerStoreProfile(
   activeSessionUserId: string | null
 ): FarmerStoreProfile {
   const meta = mockFarmerStoreMeta[farmer.id]
+  const storeSettings = ensureFarmerStoreSettings(farmer)
+  const primaryFarm = Array.from(farmerFarmsCollection.values()).find(
+    (farm) => farm.farmerId === farmer.id && farm.status === 'active'
+  )
   const farmerOffers = Array.from(offersCollection.values()).filter(
     (offer) => offer.farmerId === farmer.id
   )
@@ -102,19 +107,16 @@ function toPublicFarmerStoreProfile(
 
   return {
     id: farmer.id,
-    farmName: (farmer.organization ?? '').trim() || farmer.name,
+    farmName: storeSettings.storeName,
     farmerDisplayName: farmer.name,
     farmerType: farmer.farmerType ?? 'individual',
     isVerifiedFarmer: Boolean(farmer.isVerifiedFarmer),
-    areaName: defaultAddress?.areaName ?? fallbackArea,
-    avatarUrl: farmer.avatarUrl,
-    description:
-      meta?.description ??
-      `${(farmer.organization ?? '').trim() || farmer.name} menyalurkan hasil panen surplus langsung dari kebun.`,
-    publicPickupNotes:
-      meta?.publicPickupNotes ??
-      'Pengambilan mandiri sesuai slot jadwal pada penawaran. Alamat lengkap tersedia setelah reservasi.',
-    primaryCommodities: farmer.primaryCommodities ?? [],
+    areaName: primaryFarm?.areaName ?? defaultAddress?.areaName ?? fallbackArea,
+    avatarUrl: storeSettings.logoImage ?? farmer.avatarUrl,
+    coverImageUrl: storeSettings.coverImage,
+    description: storeSettings.description,
+    publicPickupNotes: storeSettings.publicPickupNotes,
+    primaryCommodities: storeSettings.primaryCommodities,
     joinedAt: farmer.createdAt,
     stats: {
       averageRating: reviewStats.averageRating,

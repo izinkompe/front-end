@@ -81,6 +81,7 @@ export const FarmerStoreProfileSchema = z.object({
   isVerifiedFarmer: z.boolean(),
   areaName: z.string(),
   avatarUrl: z.string().optional(),
+  coverImageUrl: z.string().optional(),
   description: z.string(),
   publicPickupNotes: z.string(),
   primaryCommodities: z.array(CommodityCategorySchema),

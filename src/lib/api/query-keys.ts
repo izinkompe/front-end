@@ -55,6 +55,12 @@ export const queryKeys = {
       [...queryKeys.farmers.all, 'detail', farmerId, userId] as const,
     reviews: (farmerId: string) => [...queryKeys.farmers.all, 'reviews', farmerId] as const,
   },
+  farmerManagement: {
+    store: (farmerId?: string) => ['farmer-management', 'store', farmerId] as const,
+    farms: (farmerId?: string) => ['farmer-management', 'farms', farmerId] as const,
+    farm: (farmId: string, farmerId?: string) =>
+      ['farmer-management', 'farm', farmId, farmerId] as const,
+  },
   admin: {
     complaints: (params?: Record<string, unknown>) => ['admin', 'complaints', params] as const,
     disputes: (params?: Record<string, unknown>) => ['admin', 'disputes', params] as const,

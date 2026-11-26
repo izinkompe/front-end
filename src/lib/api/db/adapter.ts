@@ -11,6 +11,7 @@ import { handleComplaintRoute } from './complaint-routes'
 import { handleOrderRoute } from './order-routes'
 import { handleProfileRoute } from './profile-routes'
 import { handleFarmerRoute } from './farmer-routes'
+import { handleFarmerManagementRoute } from './farmer-management-routes'
 import type { DistributionStats } from '@/types/api/admin'
 import type { User } from '@/types/api/auth'
 import { matchesOfferCategory } from '@/lib/data/categories'
@@ -187,6 +188,8 @@ export const tanstackDbAdapter = {
       activeSessionUserId,
       parseJsonBody,
     }
+    const farmerManagement = handleFarmerManagementRoute(routeContext)
+    if (farmerManagement.handled) return farmerManagement.data
     const favorites = handleFavoriteRoute(routeContext)
     if (favorites.handled) return favorites.data
     const offerWrite = handleOfferWriteRoute(routeContext)
