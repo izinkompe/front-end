@@ -171,6 +171,13 @@
   select:not(:disabled) {
     cursor: pointer;
   }
+  dialog:modal {
+    overscroll-behavior: contain;
+  }
+  dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
 }
 
 @utility font-base {
