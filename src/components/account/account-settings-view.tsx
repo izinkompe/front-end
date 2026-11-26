@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, LogOut } from 'lucide-react'
+import { AccessibilityControls } from '@/components/info/accessibility-controls'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   AlertDialog,
@@ -25,12 +26,20 @@ import {
   FieldGroup,
   FieldLabel,
 } from '@/components/ui/field'
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { useCurrentUser, useLogout, useUpdateProfile } from '@/hooks/api/use-auth'
 import { DEFAULT_ACCOUNT_PREFERENCES } from '@/lib/data/profile-helpers'
-import type { AccountPreferences } from '@/types/api/auth'
+import { ReminderRadiusSchema, type AccountPreferences } from '@/types/api/auth'
 
 export function AccountSettingsView() {
   const router = useRouter()
@@ -38,8 +47,9 @@ export function AccountSettingsView() {
   const updateProfileMutation = useUpdateProfile()
   const logoutMutation = useLogout()
 
-  const initialPreferences = currentUser?.preferences ?? DEFAULT_ACCOUNT_PREFERENCES
-  const [preferences, setPreferences] = useState<AccountPreferences>(initialPreferences)
+  const serverPreferences = currentUser?.preferences ?? DEFAULT_ACCOUNT_PREFERENCES
+  const [draftPreferences, setDraftPreferences] = useState<AccountPreferences | null>(null)
+  const preferences = draftPreferences ?? serverPreferences
   const [savedNotice, setSavedNotice] = useState(false)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
 
@@ -47,8 +57,8 @@ export function AccountSettingsView() {
     return null
   }
 
-  function updatePref<K extends keyof AccountPreferences>(key: K, value: boolean) {
-    setPreferences((prev) => ({ ...prev, [key]: value }))
+  function updatePref<K extends keyof AccountPreferences>(key: K, value: AccountPreferences[K]) {
+    setDraftPreferences((prev) => ({ ...(prev ?? serverPreferences), [key]: value }))
     setSavedNotice(false)
   }
 
@@ -56,11 +66,15 @@ export function AccountSettingsView() {
     event.preventDefault()
     if (!currentUser) return
     setSavedNotice(false)
-    await updateProfileMutation.mutateAsync({
-      name: currentUser.name,
-      preferences,
-    })
-    setSavedNotice(true)
+    updateProfileMutation.mutate(
+      { name: currentUser.name, preferences },
+      {
+        onSuccess: () => {
+          setDraftPreferences(null)
+          setSavedNotice(true)
+        },
+      }
+    )
   }
 
   async function handleLogout() {
@@ -112,11 +126,10 @@ export function AccountSettingsView() {
 
               <Field orientation='horizontal' className='justify-between gap-4'>
                 <FieldContent>
-                  <FieldLabel htmlFor='pref-harvest-reminders'>
-                    Pengingat batas penawaran
-                  </FieldLabel>
+                  <FieldLabel htmlFor='pref-harvest-reminders'>Pengingat penawaran baru</FieldLabel>
                   <FieldDescription>
-                    Ingatkan ketika komoditas di daftar favorit mendekati batas waktu pesan.
+                    Beri tahu saya saat ada penawaran baru dari petani yang saya ikuti atau kategori
+                    favorit dalam radius pilihan.
                   </FieldDescription>
                 </FieldContent>
                 <Switch
@@ -125,6 +138,39 @@ export function AccountSettingsView() {
                   onCheckedChange={(checked) => updatePref('harvestReminders', checked)}
                 />
               </Field>
+
+              {preferences.harvestReminders && (
+                <Field>
+                  <FieldLabel htmlFor='pref-reminder-radius'>
+                    Radius pengingat dari alamat utama
+                  </FieldLabel>
+                  <Select
+                    value={String(preferences.reminderRadiusKm ?? 10)}
+                    onValueChange={(value) => {
+                      if (value !== null) {
+                        updatePref('reminderRadiusKm', ReminderRadiusSchema.parse(Number(value)))
+                      }
+                    }}
+                  >
+                    <SelectTrigger id='pref-reminder-radius'>
+                      <SelectValue>{preferences.reminderRadiusKm ?? 10} km</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {[5, 10, 25, 50].map((radius) => (
+                          <SelectItem key={radius} value={String(radius)}>
+                            {radius} km
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FieldDescription>
+                    Jarak dihitung dalam garis lurus. Tambahkan alamat utama untuk memakai
+                    pengingat.
+                  </FieldDescription>
+                </Field>
+              )}
 
               <Separator />
 
@@ -167,7 +213,7 @@ export function AccountSettingsView() {
               href='/syarat'
               className='text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground'
             >
-              Syarat &amp; Kebijakan Privasi
+              Syarat dan ketentuan
             </Link>
 
             <Button type='submit' disabled={updateProfileMutation.isPending}>
@@ -177,6 +223,8 @@ export function AccountSettingsView() {
           </CardFooter>
         </Card>
       </form>
+
+      <AccessibilityControls />
 
       <Card>
         <CardHeader>

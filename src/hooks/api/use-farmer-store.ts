@@ -16,11 +16,14 @@ import {
 } from '@/types/api/farmers'
 import { OfferSchema, type Offer } from '@/types/api/offers'
 
+import { useCurrentUser } from './use-auth'
+
 const OfferListSchema = z.array(OfferSchema)
 
 export function useFarmerStore(farmerId: string) {
+  const { data: user } = useCurrentUser()
   return useQuery({
-    queryKey: queryKeys.farmers.detail(farmerId),
+    queryKey: queryKeys.farmers.detail(farmerId, user?.id),
     queryFn: () =>
       apiClient<FarmerStoreProfile>(
         '/api/farmers/' + encodeURIComponent(farmerId),
@@ -58,6 +61,7 @@ export function useFarmerReviews(farmerId: string) {
 
 export function useToggleFollowFarmer(farmerId: string) {
   const queryClient = useQueryClient()
+  const { data: user } = useCurrentUser()
 
   return useMutation({
     mutationFn: () =>
@@ -67,8 +71,10 @@ export function useToggleFollowFarmer(farmerId: string) {
         { method: 'POST' }
       ),
     onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.favorites })
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
       queryClient.setQueryData<FarmerStoreProfile | undefined>(
-        queryKeys.farmers.detail(farmerId),
+        queryKeys.farmers.detail(farmerId, user?.id),
         (prev) =>
           prev
             ? {

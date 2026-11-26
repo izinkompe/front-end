@@ -14,7 +14,7 @@ export function useMarkOrderReady(orderId: string) {
         method: 'POST',
       }),
     onSuccess: (updatedOrder) => {
-      queryClient.setQueryData(queryKeys.orders.detail(orderId), updatedOrder)
+      queryClient.setQueryData(queryKeys.orders.detail(orderId, updatedOrder.buyerId), updatedOrder)
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
     },
   })

@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCurrentUser } from '@/hooks/api/use-auth'
+import { useOfferFavorites } from '@/hooks/api/use-favorites'
 import {
   useFarmerReviews,
   useFarmerStore,
@@ -87,7 +88,6 @@ export function FarmerStoreView({ farmerId }: FarmerStoreViewProps) {
   })
 
   const [nowMs, setNowMs] = useState<number | null>(null)
-  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(() => new Set())
   const [storeShareState, setStoreShareState] = useState<ShareButtonState>('idle')
   const [offerShareStates, setOfferShareStates] = useState<Record<string, ShareButtonState>>({})
   const [infoDialogOpen, setInfoDialogOpen] = useState(false)
@@ -159,7 +159,7 @@ export function FarmerStoreView({ farmerId }: FarmerStoreViewProps) {
   }
 
   const handleToggleFollow = () => {
-    if (!currentUser) {
+    if (currentUser?.role !== 'buyer') {
       pendingFollowRef.current = true
       setAuthDialogOpen(true)
       return
@@ -243,19 +243,10 @@ export function FarmerStoreView({ farmerId }: FarmerStoreViewProps) {
     })
   }
 
-  const handleToggleFavorite = (offer: Offer) => {
-    setFavoriteIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(offer.id)) {
-        next.delete(offer.id)
-        announcePolite(`${offer.commodityName} dihapus dari tersimpan`)
-      } else {
-        next.add(offer.id)
-        announcePolite(`${offer.commodityName} disimpan ke favorit`)
-      }
-      return next
-    })
-  }
+  const { favoriteIds, toggleFavorite: handleToggleFavorite } = useOfferFavorites(
+    () => setAuthDialogOpen(true),
+    announcePolite
+  )
 
   const referenceCoordinates = useMemo(
     () => getLocationCoordinates(selectedLocation),
