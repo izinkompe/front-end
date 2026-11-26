@@ -5,6 +5,7 @@ import { notificationsCollection } from './collections/notifications'
 import { needsBoardCollection } from './collections/needs-board'
 import { handleOrderRoute } from './order-routes'
 import { handleProfileRoute } from './profile-routes'
+import { handleFarmerRoute } from './farmer-routes'
 import type { DistributionStats } from '@/types/api/admin'
 import type { NeedRequest } from '@/types/api/needs-board'
 import type { Offer } from '@/types/api/offers'
@@ -217,6 +218,10 @@ export const tanstackDbAdapter = {
 
     if (endpoint === '/api/offers' && method === 'GET') {
       let items = Array.from(offersCollection.values())
+      if (options.params?.farmerId) {
+        const targetFarmerId = String(options.params.farmerId)
+        items = items.filter((item) => item.farmerId === targetFarmerId)
+      }
       if (options.params?.status) {
         items = items.filter((item) => item.status === options.params?.status)
       }
@@ -267,6 +272,15 @@ export const tanstackDbAdapter = {
         throw new ApiError(404, 'Penawaran tidak ditemukan', 'NOT_FOUND')
       }
       return toPublicOffer(offer)
+    }
+
+    const farmerResult = handleFarmerRoute({
+      endpoint,
+      method,
+      activeSessionUserId,
+    })
+    if (farmerResult.handled) {
+      return farmerResult.data
     }
 
     const orderResult = handleOrderRoute({

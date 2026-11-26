@@ -43,6 +43,11 @@ export const queryKeys = {
       [...queryKeys.needsBoard.all, 'list', params] as const,
     detail: (id: string) => [...queryKeys.needsBoard.all, 'detail', id] as const,
   },
+  farmers: {
+    all: ['farmers'] as const,
+    detail: (farmerId: string) => [...queryKeys.farmers.all, 'detail', farmerId] as const,
+    reviews: (farmerId: string) => [...queryKeys.farmers.all, 'reviews', farmerId] as const,
+  },
   admin: {
     complaints: (params?: Record<string, unknown>) => ['admin', 'complaints', params] as const,
     disputes: (params?: Record<string, unknown>) => ['admin', 'disputes', params] as const,

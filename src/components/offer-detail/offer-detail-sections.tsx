@@ -23,6 +23,7 @@ import {
   formatPickupSlotLabel,
   getDynamicPriceScheduleSteps,
 } from '@/lib/data/offer-detail-helpers'
+import { buildFarmerStoreHref } from '@/lib/data/farmer-store-helpers'
 import { cn } from '@/lib/utils'
 import type { CommodityCondition, Offer } from '@/types/api/offers'
 import { OfferAreaMap } from './offer-area-map'
@@ -112,7 +113,7 @@ export function OfferDetailSections({
       <section
         id='ringkasan'
         tabIndex={-1}
-        className='flex scroll-mt-44 flex-col gap-5 outline-none'
+        className='flex scroll-mt-32 flex-col gap-5 outline-none'
       >
         <h2 className='text-xl leading-snug font-bold text-foreground sm:text-2xl'>
           Kondisi dan ringkasan panen
@@ -172,7 +173,7 @@ export function OfferDetailSections({
       </section>
 
       {offer.dynamicPriceRule && (
-        <section id='harga' tabIndex={-1} className='flex scroll-mt-44 flex-col gap-4 outline-none'>
+        <section id='harga' tabIndex={-1} className='flex scroll-mt-32 flex-col gap-4 outline-none'>
           <h2 className='text-xl leading-snug font-bold text-foreground sm:text-2xl'>
             Jadwal harga dinamis
           </h2>
@@ -224,7 +225,7 @@ export function OfferDetailSections({
         </section>
       )}
 
-      <section id='lokasi' tabIndex={-1} className='flex scroll-mt-44 flex-col gap-5 outline-none'>
+      <section id='lokasi' tabIndex={-1} className='flex scroll-mt-32 flex-col gap-5 outline-none'>
         <h2 className='text-xl leading-snug font-bold text-foreground sm:text-2xl'>
           Lokasi dan jadwal ambil mandiri
         </h2>
@@ -281,7 +282,7 @@ export function OfferDetailSections({
         </div>
       </section>
 
-      <section id='petani' tabIndex={-1} className='flex scroll-mt-44 flex-col gap-4 outline-none'>
+      <section id='petani' tabIndex={-1} className='flex scroll-mt-32 flex-col gap-4 outline-none'>
         <h2 className='text-xl leading-snug font-bold text-foreground sm:text-2xl'>
           Petani pengelola panen
         </h2>
@@ -295,15 +296,25 @@ export function OfferDetailSections({
               <Sprout className='size-6' />
             </span>
             <div className='flex flex-col gap-0.5'>
-              <p className='text-base font-bold text-foreground'>{offer.farmerName}</p>
+              <Link
+                href={buildFarmerStoreHref(offer.farmerId)}
+                className='text-base font-bold text-foreground underline-offset-4 hover:underline'
+              >
+                {offer.farmerName}
+              </Link>
               <p className='text-sm text-muted-foreground'>
                 {offer.category}, {offer.pickupAddressArea}
               </p>
             </div>
           </div>
 
-          <Button variant='outline' size='sm' nativeButton={false} render={<Link href='/pasar' />}>
-            Lihat penawaran lain
+          <Button
+            variant='outline'
+            size='sm'
+            nativeButton={false}
+            render={<Link href={buildFarmerStoreHref(offer.farmerId)} />}
+          >
+            Lihat profil kebun
           </Button>
         </div>
       </section>

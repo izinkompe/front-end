@@ -23,6 +23,9 @@ export function OfferDetailGallery({
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
 
+  const safeIndex = Math.min(activeIndex, Math.max(0, photoUrls.length - 1))
+  const currentUrl = photoUrls[safeIndex]
+
   function openLightbox(index: number) {
     setActiveIndex(index)
     setLightboxOpen(true)
@@ -40,104 +43,81 @@ export function OfferDetailGallery({
     return (
       <div
         aria-hidden='true'
-        className='flex aspect-16/9 max-h-96 w-full items-center justify-center rounded-2xl border border-border bg-muted text-muted-foreground'
+        className='flex aspect-4/3 w-full items-center justify-center rounded-2xl border border-border bg-muted text-muted-foreground md:aspect-square'
       >
         <Sprout className='size-12' />
       </div>
     )
   }
 
-  if (photoUrls.length === 1) {
-    return (
-      <>
-        <div className='group relative aspect-16/9 max-h-112 w-full overflow-hidden rounded-2xl border border-border bg-muted'>
-          <Image
-            src={photoUrls[0]}
-            alt={`${commodityName} dari ${areaLabel}`}
-            fill
-            sizes='(max-width: 1024px) 100vw, 1280px'
-            loading='eager'
-            fetchPriority='high'
-            className={cn('object-cover', isUnavailable && 'opacity-70 grayscale-25')}
-          />
-
-          <Button
-            type='button'
-            variant='secondary'
-            size='sm'
-            onClick={() => openLightbox(0)}
-            aria-label={`Perbesar foto ${commodityName}`}
-            className='absolute right-3 bottom-3 rounded-full bg-background/90 text-foreground shadow-sm hover:bg-background'
-          >
-            <Expand data-icon='inline-start' aria-hidden='true' />
-            <span>Perbesar foto</span>
-          </Button>
-        </div>
-
-        <OfferLightboxDialog
-          open={lightboxOpen}
-          onOpenChange={setLightboxOpen}
-          commodityName={commodityName}
-          areaLabel={areaLabel}
-          photoUrls={photoUrls}
-          activeIndex={activeIndex}
-          onSelectIndex={setActiveIndex}
-          onPrev={handlePrev}
-          onNext={handleNext}
-        />
-      </>
-    )
-  }
-
-  const secondaryPhotos = photoUrls.slice(1, 3)
-
   return (
     <>
-      <div className='grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr]'>
+      <div className='flex flex-col gap-2.5'>
         <button
           type='button'
-          onClick={() => openLightbox(0)}
-          aria-label={`Lihat foto utama ${commodityName}`}
-          className='relative aspect-16/10 w-full overflow-hidden rounded-2xl border border-border bg-muted text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:aspect-auto md:min-h-96'
+          onClick={() => openLightbox(safeIndex)}
+          aria-label={`Perbesar foto ${commodityName}`}
+          className='group relative aspect-4/3 w-full overflow-hidden rounded-2xl border border-border bg-muted text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:aspect-square'
         >
-          <Image
-            src={photoUrls[0]}
-            alt={`${commodityName} dari ${areaLabel}`}
-            fill
-            sizes='(max-width: 768px) 100vw, 66vw'
-            loading='eager'
-            fetchPriority='high'
-            className={cn('object-cover', isUnavailable && 'opacity-70 grayscale-25')}
-          />
+          {currentUrl && (
+            <Image
+              src={currentUrl}
+              alt={`${commodityName} dari ${areaLabel}`}
+              fill
+              sizes='(max-width: 767px) 100vw, (max-width: 1279px) 280px, 340px'
+              loading='eager'
+              fetchPriority='high'
+              className={cn(
+                'object-cover transition-transform duration-300 group-hover:scale-[1.02]',
+                isUnavailable && 'opacity-70 grayscale-25'
+              )}
+            />
+          )}
 
-          <span className='absolute right-3 bottom-3 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-background/90 px-3 py-1 text-sm font-medium text-foreground shadow-sm tabular-nums'>
-            <Images className='size-4' aria-hidden='true' />
-            <span>{photoUrls.length} foto</span>
+          <span className='absolute right-3 bottom-3 inline-flex min-h-8 items-center gap-1.5 rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-foreground shadow-sm tabular-nums'>
+            {photoUrls.length > 1 ? (
+              <>
+                <Images className='size-3.5' aria-hidden='true' />
+                <span>
+                  {safeIndex + 1}/{photoUrls.length}
+                </span>
+              </>
+            ) : (
+              <>
+                <Expand className='size-3.5' aria-hidden='true' />
+                <span>Perbesar</span>
+              </>
+            )}
           </span>
         </button>
 
-        <div className='grid grid-cols-2 gap-3 md:grid-cols-1'>
-          {secondaryPhotos.map((url, idx) => {
-            const photoIndex = idx + 1
-            return (
+        {photoUrls.length > 1 && (
+          <div className='grid grid-cols-4 gap-2'>
+            {photoUrls.map((url, idx) => (
               <button
                 key={url}
                 type='button'
-                onClick={() => openLightbox(photoIndex)}
-                aria-label={`Lihat foto ${photoIndex + 1} dari ${photoUrls.length}`}
-                className='relative aspect-4/3 w-full overflow-hidden rounded-2xl border border-border bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring md:min-h-46'
+                onClick={() => setActiveIndex(idx)}
+                aria-label={`Lihat foto ${idx + 1} dari ${photoUrls.length}`}
+                aria-current={idx === safeIndex ? 'true' : undefined}
+                className={cn(
+                  'relative aspect-square w-full overflow-hidden rounded-xl border bg-muted transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                  idx === safeIndex
+                    ? 'border-primary ring-2 ring-primary/40'
+                    : 'border-border opacity-75 hover:opacity-100'
+                )}
               >
                 <Image
                   src={url}
-                  alt={`${commodityName} foto ${photoIndex + 1}`}
+                  alt=''
                   fill
-                  sizes='(max-width: 768px) 50vw, 33vw'
+                  sizes='84px'
                   className={cn('object-cover', isUnavailable && 'opacity-70 grayscale-25')}
                 />
               </button>
-            )
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <OfferLightboxDialog
@@ -146,7 +126,7 @@ export function OfferDetailGallery({
         commodityName={commodityName}
         areaLabel={areaLabel}
         photoUrls={photoUrls}
-        activeIndex={activeIndex}
+        activeIndex={safeIndex}
         onSelectIndex={setActiveIndex}
         onPrev={handlePrev}
         onNext={handleNext}

@@ -31,7 +31,7 @@ import { getRelatedOffers, getSafeOfferPhotoUrls } from '@/lib/data/offer-detail
 import type { Offer } from '@/types/api/offers'
 import type { Order } from '@/types/api/orders'
 import { OfferDetailGallery } from './offer-detail-gallery'
-import { OfferDetailHeader } from './offer-detail-header'
+import { OfferDetailBreadcrumb, OfferDetailHeader } from './offer-detail-header'
 import { OfferDetailSections } from './offer-detail-sections'
 import { OfferDetailSkeleton } from './offer-detail-skeleton'
 import { OfferOrderSuccessDialog, OfferReservationForm } from './offer-reservation-form'
@@ -54,11 +54,9 @@ export function OfferDetailView({ offerId }: OfferDetailViewProps) {
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
   const [mobileReserveOpen, setMobileReserveOpen] = useState(false)
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null)
-  const [showStickySummary, setShowStickySummary] = useState(false)
   const [activeSectionId, setActiveSectionId] = useState('ringkasan')
   const [liveAnnouncement, setLiveAnnouncement] = useState('')
 
-  const headerSentinelRef = useRef<HTMLDivElement | null>(null)
   const shareTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const lastAnnouncementRef = useRef('')
 
@@ -82,21 +80,6 @@ export function OfferDetailView({ offerId }: OfferDetailViewProps) {
       timers.clear()
     }
   }, [])
-
-  useEffect(() => {
-    const sentinel = headerSentinelRef.current
-    if (!sentinel || typeof IntersectionObserver === 'undefined') return
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setShowStickySummary(!entry.isIntersecting && entry.boundingClientRect.bottom <= 110)
-      },
-      { rootMargin: '-110px 0px 0px 0px', threshold: 0 }
-    )
-
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [offer?.id])
 
   const sectionAnchors = useMemo(() => {
     if (!offer) return []
@@ -269,59 +252,55 @@ export function OfferDetailView({ offerId }: OfferDetailViewProps) {
 
       <OfferStickyBars
         offer={offer}
-        showDesktopSticky={showStickySummary}
         isUnavailable={isUnavailable}
         hasDroppedPrice={priceSummary.hasDropped}
-        isFavorite={isFavorite}
-        shareState={shareState}
-        onToggleFavorite={handleToggleFavorite}
-        onShare={handleShareOffer}
         onOpenMobileSheet={() => setMobileReserveOpen(true)}
-        onScrollToReservation={() => {
-          document.getElementById('panel-reservasi')?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-          })
-          document.getElementById('offer-order-desktop-weight')?.focus()
-        }}
       />
 
-      <div className='mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-6 pb-28 sm:px-6 lg:px-8 lg:py-8 lg:pb-12'>
-        <div ref={headerSentinelRef}>
-          <OfferDetailHeader
-            offer={offer}
-            nowMs={nowMs}
-            distanceLabel={distanceLabel}
-            countdown={countdown}
-            isUnavailable={isUnavailable}
-            isFavorite={isFavorite}
-            shareState={shareState}
-            onToggleFavorite={handleToggleFavorite}
-            onShare={handleShareOffer}
-          />
-        </div>
+      <div className='mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 pb-28 sm:px-6 lg:px-8 lg:py-8 lg:pb-12'>
+        <OfferDetailBreadcrumb offer={offer} />
 
-        <OfferDetailGallery
-          commodityName={offer.commodityName}
-          areaLabel={offer.pickupAddressArea}
-          photoUrls={photoUrls}
-          isUnavailable={isUnavailable}
-        />
+        <div className='grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_370px] lg:items-start lg:gap-8 xl:grid-cols-[minmax(0,1fr)_410px] xl:gap-10'>
+          <div className='flex min-w-0 flex-col gap-10'>
+            <section
+              aria-label='Ringkasan komoditas dan foto panen'
+              className='grid grid-cols-1 items-start gap-6 md:grid-cols-[280px_minmax(0,1fr)] lg:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)] xl:gap-7'
+            >
+              <OfferDetailGallery
+                commodityName={offer.commodityName}
+                areaLabel={offer.pickupAddressArea}
+                photoUrls={photoUrls}
+                isUnavailable={isUnavailable}
+              />
 
-        <div className='grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_390px] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_420px]'>
-          <OfferDetailSections
-            offer={offer}
-            locationLabel={selectedLocation.label}
-            distanceLabel={distanceLabel}
-            sectionAnchors={sectionAnchors}
-            activeSectionId={activeSectionId}
-            onSelectSection={setActiveSectionId}
-          />
+              <OfferDetailHeader
+                offer={offer}
+                nowMs={nowMs}
+                distanceLabel={distanceLabel}
+                countdown={countdown}
+                priceSummary={priceSummary}
+                isUnavailable={isUnavailable}
+                isFavorite={isFavorite}
+                shareState={shareState}
+                onToggleFavorite={handleToggleFavorite}
+                onShare={handleShareOffer}
+              />
+            </section>
+
+            <OfferDetailSections
+              offer={offer}
+              locationLabel={selectedLocation.label}
+              distanceLabel={distanceLabel}
+              sectionAnchors={sectionAnchors}
+              activeSectionId={activeSectionId}
+              onSelectSection={setActiveSectionId}
+            />
+          </div>
 
           <aside
             id='panel-reservasi'
             aria-label='Formulir reservasi stok'
-            className='hidden scroll-mt-44 p-px lg:sticky lg:top-43 lg:flex lg:max-h-[calc(100dvh-11.25rem)] lg:flex-col lg:gap-3 lg:self-start lg:overflow-y-auto'
+            className='hidden scroll-mt-32 p-px lg:sticky lg:top-32 lg:flex lg:max-h-[calc(100dvh-8.75rem)] lg:flex-col lg:gap-3 lg:self-start lg:overflow-y-auto'
           >
             <Card size='sm' className='shrink-0 shadow-sm'>
               <CardContent>
