@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 
 const footerColumns = [
   {
@@ -122,10 +123,14 @@ const socialLinks = [
 
 const currentYear = new Date().getFullYear()
 
-export function GlobalFooter() {
+interface GlobalFooterProps {
+  containerClassName?: string
+}
+
+export function GlobalFooter({ containerClassName = 'max-w-7xl' }: GlobalFooterProps) {
   return (
     <footer className='border-t border-border bg-secondary text-secondary-foreground'>
-      <div className='mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8'>
+      <div className={cn('mx-auto px-4 py-12 sm:px-6 lg:px-8', containerClassName)}>
         <div className='grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4'>
           {footerColumns.map((column) => (
             <div key={column.title} className='flex flex-col gap-3'>
@@ -185,7 +190,9 @@ export function GlobalFooter() {
 
       <Separator />
 
-      <div className='mx-auto flex max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8'>
+      <div
+        className={cn('mx-auto flex flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8', containerClassName)}
+      >
         <nav aria-label='Tautan Kebijakan' className='flex flex-wrap items-center gap-x-6 gap-y-1'>
           {legalLinks.map((link) => (
             <Link

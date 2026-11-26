@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist_Mono, IBM_Plex_Sans } from 'next/font/google'
+import { LocationProvider } from '@/components/providers/location-provider'
 import { QueryProvider } from '@/components/providers/query-provider'
 import { cn } from '@/lib/utils'
 import './globals.css'
@@ -33,7 +34,9 @@ export default function RootLayout({
       className={cn('h-full antialiased font-sans', ibmPlexSans.variable, geistMono.variable)}
     >
       <body className='min-h-full flex flex-col font-sans text-base'>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <LocationProvider>{children}</LocationProvider>
+        </QueryProvider>
       </body>
     </html>
   )
