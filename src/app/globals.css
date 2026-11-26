@@ -193,13 +193,15 @@
   overflow-anchor: none;
 }
 
+@custom-variant offer-sticky-stuck (@container offer-sticky scroll-state(stuck: top));
+
 .offer-sticky-shell {
   container-type: scroll-state;
   container-name: offer-sticky;
 }
 
-@container offer-sticky scroll-state(stuck: top) {
-  .offer-sticky-bar {
+.offer-sticky-bar {
+  @variant offer-sticky-stuck {
     box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
   }
 }

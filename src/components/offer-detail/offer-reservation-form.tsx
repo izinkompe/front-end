@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { AlertCircle, CheckCircle2, Clock, Lock, MapPin, ShieldCheck, Truck } from 'lucide-react'
 import {
   formatPlainRupiah,
@@ -34,10 +35,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { useCreateOrder } from '@/hooks/api/use-orders'
+import { buildCheckoutHref } from '@/lib/data/checkout-helpers'
 import {
   formatDateTimeId,
   formatPickupSlotLabel,
@@ -55,7 +55,7 @@ interface OfferReservationFormProps {
   isExpired: boolean
   currentUser: User | null | undefined
   onRequireAuth: () => void
-  onOrderCreated: (order: Order) => void
+  onOrderCreated?: (order: Order) => void
   idPrefix?: string
 }
 
@@ -64,10 +64,9 @@ export function OfferReservationForm({
   isExpired,
   currentUser,
   onRequireAuth,
-  onOrderCreated,
   idPrefix = 'offer-order',
 }: OfferReservationFormProps) {
-  const createOrderMutation = useCreateOrder()
+  const router = useRouter()
   const availableSlots = offer.pickupScheduleSlots.filter((slot) => slot.isAvailable !== false)
   const defaultSlotId = availableSlots[0]?.id ?? ''
   const presets = getWeightPresetsKg(offer.availableStockKg)
@@ -118,14 +117,15 @@ export function OfferReservationForm({
       return
     }
 
-    const created = await createOrderMutation.mutateAsync({
-      offerId: offer.id,
-      quantityKg: parsedWeightKg,
-      scheduleSlotId: activeSlotId,
-      notes: notes.trim() || undefined,
-    })
-
-    onOrderCreated(created)
+    router.push(
+      buildCheckoutHref({
+        offerId: offer.id,
+        quantityKg: parsedWeightKg,
+        slotId: activeSlotId,
+        notes: notes.trim() || undefined,
+        pricePerKg: offer.pricePerKg,
+      })
+    )
   }
 
   const weightInputId = `${idPrefix}-weight`
@@ -187,13 +187,6 @@ export function OfferReservationForm({
               <AlertDescription>
                 Masuk menggunakan akun Pembeli untuk membuat reservasi panen.
               </AlertDescription>
-            </Alert>
-          )}
-
-          {createOrderMutation.isError && (
-            <Alert variant='destructive'>
-              <AlertCircle aria-hidden='true' />
-              <AlertDescription>{createOrderMutation.error.message}</AlertDescription>
             </Alert>
           )}
 
@@ -327,19 +320,10 @@ export function OfferReservationForm({
           <Button
             type='submit'
             size='lg'
-            disabled={
-              createOrderMutation.isPending || isNonBuyerUser || availableSlots.length === 0
-            }
+            disabled={isNonBuyerUser || availableSlots.length === 0}
             className='w-full'
           >
-            {createOrderMutation.isPending && <Spinner data-icon='inline-start' />}
-            <span>
-              {createOrderMutation.isPending
-                ? 'Menyimpan reservasi...'
-                : currentUser
-                  ? 'Pesan dan reservasi stok'
-                  : 'Masuk untuk memesan'}
-            </span>
+            <span>{currentUser ? 'Lanjut ke checkout' : 'Masuk untuk memesan'}</span>
           </Button>
         </>
       )}
@@ -426,8 +410,11 @@ export function OfferOrderSuccessDialog({ order, onOpenChange }: OfferOrderSucce
           <Button variant='outline' onClick={() => onOpenChange(false)}>
             Tutup
           </Button>
-          <Button nativeButton={false} render={<Link href='/pasar' />}>
-            Kembali ke katalog
+          <Button
+            nativeButton={false}
+            render={<Link href={order ? `/pesanan/${order.id}/bayar` : '/pasar'} />}
+          >
+            {order ? 'Lanjut ke pembayaran' : 'Kembali ke katalog'}
           </Button>
         </DialogFooter>
       </DialogContent>
