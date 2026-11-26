@@ -14,9 +14,7 @@ export function AdminStatistikView() {
   return (
     <div className='flex flex-col gap-6'>
       <div className='flex flex-col gap-1'>
-        <h1 className='font-heading text-2xl font-semibold text-foreground'>
-          Statistik Distribusi
-        </h1>
+        <h1 className='type-h1 font-semibold text-foreground'>Statistik Distribusi</h1>
         <p className='text-base text-muted-foreground'>
           Volume pangan terselamatkan dan faktor konversi emisi karbon per kategori komoditas.
         </p>

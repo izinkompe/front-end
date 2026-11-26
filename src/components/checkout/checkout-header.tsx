@@ -50,9 +50,7 @@ export function CheckoutHeader({ backHref, backLabel }: CheckoutHeaderProps) {
             <span className='flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
               <Sprout className='size-4.5' aria-hidden='true' />
             </span>
-            <span className='text-base font-bold tracking-tight text-foreground sm:text-lg'>
-              PanganTani
-            </span>
+            <span className='text-base font-bold text-foreground sm:text-lg'>PanganTani</span>
           </Link>
         </div>
 

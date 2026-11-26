@@ -70,7 +70,7 @@ function ErrorContent({
         <p className='text-6xl font-bold tabular-nums text-foreground sm:text-7xl'>{code}</p>
       ) : null}
 
-      <h1 className='mt-3 text-2xl font-bold text-foreground sm:text-3xl'>{title}</h1>
+      <h1 className='mt-3 type-h1 text-foreground'>{title}</h1>
 
       <p className='mt-4 max-w-md text-base leading-relaxed text-muted-foreground'>{description}</p>
 

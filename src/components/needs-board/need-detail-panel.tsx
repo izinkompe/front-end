@@ -178,7 +178,7 @@ export function NeedDetailPanel({
             <Button
               variant='ghost'
               size='icon'
-              className='size-8 shrink-0'
+              className='shrink-0'
               aria-label='Tutup detail permintaan'
               nativeButton={false}
               render={<Link href={closeHref} scroll={false} />}
@@ -194,22 +194,22 @@ export function NeedDetailPanel({
       <CardContent className='flex flex-col gap-5'>
         <dl className='grid gap-3 text-sm sm:grid-cols-2'>
           <div className='flex flex-col gap-0.5'>
-            <dt className='text-xs text-muted-foreground'>Berat dibutuhkan</dt>
+            <dt className='text-sm text-muted-foreground'>Berat dibutuhkan</dt>
             <dd className='font-semibold text-foreground tabular-nums'>
               {formatWeightKg(need.neededQuantityKg)}
             </dd>
           </div>
           <div className='flex flex-col gap-0.5'>
-            <dt className='text-xs text-muted-foreground'>Wilayah pengambilan</dt>
+            <dt className='text-sm text-muted-foreground'>Wilayah pengambilan</dt>
             <dd className='text-foreground'>{need.targetArea}</dd>
           </div>
           <div className='flex flex-col gap-0.5'>
-            <dt className='text-xs text-muted-foreground'>Tanggal dibutuhkan</dt>
+            <dt className='text-sm text-muted-foreground'>Tanggal dibutuhkan</dt>
             <dd className='text-foreground tabular-nums'>{formatNeedDate(need.targetDate)}</dd>
           </div>
           {need.maxPricePerKg !== undefined && (
             <div className='flex flex-col gap-0.5'>
-              <dt className='text-xs text-muted-foreground'>Harga maksimum per kg</dt>
+              <dt className='text-sm text-muted-foreground'>Harga maksimum per kg</dt>
               <dd className='font-medium text-foreground tabular-nums'>
                 {formatPlainRupiah(need.maxPricePerKg)}
               </dd>
@@ -218,7 +218,7 @@ export function NeedDetailPanel({
         </dl>
 
         {fulfilledKg > 0 && (
-          <div className='flex flex-col gap-1.5 rounded-md border border-border bg-muted/30 p-3 text-xs'>
+          <div className='flex flex-col gap-1.5 rounded-md border border-border bg-muted/30 p-3 text-sm'>
             <div className='flex items-center justify-between gap-2 tabular-nums'>
               <span className='font-medium text-foreground'>
                 Terpenuhi {formatWeightKg(fulfilledKg)}

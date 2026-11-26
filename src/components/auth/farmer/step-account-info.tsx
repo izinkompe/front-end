@@ -41,9 +41,7 @@ export function StepAccountInfo({
       className='flex flex-col gap-6'
     >
       <div className='flex flex-col gap-2 text-center'>
-        <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
-          Buat akun dan kontak aktif Anda
-        </h1>
+        <h1 className='type-h1 font-semibold text-foreground'>Buat akun dan kontak aktif Anda</h1>
         <p className='text-base leading-relaxed text-muted-foreground'>
           Gunakan nama asli serta email dan nomor WhatsApp yang aktif agar kami mudah memberi kabar
           saat ada pesanan masuk.

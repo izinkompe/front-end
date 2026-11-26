@@ -74,7 +74,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (activeRole === 'buyer' && !isPathAllowed) {
     return (
-      <div className='mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-4 p-4 sm:p-6'>
+      <div className='mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-4 p-4 sm:p-6'>
         <RelaxedAuthBanner
           activeRole={activeRole}
           onPreviewRoleChange={(next) => setPreviewRoleOverride(next)}
@@ -87,6 +87,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider>
       <SidebarProvider>
+        <a href='#konten-utama' className='skip-link'>
+          Lewati ke konten utama
+        </a>
         <DashboardSidebar role={activeRole} userName={userName} organization={organization} />
         <SidebarInset>
           <DashboardHeader

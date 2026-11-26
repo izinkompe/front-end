@@ -113,8 +113,8 @@ export function ComplaintPhotoField({
                 />
               </div>
               <div className='min-w-0 flex-1'>
-                <p className='truncate text-xs font-medium text-foreground'>{item.file.name}</p>
-                <p className='text-xs text-muted-foreground tabular-nums'>
+                <p className='truncate text-sm font-medium text-foreground'>{item.file.name}</p>
+                <p className='text-sm text-muted-foreground tabular-nums'>
                   {formatFileSizeKb(item.file.size)}
                 </p>
               </div>
@@ -122,11 +122,11 @@ export function ComplaintPhotoField({
                 type='button'
                 variant='ghost'
                 size='icon'
-                className='size-7 shrink-0'
+                className='shrink-0'
                 aria-label={`Hapus foto ${item.file.name}`}
                 onClick={() => handleRemoveFile(index)}
               >
-                <X className='size-3.5' aria-hidden='true' />
+                <X className='icon-sm' aria-hidden='true' />
               </Button>
             </li>
           ))}

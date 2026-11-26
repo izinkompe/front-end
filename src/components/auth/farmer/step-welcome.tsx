@@ -24,7 +24,7 @@ export function StepWelcome({ farmerName, farmName }: StepWelcomeProps) {
           <Clock data-icon='inline-start' />
           <span>Status Verifikasi: Sedang Ditinjau Admin</span>
         </Badge>
-        <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
+        <h1 className='type-h1 font-semibold text-foreground'>
           Selamat datang di PanganTani, {farmerName}!
         </h1>
         <p className='text-base leading-relaxed text-muted-foreground'>

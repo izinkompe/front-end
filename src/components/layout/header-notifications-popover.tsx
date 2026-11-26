@@ -39,7 +39,7 @@ export function HeaderNotificationsPopover({
         {count > 0 && (
           <Badge
             aria-hidden='true'
-            className='pointer-events-none absolute -top-1 -right-1 h-4 min-w-4 px-1 text-[10px] leading-none tabular-nums'
+            className='pointer-events-none absolute -top-1 -right-1 min-h-4 min-w-4 px-1 text-xs leading-none tabular-nums'
           >
             {count > 99 ? '99+' : count}
           </Badge>
@@ -47,9 +47,9 @@ export function HeaderNotificationsPopover({
       </PopoverTrigger>
       <PopoverContent align='end' sideOffset={8} className='w-(--available-width) max-w-sm p-0'>
         <div className='flex items-center justify-between gap-2 border-b border-border px-4 py-3'>
-          <PopoverTitle className='text-sm font-semibold'>Notifikasi</PopoverTitle>
+          <PopoverTitle className='text-base font-semibold'>Notifikasi</PopoverTitle>
           {signedIn && count > 0 && (
-            <span className='text-xs text-muted-foreground tabular-nums'>{count} belum dibaca</span>
+            <span className='text-sm text-muted-foreground tabular-nums'>{count} belum dibaca</span>
           )}
         </div>
 

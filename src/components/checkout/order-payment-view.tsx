@@ -145,9 +145,7 @@ export function OrderPaymentView({ orderId }: OrderPaymentViewProps) {
 
       <div className='mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8'>
         <div className='flex flex-col gap-3'>
-          <h1 className='font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl'>
-            Pembayaran pesanan
-          </h1>
+          <h1 className='type-h1 text-foreground'>Pembayaran pesanan</h1>
           <CheckoutProgress currentStep={2} />
         </div>
 

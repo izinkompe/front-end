@@ -135,7 +135,7 @@ export function ComplaintDetailPanel({
               <h3 className='font-semibold text-foreground'>Pengembalian dana</h3>
               <dl className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
                 <div className='flex flex-col gap-0.5'>
-                  <dt className='text-xs text-muted-foreground'>Status transfer</dt>
+                  <dt className='text-sm text-muted-foreground'>Status transfer</dt>
                   <dd className='font-medium text-foreground'>
                     {report.refundStatus
                       ? refundStatusLabels[report.refundStatus]
@@ -144,7 +144,7 @@ export function ComplaintDetailPanel({
                 </div>
                 {report.refundAmount !== undefined && (
                   <div className='flex flex-col gap-0.5'>
-                    <dt className='text-xs text-muted-foreground'>Nominal pengembalian</dt>
+                    <dt className='text-sm text-muted-foreground'>Nominal pengembalian</dt>
                     <dd className='font-semibold text-primary tabular-nums'>
                       {formatPlainRupiah(report.refundAmount)}
                     </dd>
@@ -153,14 +153,14 @@ export function ComplaintDetailPanel({
                 {report.refundBankAccount && (
                   <>
                     <div className='flex flex-col gap-0.5'>
-                      <dt className='text-xs text-muted-foreground'>Rekening tujuan</dt>
+                      <dt className='text-sm text-muted-foreground'>Rekening tujuan</dt>
                       <dd className='font-medium text-foreground'>
                         {report.refundBankAccount.bankName} (
                         {report.refundBankAccount.accountNumber})
                       </dd>
                     </div>
                     <div className='flex flex-col gap-0.5'>
-                      <dt className='text-xs text-muted-foreground'>Atas nama</dt>
+                      <dt className='text-sm text-muted-foreground'>Atas nama</dt>
                       <dd className='font-medium text-foreground'>
                         {report.refundBankAccount.accountHolderName}
                       </dd>
@@ -196,7 +196,7 @@ export function ComplaintDetailPanel({
                       <p className='font-semibold text-foreground'>
                         {entry.senderRole === 'buyer' ? 'Anda' : entry.senderName}
                       </p>
-                      <p className='text-xs text-muted-foreground tabular-nums'>
+                      <p className='text-sm text-muted-foreground tabular-nums'>
                         {formatDateTimeId(entry.createdAt)}
                       </p>
                     </div>

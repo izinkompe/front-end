@@ -145,6 +145,14 @@ export function GlobalHeader({
     return () => observer.disconnect()
   }, [isSticky])
 
+  useEffect(() => {
+    const root = document.documentElement
+    const isHeaderVisible = stickyState === 'in' || mobileMenuOpen
+    const offset = isHeaderVisible && headerHeight > 0 ? `${headerHeight}px` : '0px'
+
+    root.style.setProperty('--header-offset', offset)
+  }, [headerHeight, mobileMenuOpen, stickyState])
+
   function navigateSearch(nextQuery: string, nextCategory: BuyerCategoryFilter = 'semua') {
     const href = buildBuyerSearchHref({
       mode: 'katalog',
@@ -480,7 +488,7 @@ export function GlobalHeader({
           <CollapsibleContent className='max-h-[calc(100dvh-10.3125rem)] overflow-y-auto border-b border-border bg-background transition-all duration-200 ease-out data-ending-style:opacity-0 data-starting-style:opacity-0 lg:hidden'>
             <div className={cn('mx-auto px-4 py-3 sm:px-6', containerClassName)}>
               <nav aria-label='Navigasi Mobile' className='flex flex-col gap-1'>
-                <p className='px-3.5 pt-1 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
+                <p className='px-3.5 pt-1 pb-1 text-sm font-semibold text-muted-foreground'>
                   Kategori
                 </p>
                 {categoryNavItems.map((item) => (
@@ -498,7 +506,7 @@ export function GlobalHeader({
                 />
 
                 <Separator className='my-1.5' />
-                <p className='px-3.5 pt-1 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
+                <p className='px-3.5 pt-1 pb-1 text-sm font-semibold text-muted-foreground'>
                   Jelajah
                 </p>
                 {primaryNavLinks.map((item) => (
@@ -511,7 +519,7 @@ export function GlobalHeader({
                 ))}
 
                 <Separator className='my-1.5' />
-                <p className='px-3.5 pt-1 pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
+                <p className='px-3.5 pt-1 pb-1 text-sm font-semibold text-muted-foreground'>
                   Lainnya
                 </p>
                 {moreNavItems.map((item) => (

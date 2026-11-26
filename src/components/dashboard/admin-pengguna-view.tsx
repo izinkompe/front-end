@@ -21,7 +21,7 @@ export function AdminPenggunaView() {
     <div className='flex flex-col gap-6'>
       <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <div className='flex flex-col gap-1'>
-          <h1 className='font-heading text-2xl font-semibold text-foreground'>Pengguna & Akses</h1>
+          <h1 className='type-h1 font-semibold text-foreground'>Pengguna & Akses</h1>
           <p className='text-base text-muted-foreground'>
             Daftar akun terdaftar beserta peran RBAC yang berlaku pada sesi masing-masing.
           </p>

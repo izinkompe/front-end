@@ -219,9 +219,7 @@ export function CustomListDetail({
       {availableToAdd.length > 0 && (
         <div className='flex flex-col gap-2 pt-2'>
           <Separator />
-          <p className='pt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase'>
-            Tambahkan dari Favorit
-          </p>
+          <p className='pt-1 text-sm font-semibold text-muted-foreground'>Tambahkan dari Favorit</p>
           <ul className='flex flex-col gap-2'>
             {availableToAdd.slice(0, 5).map((offer) => (
               <li

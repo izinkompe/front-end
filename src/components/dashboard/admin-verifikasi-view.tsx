@@ -34,7 +34,7 @@ export function AdminVerifikasiView() {
     <div className='flex flex-col gap-6'>
       <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
         <div className='flex flex-col gap-1'>
-          <h1 className='font-heading text-2xl font-semibold text-foreground'>Verifikasi Petani</h1>
+          <h1 className='type-h1 font-semibold text-foreground'>Verifikasi Petani</h1>
           <p className='text-base text-muted-foreground'>
             Tinjau profil usaha, wilayah lahan, dan status kelayakan mitra petani.
           </p>

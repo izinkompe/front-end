@@ -18,14 +18,7 @@ import {
 } from 'lucide-react'
 import { BuyerAuthDialog } from '@/components/auth/buyer-auth-dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+import { BreadcrumbTrail } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -108,17 +101,7 @@ export function AccountShell({ children }: { children: ReactNode }) {
   if (!currentUser) {
     return (
       <div className='mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8'>
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink render={<Link href='/' />}>Beranda</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Akun</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <BreadcrumbTrail items={[{ label: 'Beranda', href: '/' }, { label: 'Akun' }]} />
 
         <Card>
           <CardContent className='py-10'>
@@ -166,25 +149,17 @@ export function AccountShell({ children }: { children: ReactNode }) {
 
   return (
     <div className='mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8'>
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink render={<Link href='/' />}>Beranda</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink render={<Link href='/akun' />}>Akun</BreadcrumbLink>
-          </BreadcrumbItem>
-          {pathname !== '/akun' && (
-            <>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{activeLabel}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </>
-          )}
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbTrail
+        items={
+          pathname === '/akun'
+            ? [{ label: 'Beranda', href: '/' }, { label: 'Akun' }]
+            : [
+                { label: 'Beranda', href: '/' },
+                { label: 'Akun', href: '/akun' },
+                { label: activeLabel },
+              ]
+        }
+      />
 
       <div className='grid grid-cols-1 gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start'>
         <aside className='flex flex-col gap-4 lg:sticky lg:top-32'>

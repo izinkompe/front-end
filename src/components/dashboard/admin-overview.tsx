@@ -59,9 +59,7 @@ export function AdminOverview({ user }: AdminOverviewProps) {
     <div className='flex flex-col gap-6'>
       <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
         <div className='flex flex-col gap-1'>
-          <h1 className='font-heading text-2xl font-semibold text-foreground'>
-            Operasional PanganTani
-          </h1>
+          <h1 className='type-h1 font-semibold text-foreground'>Operasional PanganTani</h1>
           <p className='text-base text-muted-foreground'>Masuk sebagai {displayName}</p>
         </div>
         <Button nativeButton={false} render={<Link href='/dashboard/admin/verifikasi' />}>

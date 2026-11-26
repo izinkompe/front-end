@@ -146,7 +146,7 @@ export function TermsIntroAndUsageSections() {
             tabIndex={0}
             role='region'
             aria-labelledby='tabel-ketentuan-transaksi'
-            className='overflow-x-auto rounded-lg border border-border bg-card'
+            className='table-scroll-region bg-card'
           >
             <table className='w-full min-w-[600px] border-collapse text-left text-sm'>
               <caption
