@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { z } from 'zod'
 import { apiClient } from '@/lib/api/client'
 import { ApiError } from '@/lib/api/errors'
 import { queryKeys } from '@/lib/api/query-keys'
@@ -9,6 +10,8 @@ import {
   type BuyerRegisterRequest,
   type FarmerRegisterRequest,
   type LoginRequest,
+  type ForgotPasswordRequest,
+  type ResetPasswordRequest,
   type SaveBuyerAddressRequest,
   type UpdateProfileRequest,
   type User,
@@ -178,5 +181,26 @@ export function useLogout() {
       queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
     },
+  })
+}
+
+export function useRequestPasswordReset() {
+  return useMutation({
+    mutationFn: (payload: ForgotPasswordRequest) =>
+      apiClient(
+        '/api/auth/forgot-password',
+        z.object({ success: z.literal(true), demoCode: z.string().optional() }),
+        { method: 'POST', body: JSON.stringify(payload) }
+      ),
+  })
+}
+
+export function useConfirmPasswordReset() {
+  return useMutation({
+    mutationFn: (payload: ResetPasswordRequest) =>
+      apiClient('/api/auth/reset-password', z.object({ success: z.literal(true) }), {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
   })
 }

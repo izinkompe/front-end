@@ -24,11 +24,14 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLogin, useRegisterBuyer } from '@/hooks/api/use-auth'
+import { BuyerPasswordResetForm } from './buyer-password-reset-form'
 import { BuyerRegisterRequestSchema, LoginRequestSchema } from '@/types/api/auth'
 
 interface BuyerAuthDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onAuthenticated?: () => void
+  defaultTab?: 'login' | 'register'
 }
 
 function getFieldErrorMessages(errors: unknown[]): Array<{ message: string }> {
@@ -43,7 +46,7 @@ function getFieldErrorMessages(errors: unknown[]): Array<{ message: string }> {
     .filter((item): item is { message: string } => Boolean(item?.message))
 }
 
-function BuyerLoginForm({ onSuccess }: { onSuccess: () => void }) {
+function BuyerLoginForm({ onSuccess, onReset }: { onSuccess: () => void; onReset: () => void }) {
   const [showPassword, setShowPassword] = useState(false)
   const loginMutation = useLogin()
 
@@ -56,8 +59,7 @@ function BuyerLoginForm({ onSuccess }: { onSuccess: () => void }) {
       onSubmit: LoginRequestSchema,
     },
     onSubmit: async ({ value }) => {
-      await loginMutation.mutateAsync(value)
-      onSuccess()
+      loginMutation.mutate(value, { onSuccess })
     },
   })
 
@@ -111,13 +113,9 @@ function BuyerLoginForm({ onSuccess }: { onSuccess: () => void }) {
               <Field data-invalid={isInvalid || undefined}>
                 <div className='flex items-center justify-between gap-2'>
                   <FieldLabel htmlFor='buyer-login-password'>Kata sandi</FieldLabel>
-                  <Link
-                    href='/bantuan'
-                    onClick={onSuccess}
-                    className='inline-flex min-h-10 items-center rounded-sm px-1 text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                  >
+                  <Button type='button' variant='link' size='sm' onClick={onReset}>
                     Lupa kata sandi?
-                  </Link>
+                  </Button>
                 </div>
                 <InputGroup>
                   <InputGroupInput
@@ -178,8 +176,7 @@ function BuyerRegisterForm({ onSuccess }: { onSuccess: () => void }) {
       onSubmit: BuyerRegisterRequestSchema,
     },
     onSubmit: async ({ value }) => {
-      await registerMutation.mutateAsync(value)
-      onSuccess()
+      registerMutation.mutate(value, { onSuccess })
     },
   })
 
@@ -323,48 +320,80 @@ function BuyerRegisterForm({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
-export function BuyerAuthDialog({ open, onOpenChange }: BuyerAuthDialogProps) {
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
+export function BuyerAuthDialog({
+  open,
+  onOpenChange,
+  onAuthenticated,
+  defaultTab = 'login',
+}: BuyerAuthDialogProps) {
+  const [tabOverride, setTabOverride] = useState<'login' | 'register' | null>(null)
+  const [reset, setReset] = useState(false)
+  const activeTab = tabOverride ?? defaultTab
 
   function handleSuccess() {
     onOpenChange(false)
+    onAuthenticated?.()
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) {
+          setReset(false)
+          setTabOverride(null)
+        }
+        onOpenChange(next)
+      }}
+    >
       <DialogContent className='gap-5 p-6 sm:max-w-md'>
-        <DialogHeader className='gap-1.5 pr-10'>
-          <DialogTitle className='text-xl font-semibold'>Masuk ke PanganTani</DialogTitle>
-          <DialogDescription>
-            Khusus akun Pembeli untuk memesan hasil panen langsung dari petani.
-          </DialogDescription>
-        </DialogHeader>
+        {reset ? (
+          <>
+            <DialogHeader className='gap-1.5 pr-10'>
+              <DialogTitle className='text-xl font-semibold'>Atur ulang kata sandi</DialogTitle>
+              <DialogDescription>
+                Masukkan email akun pembeli untuk meminta kode verifikasi dan mengatur kata sandi
+                baru.
+              </DialogDescription>
+            </DialogHeader>
+            <BuyerPasswordResetForm onBack={() => setReset(false)} />
+          </>
+        ) : (
+          <>
+            <DialogHeader className='gap-1.5 pr-10'>
+              <DialogTitle className='text-xl font-semibold'>Masuk ke PanganTani</DialogTitle>
+              <DialogDescription>
+                Khusus akun Pembeli untuk memesan hasil panen langsung dari petani.
+              </DialogDescription>
+            </DialogHeader>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => setActiveTab(value as 'login' | 'register')}
-          className='gap-5'
-        >
-          <TabsList
-            variant='line'
-            className='min-h-11 w-full justify-start gap-6 border-b border-border p-0'
-          >
-            <TabsTrigger value='login' className='flex-none px-1 pb-2.5 after:bottom-0'>
-              Masuk
-            </TabsTrigger>
-            <TabsTrigger value='register' className='flex-none px-1 pb-2.5 after:bottom-0'>
-              Daftar Baru
-            </TabsTrigger>
-          </TabsList>
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) => setTabOverride(value as 'login' | 'register')}
+              className='gap-5'
+            >
+              <TabsList
+                variant='line'
+                className='min-h-11 w-full justify-start gap-6 border-b border-border p-0'
+              >
+                <TabsTrigger value='login' className='flex-none px-1 pb-2.5 after:bottom-0'>
+                  Masuk
+                </TabsTrigger>
+                <TabsTrigger value='register' className='flex-none px-1 pb-2.5 after:bottom-0'>
+                  Daftar Baru
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value='login'>
-            <BuyerLoginForm onSuccess={handleSuccess} />
-          </TabsContent>
+              <TabsContent value='login'>
+                <BuyerLoginForm onSuccess={handleSuccess} onReset={() => setReset(true)} />
+              </TabsContent>
 
-          <TabsContent value='register'>
-            <BuyerRegisterForm onSuccess={handleSuccess} />
-          </TabsContent>
-        </Tabs>
+              <TabsContent value='register'>
+                <BuyerRegisterForm onSuccess={handleSuccess} />
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )
