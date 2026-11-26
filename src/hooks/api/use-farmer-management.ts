@@ -13,9 +13,23 @@ import {
   type UpdateFarmerFarmRequest,
   type UpdateFarmerStoreSettingsRequest,
 } from '@/types/api/farmer-management'
+import { OfferSchema, type Offer } from '@/types/api/offers'
 import { useCurrentUser } from './use-auth'
 
 const FarmerFarmListSchema = z.array(FarmerFarmSchema)
+const FarmerOfferListSchema = z.array(OfferSchema)
+
+export function useFarmerOffers() {
+  const { data: user } = useCurrentUser()
+  const isFarmer = user?.role === 'farmer'
+
+  return useQuery({
+    queryKey: ['farmer-management', 'offers', user?.id ?? 'anon'] as const,
+    queryFn: () => apiClient<Offer[]>('/api/farmer/offers', FarmerOfferListSchema),
+    enabled: isFarmer,
+    staleTime: 30 * 1000,
+  })
+}
 
 export function useFarmerStoreSettings() {
   const { data: user } = useCurrentUser()
