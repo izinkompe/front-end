@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AccountLink } from '@/components/auth/account-link'
 
 export function InfoCenterPrivacyTab() {
   return (
@@ -64,12 +65,12 @@ export function InfoCenterPrivacyTab() {
         <h2 className='text-xl font-bold text-foreground'>Pembaruan data dan kontak privasi</h2>
         <p>
           Anda dapat memperbarui informasi profil dan daftar alamat kapan saja melalui halaman{' '}
-          <Link
+          <AccountLink
             href='/akun/profil'
             className='font-medium text-primary underline underline-offset-4'
           >
             Profil Saya
-          </Link>
+          </AccountLink>
           . Untuk pertanyaan mengenai pengelolaan data pribadi, hubungi tim kami melalui{' '}
           <a
             href='mailto:bantuan@pangantani.id'

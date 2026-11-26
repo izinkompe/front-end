@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
-import Link from 'next/link'
+import { AccountLink } from '@/components/auth/account-link'
 import { BuyerAuthDialog } from '@/components/auth/buyer-auth-dialog'
 import { GlobalFooter } from '@/components/layout/global-footer'
 import { Button } from '@/components/ui/button'
@@ -49,7 +49,11 @@ export function BuyerOrderAccess({ children }: { children: ReactNode }) {
                 <Button onClick={() => setOpen(true)}>
                   {isWrongRole ? 'Ganti ke akun pembeli' : 'Masuk sebagai pembeli'}
                 </Button>
-                <Button variant='outline' nativeButton={false} render={<Link href='/akun' />}>
+                <Button
+                  variant='outline'
+                  nativeButton={false}
+                  render={<AccountLink href='/akun' />}
+                >
                   Pesanan Saya
                 </Button>
               </EmptyContent>

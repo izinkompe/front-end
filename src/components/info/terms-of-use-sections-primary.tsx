@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AccountLink } from '@/components/auth/account-link'
 import {
   PROHIBITED_ACTIVITIES,
   PROHIBITED_CONTENT_RULES,
@@ -190,17 +191,20 @@ export function TermsIntroAndUsageSections() {
             Pesanan yang belum dibayar dapat dibatalkan secara langsung sebelum batas waktu
             pembayaran berakhir. Jika bukti pembayaran telah dikirim atau diverifikasi, Anda dapat
             mengajukan pembatalan pasca-bayar maupun melaporkan masalah melalui{' '}
-            <Link href='/akun' className='font-medium text-primary underline underline-offset-4'>
+            <AccountLink
+              href='/akun'
+              className='font-medium text-primary underline underline-offset-4'
+            >
               Pesanan Saya
-            </Link>{' '}
+            </AccountLink>{' '}
             untuk ditinjau oleh administrator. Status tindak lanjut dan persetujuan pengembalian
             dana dapat dipantau melalui{' '}
-            <Link
+            <AccountLink
               href='/akun/pengaduan'
               className='font-medium text-primary underline underline-offset-4'
             >
               Pengaduan Saya
-            </Link>
+            </AccountLink>
             .
           </p>
         </div>

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Clock, Mail, MapPin, MessageSquareWarning, Sprout } from 'lucide-react'
+import { AccountLink } from '@/components/auth/account-link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -35,14 +36,14 @@ export function InfoCenterContactTab() {
               </p>
             </div>
             <div className='flex flex-wrap gap-2'>
-              <Button size='sm' nativeButton={false} render={<Link href='/akun' />}>
+              <Button size='sm' nativeButton={false} render={<AccountLink href='/akun' />}>
                 Pesanan Saya
               </Button>
               <Button
                 variant='outline'
                 size='sm'
                 nativeButton={false}
-                render={<Link href='/akun/pengaduan' />}
+                render={<AccountLink href='/akun/pengaduan' />}
               >
                 <MessageSquareWarning data-icon='inline-start' aria-hidden='true' />
                 Pengaduan Saya

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AccountLink } from '@/components/auth/account-link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -74,17 +75,20 @@ export function InfoCenterHelpTab() {
         </h2>
         <p>
           Buka{' '}
-          <Link href='/akun' className='font-medium text-primary underline underline-offset-4'>
+          <AccountLink
+            href='/akun'
+            className='font-medium text-primary underline underline-offset-4'
+          >
             Pesanan Saya
-          </Link>{' '}
+          </AccountLink>{' '}
           untuk mengajukan pembatalan pasca-bayar atau melaporkan masalah. Administrator meninjau
           laporan. Pantau tanggapan, klarifikasi, dan pengembalian dana di{' '}
-          <Link
+          <AccountLink
             href='/akun/pengaduan'
             className='font-medium text-primary underline underline-offset-4'
           >
             Pengaduan Saya
-          </Link>
+          </AccountLink>
           .
         </p>
         <p>
@@ -98,14 +102,14 @@ export function InfoCenterHelpTab() {
           <CardTitle>Butuh bantuan terkait pesanan aktif?</CardTitle>
         </CardHeader>
         <CardContent className='flex flex-wrap gap-2'>
-          <Button size='sm' nativeButton={false} render={<Link href='/akun' />}>
+          <Button size='sm' nativeButton={false} render={<AccountLink href='/akun' />}>
             Buka Pesanan Saya
           </Button>
           <Button
             variant='outline'
             size='sm'
             nativeButton={false}
-            render={<Link href='/akun/pengaduan' />}
+            render={<AccountLink href='/akun/pengaduan' />}
           >
             Lihat Pengaduan Saya
           </Button>

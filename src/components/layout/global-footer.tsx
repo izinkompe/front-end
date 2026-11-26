@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AccountLink } from '@/components/auth/account-link'
 import { buttonVariants } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
@@ -132,16 +133,19 @@ export function GlobalFooter({ containerClassName = 'max-w-7xl' }: GlobalFooterP
             <div key={column.title} className='flex flex-col gap-3'>
               <h3 className='text-base font-semibold text-secondary-foreground'>{column.title}</h3>
               <ul className='flex flex-col gap-0.5 text-sm text-muted-foreground'>
-                {column.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className='inline-flex min-h-10 items-center rounded-sm py-1.5 leading-snug transition-colors pointer-coarse:min-h-11 hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+                {column.links.map((link) => {
+                  const LinkComponent = link.href.startsWith('/akun') ? AccountLink : Link
+                  return (
+                    <li key={link.label}>
+                      <LinkComponent
+                        href={link.href}
+                        className='inline-flex min-h-10 items-center rounded-sm py-1.5 leading-snug transition-colors pointer-coarse:min-h-11 hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                      >
+                        {link.label}
+                      </LinkComponent>
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           ))}

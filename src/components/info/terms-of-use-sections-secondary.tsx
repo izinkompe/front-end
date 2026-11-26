@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AccountLink } from '@/components/auth/account-link'
 import { SURVIVAL_SECTIONS } from './terms-of-use-data'
 
 export function TermsLegalAndGeneralSections() {
@@ -194,12 +195,12 @@ export function TermsLegalAndGeneralSections() {
             Pusat Bantuan
           </Link>
           , ajukan laporan melalui{' '}
-          <Link
+          <AccountLink
             href='/akun/pengaduan'
             className='font-medium text-primary underline underline-offset-4'
           >
             Pengaduan Saya
-          </Link>
+          </AccountLink>
           , atau hubungi kami melalui email resmi di{' '}
           <a
             href='mailto:bantuan@pangantani.id'

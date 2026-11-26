@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist_Mono, IBM_Plex_Sans } from 'next/font/google'
+import { BuyerAuthPromptProvider } from '@/components/auth/buyer-auth-prompt-provider'
 import { FavoritesSidebarProvider } from '@/components/favorites/favorites-sidebar-provider'
 import { AccessibilityProvider } from '@/components/providers/accessibility-provider'
 import { LocationProvider } from '@/components/providers/location-provider'
@@ -39,7 +40,9 @@ export default function RootLayout({
         <QueryProvider>
           <AccessibilityProvider>
             <LocationProvider>
-              <FavoritesSidebarProvider>{children}</FavoritesSidebarProvider>
+              <BuyerAuthPromptProvider>
+                <FavoritesSidebarProvider>{children}</FavoritesSidebarProvider>
+              </BuyerAuthPromptProvider>
             </LocationProvider>
           </AccessibilityProvider>
         </QueryProvider>
