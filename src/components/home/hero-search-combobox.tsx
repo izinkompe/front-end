@@ -143,181 +143,191 @@ export function HeroSearchCombobox({
   const offerStartIndex = 1 + suggestions.commodities.length
 
   return (
-    <div ref={containerRef} className={cn('relative', className)}>
-      <InputGroup
+    <div ref={containerRef} className={cn('relative min-h-12', className)}>
+      <div
         className={cn(
-          'min-h-12 border-input bg-background text-foreground dark:bg-input/30',
-          isOpen && 'rounded-b-none border-b-transparent'
+          'w-full',
+          isOpen &&
+            'absolute inset-x-0 top-0 z-50 overflow-hidden rounded-lg border border-ring bg-popover shadow-xl ring-3 ring-ring/50'
         )}
       >
-        <InputGroupAddon align='inline-start'>
-          <Search className='size-4 shrink-0 text-muted-foreground' aria-hidden='true' />
-        </InputGroupAddon>
-        <InputGroupInput
-          type='search'
-          role='combobox'
-          aria-expanded={isOpen}
-          aria-controls={isOpen ? listboxId : undefined}
-          aria-autocomplete='list'
-          aria-activedescendant={activeOptionId}
-          aria-label='Cari nama komoditas'
-          value={query}
-          onFocus={() => {
-            if (query.trim().length > 0) {
-              setOpen(true)
-            }
-          }}
-          onChange={(event) => {
-            const nextValue = event.target.value
-            onQueryChange(nextValue)
-            setOpen(nextValue.trim().length > 0)
-            setActiveIndex(-1)
-          }}
-          onKeyDown={handleKeyDown}
-          placeholder='Cari tomat, buncis, mangga...'
-          maxLength={100}
-          autoComplete='off'
-          className='text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden'
-        />
-        {query.length > 0 && (
-          <InputGroupAddon align='inline-end' className='pr-3'>
-            <button
-              type='button'
-              onClick={() => {
-                onQueryChange('')
-                setOpen(false)
-                setActiveIndex(-1)
-              }}
-              aria-label='Hapus kata kunci pencarian'
-              className='inline-flex items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
-            >
-              <X className='size-4 shrink-0' aria-hidden='true' />
-            </button>
-          </InputGroupAddon>
-        )}
-      </InputGroup>
-
-      {isOpen && (
-        <div
-          id={listboxId}
-          role='listbox'
-          aria-label='Saran jenis komoditas dan penawaran PanganTani'
-          className='absolute inset-x-0 top-full z-50 overflow-hidden rounded-b-lg border border-t-0 border-input bg-popover text-left text-popover-foreground shadow-xl'
+        <InputGroup
+          className={cn(
+            'min-h-12 bg-background text-foreground dark:bg-input/30',
+            isOpen
+              ? 'rounded-none border-0 shadow-none has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0'
+              : 'border-input'
+          )}
         >
-          <button
-            id={`${listboxId}-option-0`}
-            type='button'
-            role='option'
-            aria-selected={activeIndex === 0}
-            onMouseDown={(event) => event.preventDefault()}
-            onMouseEnter={() => setActiveIndex(0)}
-            onClick={() => runAction(flatActions[0])}
-            className={cn(
-              'flex w-full items-center gap-2 bg-primary px-4 py-3 text-left text-sm text-primary-foreground transition-colors hover:bg-primary/90 sm:text-base',
-              activeIndex === 0 && 'bg-primary/90 ring-2 ring-inset ring-primary-foreground/30'
-            )}
+          <InputGroupAddon align='inline-start'>
+            <Search className='size-4 shrink-0 text-muted-foreground' aria-hidden='true' />
+          </InputGroupAddon>
+          <InputGroupInput
+            type='search'
+            role='combobox'
+            aria-expanded={isOpen}
+            aria-controls={isOpen ? listboxId : undefined}
+            aria-autocomplete='list'
+            aria-activedescendant={activeOptionId}
+            aria-label='Cari nama komoditas'
+            value={query}
+            onFocus={() => {
+              if (query.trim().length > 0) {
+                setOpen(true)
+              }
+            }}
+            onChange={(event) => {
+              const nextValue = event.target.value
+              onQueryChange(nextValue)
+              setOpen(nextValue.trim().length > 0)
+              setActiveIndex(-1)
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder='Cari tomat, buncis, mangga...'
+            maxLength={100}
+            autoComplete='off'
+            className='text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden'
+          />
+          {query.length > 0 && (
+            <InputGroupAddon align='inline-end' className='pr-3'>
+              <button
+                type='button'
+                onClick={() => {
+                  onQueryChange('')
+                  setOpen(false)
+                  setActiveIndex(-1)
+                }}
+                aria-label='Hapus kata kunci pencarian'
+                className='inline-flex items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
+              >
+                <X className='size-4 shrink-0' aria-hidden='true' />
+              </button>
+            </InputGroupAddon>
+          )}
+        </InputGroup>
+
+        {isOpen && (
+          <div
+            id={listboxId}
+            role='listbox'
+            aria-label='Saran jenis komoditas dan penawaran PanganTani'
+            className='text-left text-popover-foreground'
           >
-            <span className='truncate'>
-              Cari: &ldquo;<strong className='font-semibold'>{trimmedQuery}</strong>&rdquo;
-            </span>
-          </button>
+            <button
+              id={`${listboxId}-option-0`}
+              type='button'
+              role='option'
+              aria-selected={activeIndex === 0}
+              onMouseDown={(event) => event.preventDefault()}
+              onMouseEnter={() => setActiveIndex(0)}
+              onClick={() => runAction(flatActions[0])}
+              className={cn(
+                'flex w-full items-center gap-2 bg-primary px-4 py-3 text-left text-sm text-primary-foreground transition-colors hover:bg-primary/90 sm:text-base',
+                activeIndex === 0 && 'bg-primary/90 ring-2 ring-inset ring-primary-foreground/30'
+              )}
+            >
+              <span className='truncate'>
+                Cari: &ldquo;<strong className='font-semibold'>{trimmedQuery}</strong>&rdquo;
+              </span>
+            </button>
 
-          <div className='max-h-80 overflow-y-auto'>
-            {suggestions.commodities.length > 0 && (
-              <div>
-                <div className='flex items-center gap-2.5 border-b border-border/80 px-4 py-2.5 text-sm font-semibold text-foreground'>
-                  <Sprout
-                    className='size-4 shrink-0 text-primary dark:text-sidebar-primary'
-                    aria-hidden='true'
-                  />
-                  <span>Jenis Komoditas</span>
+            <div className='max-h-80 overflow-y-auto'>
+              {suggestions.commodities.length > 0 && (
+                <div>
+                  <div className='flex items-center gap-2.5 border-b border-border/80 px-4 py-2.5 text-sm font-semibold text-foreground'>
+                    <Sprout
+                      className='size-4 shrink-0 text-primary dark:text-sidebar-primary'
+                      aria-hidden='true'
+                    />
+                    <span>Jenis Komoditas</span>
+                  </div>
+                  <div className='py-1'>
+                    {suggestions.commodities.map((item, idx) => {
+                      const flatIdx = commodityStartIndex + idx
+                      const isActive = activeIndex === flatIdx
+                      return (
+                        <button
+                          key={item.id}
+                          id={`${listboxId}-option-${flatIdx}`}
+                          type='button'
+                          role='option'
+                          aria-selected={isActive}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onMouseEnter={() => setActiveIndex(flatIdx)}
+                          onClick={() => runAction(flatActions[flatIdx])}
+                          className={cn(
+                            'flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground',
+                            isActive && 'bg-accent text-accent-foreground'
+                          )}
+                        >
+                          <span className='truncate'>
+                            <HighlightedText text={item.label} query={trimmedQuery} />
+                          </span>
+                          <span className='shrink-0 text-xs text-muted-foreground'>
+                            {item.categoryLabel}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-                <div className='py-1'>
-                  {suggestions.commodities.map((item, idx) => {
-                    const flatIdx = commodityStartIndex + idx
-                    const isActive = activeIndex === flatIdx
-                    return (
-                      <button
-                        key={item.id}
-                        id={`${listboxId}-option-${flatIdx}`}
-                        type='button'
-                        role='option'
-                        aria-selected={isActive}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onMouseEnter={() => setActiveIndex(flatIdx)}
-                        onClick={() => runAction(flatActions[flatIdx])}
-                        className={cn(
-                          'flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground',
-                          isActive && 'bg-accent text-accent-foreground'
-                        )}
-                      >
-                        <span className='truncate'>
-                          <HighlightedText text={item.label} query={trimmedQuery} />
-                        </span>
-                        <span className='shrink-0 text-xs text-muted-foreground'>
-                          {item.categoryLabel}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+              )}
 
-            {suggestions.offers.length > 0 && (
-              <div>
-                <div
-                  className={cn(
-                    'flex items-center gap-2.5 border-b border-border/80 px-4 py-2.5 text-sm font-semibold text-foreground',
-                    suggestions.commodities.length > 0 && 'border-t'
-                  )}
-                >
-                  <Store
-                    className='size-4 shrink-0 text-primary dark:text-sidebar-primary'
-                    aria-hidden='true'
-                  />
-                  <span>Penawaran Panen</span>
+              {suggestions.offers.length > 0 && (
+                <div>
+                  <div
+                    className={cn(
+                      'flex items-center gap-2.5 border-b border-border/80 px-4 py-2.5 text-sm font-semibold text-foreground',
+                      suggestions.commodities.length > 0 && 'border-t'
+                    )}
+                  >
+                    <Store
+                      className='size-4 shrink-0 text-primary dark:text-sidebar-primary'
+                      aria-hidden='true'
+                    />
+                    <span>Penawaran Panen</span>
+                  </div>
+                  <div className='py-1'>
+                    {suggestions.offers.map((item, idx) => {
+                      const flatIdx = offerStartIndex + idx
+                      const isActive = activeIndex === flatIdx
+                      return (
+                        <button
+                          key={item.id}
+                          id={`${listboxId}-option-${flatIdx}`}
+                          type='button'
+                          role='option'
+                          aria-selected={isActive}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onMouseEnter={() => setActiveIndex(flatIdx)}
+                          onClick={() => runAction(flatActions[flatIdx])}
+                          className={cn(
+                            'flex w-full flex-col gap-0.5 px-4 py-2.5 text-left text-sm text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground',
+                            isActive && 'bg-accent text-accent-foreground'
+                          )}
+                        >
+                          <span className='line-clamp-2 leading-snug'>
+                            <HighlightedText text={item.title} query={trimmedQuery} />
+                          </span>
+                          <span className='truncate text-xs text-muted-foreground'>
+                            <HighlightedText text={item.subtitle} query={trimmedQuery} />
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
-                <div className='py-1'>
-                  {suggestions.offers.map((item, idx) => {
-                    const flatIdx = offerStartIndex + idx
-                    const isActive = activeIndex === flatIdx
-                    return (
-                      <button
-                        key={item.id}
-                        id={`${listboxId}-option-${flatIdx}`}
-                        type='button'
-                        role='option'
-                        aria-selected={isActive}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onMouseEnter={() => setActiveIndex(flatIdx)}
-                        onClick={() => runAction(flatActions[flatIdx])}
-                        className={cn(
-                          'flex w-full flex-col gap-0.5 px-4 py-2.5 text-left text-sm text-foreground/80 transition-colors hover:bg-accent hover:text-accent-foreground',
-                          isActive && 'bg-accent text-accent-foreground'
-                        )}
-                      >
-                        <span className='line-clamp-2 leading-snug'>
-                          <HighlightedText text={item.title} query={trimmedQuery} />
-                        </span>
-                        <span className='truncate text-xs text-muted-foreground'>
-                          <HighlightedText text={item.subtitle} query={trimmedQuery} />
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+              )}
 
-            {suggestions.commodities.length === 0 && suggestions.offers.length === 0 && (
-              <p className='px-4 py-3 text-sm text-muted-foreground'>
-                Belum ada saran langsung. Tekan Enter untuk mencari &ldquo;{trimmedQuery}&rdquo;.
-              </p>
-            )}
+              {suggestions.commodities.length === 0 && suggestions.offers.length === 0 && (
+                <p className='px-4 py-3 text-sm text-muted-foreground'>
+                  Belum ada saran langsung. Tekan Enter untuk mencari &ldquo;{trimmedQuery}&rdquo;.
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
