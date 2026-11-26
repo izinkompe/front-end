@@ -2,15 +2,12 @@
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { id } from 'date-fns/locale'
 import {
   AlarmClock,
   Apple,
   Boxes,
-  Calendar as CalendarIcon,
   CalendarClock,
   Carrot,
-  ChevronDown,
   Clock,
   Compass,
   Globe,
@@ -30,25 +27,16 @@ import {
 } from 'lucide-react'
 import { useSelectedLocation } from '@/components/providers/location-provider'
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { useOffers } from '@/hooks/api/use-offers'
+import { HeroFilterSelect, PickupCalendarPopover } from './hero-filter-controls'
+import { HeroSearchCombobox } from './hero-search-combobox'
+import type { CommoditySuggestion, OfferSuggestion } from './hero-search-suggestions'
 import {
   buildBuyerSearchHref,
   categoryFilterOptions,
   deadlineOptions,
   formatPickupDateIso,
-  formatPickupDateLabel,
   minStockOptions,
   radiusOptions,
   type BuyerCategoryFilter,
@@ -98,138 +86,16 @@ const deadlineIcons: Record<BuyerDeadlineOption, LucideIcon> = {
   today: CalendarClock,
 }
 
-const controlTriggerClassName =
-  'min-h-12 w-full border-input bg-background text-foreground hover:bg-muted/50 dark:bg-input/30 dark:hover:bg-input/50'
-
-const controlIconClassName = 'size-4 shrink-0 text-muted-foreground'
-
-interface HeroFilterSelectProps<T extends string> {
-  value: T
-  onValueChange: (value: string | null) => void
-  options: ReadonlyArray<{ value: T; label: string }>
-  icons: Record<T, LucideIcon>
-  ariaLabel: string
-  fallbackLabel: string
-}
-
-function HeroFilterSelect<T extends string>({
-  value,
-  onValueChange,
-  options,
-  icons,
-  ariaLabel,
-  fallbackLabel,
-}: HeroFilterSelectProps<T>) {
-  const selectedLabel = options.find((option) => option.value === value)?.label ?? fallbackLabel
-  const SelectedIcon: LucideIcon = icons[value]
-
-  return (
-    <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={controlTriggerClassName} aria-label={ariaLabel}>
-        <SelectValue>
-          <SelectedIcon className={controlIconClassName} aria-hidden='true' />
-          <span className='truncate text-foreground'>{selectedLabel}</span>
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        <SelectGroup>
-          {options.map((option) => {
-            const OptionIcon: LucideIcon = icons[option.value]
-            return (
-              <SelectItem key={option.value} value={option.value}>
-                <span className='flex items-center gap-2'>
-                  <OptionIcon className={controlIconClassName} aria-hidden='true' />
-                  <span>{option.label}</span>
-                </span>
-              </SelectItem>
-            )
-          })}
-        </SelectGroup>
-      </SelectContent>
-    </Select>
-  )
-}
-
 function getTodayStart() {
   const now = new Date()
   return new Date(now.getFullYear(), now.getMonth(), now.getDate())
-}
-
-interface PickupCalendarPopoverProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  selectedDate: Date | undefined
-  today: Date | undefined
-  onSelectDate: (date: Date | undefined) => void
-  onSelectToday: () => void
-  onClearDate: () => void
-}
-
-function PickupCalendarPopover({
-  open,
-  onOpenChange,
-  selectedDate,
-  today,
-  onSelectDate,
-  onSelectToday,
-  onClearDate,
-}: PickupCalendarPopoverProps) {
-  const pickupDateLabel = selectedDate ? formatPickupDateLabel(selectedDate) : 'Semua jadwal'
-
-  return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger
-        render={
-          <Button
-            type='button'
-            variant='outline'
-            className={`${controlTriggerClassName} justify-between py-2 pr-3 pl-3.5 font-normal hover:text-foreground aria-expanded:bg-muted/50 aria-expanded:text-foreground`}
-            aria-label='Pilih tanggal jadwal pengambilan mandiri'
-          />
-        }
-      >
-        <span className='flex min-w-0 items-center gap-2'>
-          <CalendarIcon className={controlIconClassName} aria-hidden='true' />
-          <span className='truncate text-foreground'>{pickupDateLabel}</span>
-        </span>
-        <ChevronDown className={controlIconClassName} aria-hidden='true' />
-      </PopoverTrigger>
-
-      <PopoverContent align='start' className='w-auto min-w-80 gap-0 p-0'>
-        <Calendar
-          mode='single'
-          selected={selectedDate}
-          onSelect={onSelectDate}
-          defaultMonth={selectedDate ?? today}
-          disabled={today ? { before: today } : undefined}
-          locale={id}
-          className='w-full'
-          classNames={{ root: 'w-full' }}
-        />
-        <Separator />
-        <div className='flex items-center justify-between gap-2 p-2.5'>
-          <Button type='button' variant='ghost' size='sm' onClick={onSelectToday}>
-            Hari ini
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={onClearDate}
-            disabled={!selectedDate}
-          >
-            Semua jadwal
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  )
 }
 
 export function BuyerHeroSearch() {
   const router = useRouter()
   const { selectedLocation, hasUpdatedLocation, locating, locationMessage, detectCurrentLocation } =
     useSelectedLocation()
+  const { data: offers = [] } = useOffers()
 
   const [mode, setMode] = useState<BuyerSearchMode>('katalog')
   const [query, setQuery] = useState('')
@@ -314,12 +180,11 @@ export function BuyerHeroSearch() {
     setCalendarOpen(false)
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  function navigateSearch(nextQuery: string, nextCategory: BuyerCategoryFilter = category) {
     const href = buildBuyerSearchHref({
       mode,
-      query,
-      category,
+      query: nextQuery,
+      category: nextCategory,
       radiusKm,
       minStockKg,
       deadlineWindow,
@@ -327,6 +192,24 @@ export function BuyerHeroSearch() {
       location: selectedLocation,
     })
     router.push(href)
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    navigateSearch(query)
+  }
+
+  function handleSelectCommodity(commodity: CommoditySuggestion) {
+    const nextCategory = mode === 'katalog' ? commodity.categorySlug : category
+    setQuery(commodity.label)
+    if (mode === 'katalog') {
+      setCategory(commodity.categorySlug)
+    }
+    navigateSearch(commodity.label, nextCategory)
+  }
+
+  function handleSelectOffer(offer: OfferSuggestion) {
+    router.push(offer.href)
   }
 
   return (
@@ -369,19 +252,14 @@ export function BuyerHeroSearch() {
           aria-label='Pencarian panen surplus'
           className='grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_auto] lg:items-center'
         >
-          <InputGroup className='min-h-12 border-input bg-background sm:col-span-2 lg:col-span-1 dark:bg-input/30'>
-            <InputGroupAddon align='inline-start'>
-              <Search className={controlIconClassName} aria-hidden='true' />
-            </InputGroupAddon>
-            <InputGroupInput
-              type='search'
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder='Cari tomat, buncis, mangga...'
-              aria-label='Cari nama komoditas'
-              maxLength={100}
-            />
-          </InputGroup>
+          <HeroSearchCombobox
+            query={query}
+            onQueryChange={setQuery}
+            offers={offers}
+            onSubmitQuery={(nextQuery) => navigateSearch(nextQuery)}
+            onSelectCommodity={handleSelectCommodity}
+            onSelectOffer={handleSelectOffer}
+          />
 
           {mode === 'katalog' && (
             <>
