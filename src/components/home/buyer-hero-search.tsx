@@ -220,25 +220,25 @@ export function BuyerHeroSearch() {
         value={[mode]}
         onValueChange={handleModeChange}
         aria-label='Mode pencarian panen'
-        className='relative z-10 -mb-6 max-w-full overflow-x-auto rounded-full border border-border/80 bg-card p-1.5 shadow-md'
+        className='relative z-10 -mb-6 max-w-full flex-nowrap overflow-x-auto rounded-full border border-border/80 bg-card p-1.5 shadow-md'
       >
         <ToggleGroupItem
           value='katalog'
-          className='min-h-10 rounded-full px-4 text-sm font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
+          className='min-h-10 shrink-0 whitespace-nowrap rounded-full px-3 text-xs font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary sm:px-4 sm:text-sm dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <Search data-icon='inline-start' aria-hidden='true' />
           <span>Cari panen</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value='peta'
-          className='min-h-10 rounded-full px-4 text-sm font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
+          className='min-h-10 shrink-0 whitespace-nowrap rounded-full px-3 text-xs font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary sm:px-4 sm:text-sm dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <MapPin data-icon='inline-start' aria-hidden='true' />
           <span>Peta radius</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value='segera-ditutup'
-          className='min-h-10 rounded-full px-4 text-sm font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
+          className='min-h-10 shrink-0 whitespace-nowrap rounded-full px-3 text-xs font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary sm:px-4 sm:text-sm dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <Clock data-icon='inline-start' aria-hidden='true' />
           <span>Segera ditutup</span>
@@ -339,7 +339,7 @@ export function BuyerHeroSearch() {
         </form>
 
         <div className='mt-4 flex flex-col items-center justify-between gap-1.5 border-t border-border/80 pt-3.5 text-center sm:flex-row sm:text-left'>
-          <div className='flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-sm text-foreground/75 sm:justify-start'>
+          <div className='flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-foreground/75 sm:justify-start sm:text-sm'>
             <span>
               {hasUpdatedLocation
                 ? `Lokasi acuan memakai ${selectedLocation.label}.`

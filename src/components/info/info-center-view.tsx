@@ -55,16 +55,16 @@ export function InfoCenterView({ activeTab }: InfoCenterViewProps) {
           aria-label='Pusat informasi PanganTani'
           className='relative z-20 -mt-7 rounded-xl border border-border bg-card px-2 py-2 shadow-sm sm:-mt-8 sm:px-4'
         >
-          <ul className='flex flex-wrap items-center justify-center gap-1 sm:justify-around sm:gap-2'>
+          <ul className='flex flex-nowrap items-center justify-start gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:justify-around sm:gap-2 [&::-webkit-scrollbar]:hidden'>
             {INFO_CENTER_TABS.map((item) => {
               const isActive = item.id === activeTab
               return (
-                <li key={item.id}>
+                <li key={item.id} className='shrink-0'>
                   <Link
                     href={item.href}
                     aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      'inline-flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:px-4 sm:text-base',
+                      'inline-flex min-h-11 items-center rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors sm:px-4 sm:text-base',
                       isActive
                         ? 'bg-primary/10 font-semibold text-primary'
                         : 'text-foreground hover:bg-muted'
