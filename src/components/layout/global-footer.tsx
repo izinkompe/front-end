@@ -34,7 +34,7 @@ const footerColumns = [
       { label: 'Ajak Teman', href: '/referral' },
       { label: 'Keanggotaan PanganTani', href: '/keanggotaan' },
       { label: 'Kemitraan Distributor & Resto', href: '/mitra-bisnis' },
-      { label: 'Papan Kebutuhan Pangan', href: '/kebutuhan' },
+      { label: 'Papan Kebutuhan Pangan', href: '/papan-kebutuhan' },
       { label: 'Pasar Panen Musiman', href: '/pasar' },
     ],
   },
