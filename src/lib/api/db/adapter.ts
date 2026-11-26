@@ -191,8 +191,9 @@ export const tanstackDbAdapter = {
 
     if (endpoint === '/api/offers/expiring-soon') {
       return Array.from(offersCollection.values())
-        .filter((item) => item.condition === 'ripe_urgent' || item.status === 'active')
-        .slice(0, 3)
+        .filter((item) => item.status === 'active' && item.availableStockKg > 0)
+        .sort((a, b) => Date.parse(a.orderDeadline) - Date.parse(b.orderDeadline))
+        .slice(0, 6)
     }
 
     if (endpoint === '/api/offers' && method === 'GET') {
