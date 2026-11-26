@@ -1,4 +1,4 @@
-import './src/lib/env'
+import { env } from './src/lib/env'
 import type { NextConfig } from 'next'
 
 const securityHeaders = [
@@ -24,7 +24,15 @@ const securityHeaders = [
   },
 ]
 
+const appHostname = new URL(env.NEXT_PUBLIC_APP_URL).hostname
+const configuredDevOrigins = (env.DEV_ALLOWED_ORIGINS ?? '')
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean)
+const devOrigins = Array.from(new Set([...configuredDevOrigins, '*.local', appHostname]))
+
 const nextConfig: NextConfig = {
+  allowedDevOrigins: devOrigins,
   cacheComponents: true,
   partialPrefetching: true,
   reactCompiler: true,

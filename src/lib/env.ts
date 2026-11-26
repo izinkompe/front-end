@@ -21,6 +21,7 @@ const baseServerSchema = z.object({
   AUTH_SECRET: z.string().min(1).optional(),
   NEXTAUTH_URL: httpUrlSchema.optional(),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).optional(),
+  DEV_ALLOWED_ORIGINS: z.string().optional(),
 })
 
 const clientSchema = z.object({
