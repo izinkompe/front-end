@@ -65,7 +65,7 @@ export function BuyerExpiringOfferCard({
         'relative flex h-full flex-col justify-between rounded-2xl border border-border p-5 text-card-foreground shadow-sm transition-shadow',
         countdown.isExpired
           ? 'bg-muted/60'
-          : 'bg-card has-[a.offer-card-link:hover]:shadow-md has-[a.offer-card-link:focus-visible]:outline-2 has-[a.offer-card-link:focus-visible]:outline-offset-2 has-[a.offer-card-link:focus-visible]:outline-ring'
+          : 'bg-card has-[a.offer-card-link:hover]:border-foreground/30 has-[a.offer-card-link:hover]:shadow-md has-[a.offer-card-link:focus-visible]:outline-2 has-[a.offer-card-link:focus-visible]:outline-offset-2 has-[a.offer-card-link:focus-visible]:outline-ring'
       )}
     >
       <div className='flex flex-col gap-4'>
@@ -81,7 +81,7 @@ export function BuyerExpiringOfferCard({
               ) : (
                 <Link
                   href={detailHref}
-                  className='offer-card-link outline-none after:absolute after:inset-0 after:content-[""]'
+                  className='offer-card-link underline-offset-4 outline-none hover:underline after:absolute after:inset-0 after:content-[""]'
                 >
                   {offer.commodityName}
                 </Link>

@@ -56,7 +56,7 @@ export function BuyerHarvestHubsSection() {
               <article
                 key={`${hub.provinceId}-${hub.id}`}
                 className={cn(
-                  'relative flex h-full flex-col justify-between gap-4 rounded-2xl border bg-card p-5 text-card-foreground shadow-sm transition-shadow has-[a.hub-card-link:hover]:shadow-md has-[a.hub-card-link:focus-visible]:outline-2 has-[a.hub-card-link:focus-visible]:outline-offset-2 has-[a.hub-card-link:focus-visible]:outline-ring',
+                  'relative flex h-full flex-col justify-between gap-4 rounded-2xl border bg-card p-5 text-card-foreground shadow-sm transition-shadow has-[a.hub-card-link:hover]:border-foreground/30 has-[a.hub-card-link:hover]:shadow-md has-[a.hub-card-link:focus-visible]:outline-2 has-[a.hub-card-link:focus-visible]:outline-offset-2 has-[a.hub-card-link:focus-visible]:outline-ring',
                   hub.isSelectedLocation ? 'border-primary' : 'border-border'
                 )}
               >
@@ -69,7 +69,7 @@ export function BuyerHarvestHubsSection() {
                       <h3 className='mt-0.5 text-lg leading-snug font-bold text-foreground'>
                         <Link
                           href={hub.href}
-                          className='hub-card-link outline-none after:absolute after:inset-0 after:content-[""]'
+                          className='hub-card-link underline-offset-4 outline-none hover:underline after:absolute after:inset-0 after:content-[""]'
                         >
                           {hub.name}
                         </Link>

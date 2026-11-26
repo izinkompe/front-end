@@ -53,7 +53,7 @@ export function BuyerCategoryProductCard({ offer, distanceKm }: BuyerCategoryPro
   const distanceLabel = distanceKm === null ? null : formatStraightLineDistance(distanceKm)
 
   return (
-    <article className='@container relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm transition-shadow has-[a.category-card-link:hover]:shadow-md has-[a.category-card-link:focus-visible]:outline-2 has-[a.category-card-link:focus-visible]:outline-offset-2 has-[a.category-card-link:focus-visible]:outline-ring'>
+    <article className='@container relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm transition-shadow has-[a.category-card-link:hover]:border-foreground/30 has-[a.category-card-link:hover]:shadow-md has-[a.category-card-link:focus-visible]:outline-2 has-[a.category-card-link:focus-visible]:outline-offset-2 has-[a.category-card-link:focus-visible]:outline-ring'>
       {photoUrl ? (
         <Image
           src={photoUrl}
@@ -93,7 +93,7 @@ export function BuyerCategoryProductCard({ offer, distanceKm }: BuyerCategoryPro
             <h3 className='line-clamp-2 text-lg leading-snug font-bold text-foreground'>
               <Link
                 href={detailHref}
-                className='category-card-link outline-none after:absolute after:inset-0 after:content-[""]'
+                className='category-card-link underline-offset-4 outline-none hover:underline after:absolute after:inset-0 after:content-[""]'
               >
                 {offer.commodityName}
               </Link>
