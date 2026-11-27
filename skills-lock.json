@@ -8,6 +8,13 @@
       "skillPath": "plugins/ui-design/skills/accessibility-compliance/SKILL.md",
       "computedHash": "c8ad5b5f83e413bb69e7a7ad251662c91e27cdf7db7d104df68b11aab6d3c534"
     },
+    "backend-patterns": {
+      "source": "affaan-m/ECC",
+      "commit": "4adeee6732a12d1540f49a4d50a38ce8c97f9a53",
+      "sourceType": "github",
+      "skillPath": "skills/backend-patterns/SKILL.md",
+      "computedHash": "e39330205cf49940fb809109a690b87afbbca5d2e86269267abb8416d2093c15"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "commit": "e4bb5d960d87126ff3b3a8af1a104b7db67560ba",
@@ -84,6 +91,13 @@
       "sourceType": "github",
       "skillPath": "skills/unslop-ui/SKILL.md",
       "computedHash": "bca7d731d5dda09a73724c8dd65e4826f14686d28a5a981f61a938fc78ae5b97"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "commit": "5a37a6329fbad3666c3207392a6a7c0110e92efb",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "7991ed4fbecdac23f47c1a40c243e00a212a9e7f3604db93959b3ae11dffe299"
     },
     "visual-design-foundations": {
       "source": "wshobson/agents",

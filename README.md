@@ -101,7 +101,7 @@ Repository ini memiliki otomatisasi git hooks melalui **Lefthook**:
 
 ## CI, CT, dan CD
 
-GitHub Actions menjalankan CI dan CT pada pull request ke `main` dan push ke `main`. Ketiga workflow menggunakan runner Ubuntu tanpa Docker.
+GitHub Actions menjalankan CI dan CT pada push ke semua branch dan pull request ke branch mana pun. Ketiga workflow menggunakan runner Ubuntu tanpa Docker.
 
 - [CI](.github/workflows/ci.yml) memeriksa tipe TypeScript dan membuat build produksi. Artefak build disimpan selama tujuh hari.
 - [CT](.github/workflows/ct.yml) menjalankan unit test Bun dan smoke test HTTP pada build dari run CI yang sama.
