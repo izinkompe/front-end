@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
+import { AuthMeResponseSchema } from '@/lib/auth/auth-response'
 import { apiClient } from '@/lib/api/client'
 import { queryKeys } from '@/lib/api/query-keys'
 import { ComplaintSchema, type Complaint, type ReplyComplaintRequest } from '@/types/api/complaints'
@@ -122,7 +123,10 @@ export function useReplyFarmerComplaint(complaintId: string) {
 export function useFarmerVerificationStatus() {
   return useQuery({
     queryKey: queryKeys.verifications.farmerStatus,
-    queryFn: () => apiClient<{ isVerifiedFarmer?: boolean } | null>('/api/auth/me'),
+    queryFn: () =>
+      apiClient('/api/auth/me', AuthMeResponseSchema, {
+        silentStatuses: [401, 404],
+      }),
     select: (data) => Boolean(data?.isVerifiedFarmer),
   })
 }

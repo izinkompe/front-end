@@ -4,12 +4,14 @@ import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  AlertCircle,
   Bell,
   LayoutDashboard,
   MapPin,
   MessageSquareWarning,
   Pencil,
   ReceiptText,
+  RefreshCw,
   Settings,
   ShieldCheck,
   ShoppingBag,
@@ -82,7 +84,7 @@ function AccountShellSkeleton() {
 export function AccountShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const isHydrated = useHydrated()
-  const { data: currentUser, isPending } = useCurrentUser()
+  const { data: currentUser, isPending, isError, error, refetch } = useCurrentUser()
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
 
   if (!isHydrated || isPending) {
@@ -97,6 +99,55 @@ export function AccountShell({ children }: { children: ReactNode }) {
   }
 
   const activeLabel = getBreadcrumbLabel(pathname)
+
+  if (isError) {
+    const errorMessage =
+      error instanceof Error && error.message
+        ? error.message
+        : 'Terjadi kesalahan saat memverifikasi sesi akun Anda.'
+
+    return (
+      <div className='mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8'>
+        <BreadcrumbTrail items={[{ label: 'Beranda', href: '/' }, { label: 'Akun' }]} />
+
+        <Card className='border-destructive/30'>
+          <CardContent className='py-10'>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant='icon'>
+                  <AlertCircle className='text-destructive' aria-hidden='true' />
+                </EmptyMedia>
+                <EmptyTitle className='text-base font-semibold'>
+                  Gagal memverifikasi sesi akun
+                </EmptyTitle>
+                <EmptyDescription>{errorMessage}</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent className='flex-row flex-wrap justify-center gap-2'>
+                <Button
+                  type='button'
+                  onClick={() => {
+                    void refetch()
+                  }}
+                >
+                  <RefreshCw data-icon='inline-start' />
+                  Coba lagi
+                </Button>
+                <Button type='button' variant='outline' onClick={() => setAuthDialogOpen(true)}>
+                  Masuk ulang
+                </Button>
+              </EmptyContent>
+            </Empty>
+          </CardContent>
+        </Card>
+
+        <div className='hidden' aria-hidden='true'>
+          {children}
+        </div>
+
+        <BuyerAuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
+      </div>
+    )
+  }
 
   if (!currentUser) {
     return (

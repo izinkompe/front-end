@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Lock, ShieldX } from 'lucide-react'
+import { AlertCircle, Lock, RefreshCw, ShieldX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Empty,
@@ -96,6 +96,51 @@ export function DashboardAuthRequired({ nextPath }: { nextPath: string }) {
             </Button>
             <Button variant='outline' nativeButton={false} render={<Link href={adminLoginHref} />}>
               Masuk Admin
+            </Button>
+          </div>
+        </EmptyContent>
+      </Empty>
+    </div>
+  )
+}
+
+export function DashboardAuthError({
+  error,
+  nextPath,
+  onRetry,
+}: {
+  error: unknown
+  nextPath: string
+  onRetry: () => void
+}) {
+  const encodedNext = encodeURIComponent(nextPath)
+  const farmerLoginHref = `/masuk-petani?next=${encodedNext}`
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : 'Terjadi kesalahan saat memverifikasi sesi akun Anda.'
+
+  return (
+    <div className='flex min-h-[70vh] items-center justify-center p-4'>
+      <Empty className='max-w-md border border-destructive/30 bg-card'>
+        <EmptyHeader>
+          <EmptyMedia variant='icon'>
+            <AlertCircle className='text-destructive' />
+          </EmptyMedia>
+          <EmptyTitle>Verifikasi sesi gagal</EmptyTitle>
+          <EmptyDescription>{message}</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <div className='flex flex-wrap items-center justify-center gap-2'>
+            <Button type='button' onClick={onRetry}>
+              <RefreshCw data-icon='inline-start' />
+              Coba Lagi
+            </Button>
+            <Button variant='outline' nativeButton={false} render={<Link href={farmerLoginHref} />}>
+              Masuk Ulang
+            </Button>
+            <Button variant='ghost' nativeButton={false} render={<Link href='/' />}>
+              Beranda
             </Button>
           </div>
         </EmptyContent>

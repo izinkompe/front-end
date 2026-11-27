@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/api/client'
 import { ApiError } from '@/lib/api/errors'
 import { queryKeys } from '@/lib/api/query-keys'
 import { isAuthRelaxed } from '@/lib/auth/rbac'
+import { AuthMeResponseSchema, AuthSessionResponseSchema } from '@/lib/auth/auth-response'
 import {
   clearSessionRoleCookies,
   getCachedAuthUser,
@@ -26,11 +27,14 @@ import {
   type UpdateProfileRequest,
   type User,
   type UserRole,
+  type VerifyEmailOtpRequest,
   type VerifyPhoneRequest,
 } from '@/types/api/auth'
+import { useAuthStore } from '@/stores/use-auth-store'
 
 function syncAuthUserCache(queryClient: QueryClient, user: User | null) {
   setCachedAuthUser(user)
+  useAuthStore.getState().setUser(user)
   queryClient.setQueryData(queryKeys.auth.me, user)
   queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
 }
@@ -42,17 +46,19 @@ export function useCurrentUser() {
     queryKey: queryKeys.auth.me,
     queryFn: async () => {
       try {
-        const user = await apiClient<User | null>('/api/auth/me', UserSchema.nullable(), {
+        const user = await apiClient<User | null>('/api/auth/me', AuthMeResponseSchema, {
           silentStatuses: [401, 404],
         })
         setCachedAuthUser(user)
+        useAuthStore.getState().setUser(user)
         if (!user) {
           clearSessionRoleCookies()
         }
         return user
       } catch (error) {
+        clearSessionRoleCookies()
+        useAuthStore.getState().setUser(null)
         if (error instanceof ApiError && (error.status === 401 || error.status === 404)) {
-          clearSessionRoleCookies()
           return null
         }
         throw error
@@ -69,7 +75,7 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: (credentials: LoginRequest) =>
-      apiClient<{ token: string; user: User }>('/api/auth/login', undefined, {
+      apiClient<{ token?: string; user: User }>('/api/auth/login', AuthSessionResponseSchema, {
         method: 'POST',
         body: JSON.stringify(credentials),
       }),
@@ -85,10 +91,14 @@ export function useLoginFarmer() {
 
   return useMutation({
     mutationFn: (credentials: LoginRequest) =>
-      apiClient<{ token: string; user: User }>('/api/auth/login-farmer', undefined, {
-        method: 'POST',
-        body: JSON.stringify(credentials),
-      }),
+      apiClient<{ token?: string; user: User }>(
+        '/api/auth/login-farmer',
+        AuthSessionResponseSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify(credentials),
+        }
+      ),
     onSuccess: (data) => {
       setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
@@ -102,10 +112,14 @@ export function useLoginAdmin() {
 
   return useMutation({
     mutationFn: (credentials: LoginRequest) =>
-      apiClient<{ token: string; user: User }>('/api/auth/login-admin', undefined, {
-        method: 'POST',
-        body: JSON.stringify(credentials),
-      }),
+      apiClient<{ token?: string; user: User }>(
+        '/api/auth/login-admin',
+        AuthSessionResponseSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify(credentials),
+        }
+      ),
     onSuccess: (data) => {
       setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
@@ -119,7 +133,7 @@ export function useRegisterBuyer() {
 
   return useMutation({
     mutationFn: (payload: BuyerRegisterRequest) =>
-      apiClient<{ token: string; user: User }>('/api/auth/register', undefined, {
+      apiClient<{ token?: string; user: User }>('/api/auth/register', AuthSessionResponseSchema, {
         method: 'POST',
         body: JSON.stringify(payload),
       }),
@@ -135,10 +149,14 @@ export function useRegisterFarmer() {
 
   return useMutation({
     mutationFn: (payload: FarmerRegisterRequest) =>
-      apiClient<{ token: string; user: User }>('/api/auth/register-farmer', undefined, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
+      apiClient<{ token?: string; user: User }>(
+        '/api/auth/register-farmer',
+        AuthSessionResponseSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        }
+      ),
     onSuccess: (data) => {
       setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
@@ -214,8 +232,9 @@ export function useLogout() {
     mutationFn: () =>
       apiClient<{ success: boolean }>('/api/auth/logout', undefined, {
         method: 'POST',
+        silentStatuses: [401],
       }),
-    onSuccess: () => {
+    onSettled: () => {
       clearSessionRoleCookies()
       syncAuthUserCache(queryClient, null)
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
@@ -266,7 +285,71 @@ export function useConfirmPasswordReset() {
     mutationFn: (payload: ResetPasswordRequest) =>
       apiClient('/api/auth/reset-password', z.object({ success: z.literal(true) }), {
         method: 'POST',
+        body: JSON.stringify({
+          ...payload,
+          password_confirmation: payload.password_confirmation ?? payload.password,
+        }),
+      }),
+  })
+}
+
+export function useVerifyEmailUrl() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (verificationUrl: string) => {
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ verificationUrl }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new ApiError(
+          response.status,
+          data.message || 'Gagal memverifikasi email',
+          'VERIFY_EMAIL_FAILED',
+          data.details
+        )
+      }
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+    },
+  })
+}
+
+export function useResendVerificationEmail() {
+  return useMutation({
+    mutationFn: () =>
+      apiClient<{ message?: string }>('/auth/email/verification-notification', undefined, {
+        method: 'POST',
+      }),
+  })
+}
+
+export function useSendEmailOtp() {
+  return useMutation({
+    mutationFn: () =>
+      apiClient<{ message?: string }>('/auth/email/otp', undefined, {
+        method: 'POST',
+      }),
+  })
+}
+
+export function useVerifyEmailOtp() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: VerifyEmailOtpRequest) =>
+      apiClient<{ message?: string }>('/auth/email/verify-otp', undefined, {
+        method: 'POST',
         body: JSON.stringify(payload),
       }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+    },
   })
 }
