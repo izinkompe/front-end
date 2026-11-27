@@ -1,10 +1,11 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, X } from 'lucide-react'
 import { BrandLogo } from '@/components/shared/brand-logo'
-import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Sidebar,
   SidebarContent,
@@ -17,9 +18,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { getDashboardNavGroups } from '@/components/dashboard/dashboard-nav-config'
-import { getRoleLabel } from '@/lib/auth/rbac'
 import type { UserRole } from '@/types/api/auth'
 
 interface DashboardSidebarProps {
@@ -31,7 +32,17 @@ interface DashboardSidebarProps {
 export function DashboardSidebar({ role, userName, organization }: DashboardSidebarProps) {
   const pathname = usePathname()
   const groups = getDashboardNavGroups(role)
-  const roleLabel = getRoleLabel(role)
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  useEffect(() => {
+    setOpenMobile(false)
+  }, [pathname, setOpenMobile])
+
+  function handleNavClick() {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }
 
   return (
     <Sidebar collapsible='icon'>
@@ -44,9 +55,18 @@ export function DashboardSidebar({ role, userName, organization }: DashboardSide
             size='sm'
             wordmarkClassName='truncate group-data-[collapsible=icon]:hidden'
           />
-          <Badge variant='secondary' className='shrink-0 group-data-[collapsible=icon]:hidden'>
-            {roleLabel}
-          </Badge>
+          {isMobile && (
+            <Button
+              type='button'
+              variant='ghost'
+              size='icon'
+              aria-label='Tutup menu navigasi'
+              onClick={() => setOpenMobile(false)}
+              className='shrink-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+            >
+              <X aria-hidden='true' />
+            </Button>
+          )}
         </div>
       </SidebarHeader>
 
@@ -68,7 +88,7 @@ export function DashboardSidebar({ role, userName, organization }: DashboardSide
                       <SidebarMenuButton
                         isActive={isActive}
                         tooltip={item.title}
-                        render={<Link href={item.href} />}
+                        render={<Link href={item.href} onClick={handleNavClick} />}
                       >
                         <Icon className='icon-sm' aria-hidden='true' />
                         <span>{item.title}</span>
@@ -85,7 +105,10 @@ export function DashboardSidebar({ role, userName, organization }: DashboardSide
       <SidebarFooter className='border-t border-sidebar-border p-3'>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip='Lihat Pasar Panen' render={<Link href='/' />}>
+            <SidebarMenuButton
+              tooltip='Lihat Pasar Panen'
+              render={<Link href='/' onClick={handleNavClick} />}
+            >
               <ExternalLink className='icon-sm' aria-hidden='true' />
               <span>Pasar Panen</span>
             </SidebarMenuButton>

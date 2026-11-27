@@ -16,9 +16,10 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useAdminOffers, useModerateAdminOffer } from '@/hooks/api/use-admin'
 import type { OfferStatus } from '@/types/api/offers'
+import { DashboardFilterSelect } from './dashboard-filter-select'
+import { DashboardPageHeader } from './dashboard-page-header'
 
 const STATUS_LABELS: Record<OfferStatus, string> = {
   active: 'Aktif',
@@ -37,25 +38,22 @@ export function AdminModerasiView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <h1 className='type-h1 font-semibold text-foreground'>Moderasi Penawaran</h1>
-
-        <ToggleGroup
-          value={[filter]}
-          onValueChange={(values) => {
-            const next = values[0] as 'all' | OfferStatus | undefined
-            if (next) setFilter(next)
-          }}
-          variant='outline'
-          size='sm'
-          className='flex-wrap justify-start'
-        >
-          <ToggleGroupItem value='all'>Semua ({offers.length})</ToggleGroupItem>
-          <ToggleGroupItem value='active'>Aktif</ToggleGroupItem>
-          <ToggleGroupItem value='closed'>Ditutup</ToggleGroupItem>
-          <ToggleGroupItem value='draft'>Draf</ToggleGroupItem>
-        </ToggleGroup>
-      </div>
+      <DashboardPageHeader
+        title='Moderasi Penawaran'
+        actions={
+          <DashboardFilterSelect
+            ariaLabel='Filter status penawaran'
+            value={filter}
+            onValueChange={setFilter}
+            options={[
+              { value: 'all', label: `Semua status (${offers.length})` },
+              { value: 'active', label: 'Aktif' },
+              { value: 'closed', label: 'Ditutup' },
+              { value: 'draft', label: 'Draf' },
+            ]}
+          />
+        }
+      />
 
       {isError && (
         <Alert variant='destructive'>

@@ -16,8 +16,9 @@ import {
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useAdminFarmers, useVerifyAdminFarmer } from '@/hooks/api/use-admin'
+import { DashboardFilterSelect } from './dashboard-filter-select'
+import { DashboardPageHeader } from './dashboard-page-header'
 
 export function AdminVerifikasiView() {
   const { data: farmers = [], isLoading, isError } = useAdminFarmers()
@@ -32,26 +33,24 @@ export function AdminVerifikasiView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <h1 className='type-h1 font-semibold text-foreground'>Verifikasi Petani</h1>
-
-        <ToggleGroup
-          value={[filter]}
-          onValueChange={(values) => {
-            const next = values[0] as 'all' | 'pending' | 'verified' | undefined
-            if (next) setFilter(next)
-          }}
-          variant='outline'
-          size='sm'
-          className='flex-wrap justify-start'
-        >
-          <ToggleGroupItem value='all'>Semua ({farmers.length})</ToggleGroupItem>
-          <ToggleGroupItem value='pending'>
-            Menunggu ({farmers.filter((item) => !item.isVerifiedFarmer).length})
-          </ToggleGroupItem>
-          <ToggleGroupItem value='verified'>Terverifikasi</ToggleGroupItem>
-        </ToggleGroup>
-      </div>
+      <DashboardPageHeader
+        title='Verifikasi Petani'
+        actions={
+          <DashboardFilterSelect
+            ariaLabel='Filter status verifikasi petani'
+            value={filter}
+            onValueChange={setFilter}
+            options={[
+              { value: 'all', label: `Semua status (${farmers.length})` },
+              {
+                value: 'pending',
+                label: `Menunggu (${farmers.filter((item) => !item.isVerifiedFarmer).length})`,
+              },
+              { value: 'verified', label: 'Terverifikasi' },
+            ]}
+          />
+        }
+      />
 
       {isError && (
         <Alert variant='destructive'>
@@ -66,7 +65,7 @@ export function AdminVerifikasiView() {
           <Skeleton className='h-48 w-full' />
         </div>
       ) : filtered.length === 0 ? (
-        <Empty className='border border-border bg-card'>
+        <Empty className='bg-card'>
           <EmptyHeader>
             <EmptyTitle>Tidak ada data petani</EmptyTitle>
             <EmptyDescription>

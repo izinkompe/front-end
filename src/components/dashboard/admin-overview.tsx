@@ -15,6 +15,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDistributionStats } from '@/hooks/api/use-admin'
 import type { User } from '@/types/api/auth'
+import { DashboardPageHeader } from './dashboard-page-header'
 
 interface AdminOverviewProps {
   user?: User | null
@@ -49,15 +50,15 @@ export function AdminOverview({ user }: AdminOverviewProps) {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex flex-col gap-1'>
-          <h1 className='type-h1 font-semibold text-foreground'>Operasional PanganTani</h1>
-          <p className='text-base text-muted-foreground'>Masuk sebagai {displayName}</p>
-        </div>
-        <Button nativeButton={false} render={<Link href='/dashboard/admin/verifikasi' />}>
-          Tinjau verifikasi
-        </Button>
-      </div>
+      <DashboardPageHeader
+        title='Operasional PanganTani'
+        subtitle={`Masuk sebagai ${displayName}`}
+        actions={
+          <Button nativeButton={false} render={<Link href='/dashboard/admin/verifikasi' />}>
+            Tinjau verifikasi
+          </Button>
+        }
+      />
 
       {isError && (
         <Alert variant='destructive'>

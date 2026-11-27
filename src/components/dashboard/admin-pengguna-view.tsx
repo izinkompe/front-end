@@ -6,10 +6,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useAdminUsers } from '@/hooks/api/use-admin'
 import { getRoleLabel } from '@/lib/auth/rbac'
 import type { UserRole } from '@/types/api/auth'
+import { DashboardFilterSelect } from './dashboard-filter-select'
+import { DashboardPageHeader } from './dashboard-page-header'
 
 export function AdminPenggunaView() {
   const { data: users = [], isLoading, isError } = useAdminUsers()
@@ -19,25 +20,22 @@ export function AdminPenggunaView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <h1 className='type-h1 font-semibold text-foreground'>Pengguna & Akses</h1>
-
-        <ToggleGroup
-          value={[roleFilter]}
-          onValueChange={(values) => {
-            const next = values[0] as 'all' | UserRole | undefined
-            if (next) setRoleFilter(next)
-          }}
-          variant='outline'
-          size='sm'
-          className='flex-wrap justify-start'
-        >
-          <ToggleGroupItem value='all'>Semua ({users.length})</ToggleGroupItem>
-          <ToggleGroupItem value='admin'>Admin</ToggleGroupItem>
-          <ToggleGroupItem value='farmer'>Petani</ToggleGroupItem>
-          <ToggleGroupItem value='buyer'>Pembeli</ToggleGroupItem>
-        </ToggleGroup>
-      </div>
+      <DashboardPageHeader
+        title='Pengguna & Akses'
+        actions={
+          <DashboardFilterSelect
+            ariaLabel='Filter peran pengguna'
+            value={roleFilter}
+            onValueChange={setRoleFilter}
+            options={[
+              { value: 'all', label: `Semua peran (${users.length})` },
+              { value: 'admin', label: 'Admin' },
+              { value: 'farmer', label: 'Petani' },
+              { value: 'buyer', label: 'Pembeli' },
+            ]}
+          />
+        }
+      />
 
       {isError && (
         <Alert variant='destructive'>
@@ -57,28 +55,27 @@ export function AdminPenggunaView() {
           ) : (
             <div className='flex flex-col gap-3'>
               {filtered.map((user) => (
-                <div
-                  key={user.id}
-                  className='flex flex-col justify-between gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-center'
-                >
-                  <div className='flex min-w-0 flex-col gap-0.5'>
-                    <span className='font-medium text-foreground'>{user.name}</span>
-                    <span className='break-words text-meta text-muted-foreground'>
-                      {user.email}
-                      {user.organization ? ` · ${user.organization}` : ''}
-                    </span>
-                  </div>
-                  <div className='flex flex-wrap items-center gap-2'>
-                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                      {getRoleLabel(user.role)}
-                    </Badge>
-                    {user.role === 'farmer' && (
-                      <Badge variant='outline'>
-                        {user.isVerifiedFarmer ? 'Terverifikasi' : 'Menunggu'}
+                <Card key={user.id} size='sm'>
+                  <CardContent className='flex flex-col justify-between gap-2 sm:flex-row sm:items-center'>
+                    <div className='flex min-w-0 flex-col gap-0.5'>
+                      <span className='font-medium text-foreground'>{user.name}</span>
+                      <span className='break-words text-meta text-muted-foreground'>
+                        {user.email}
+                        {user.organization ? ` · ${user.organization}` : ''}
+                      </span>
+                    </div>
+                    <div className='flex flex-wrap items-center gap-2'>
+                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                        {getRoleLabel(user.role)}
                       </Badge>
-                    )}
-                  </div>
-                </div>
+                      {user.role === 'farmer' && (
+                        <Badge variant='outline'>
+                          {user.isVerifiedFarmer ? 'Terverifikasi' : 'Menunggu'}
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}

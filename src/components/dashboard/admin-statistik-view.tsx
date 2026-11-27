@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCarbonFactors, useDistributionStats } from '@/hooks/api/use-admin'
+import { DashboardPageHeader } from './dashboard-page-header'
 
 export function AdminStatistikView() {
   const { data: stats, isLoading: statsLoading, isError: statsError } = useDistributionStats()
@@ -13,7 +14,7 @@ export function AdminStatistikView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <h1 className='type-h1 font-semibold text-foreground'>Statistik Distribusi</h1>
+      <DashboardPageHeader title='Statistik Distribusi' />
 
       {statsError && (
         <Alert variant='destructive'>
@@ -78,23 +79,22 @@ export function AdminStatistikView() {
           ) : (
             <div className='flex flex-col gap-3'>
               {factors.map((factor) => (
-                <div
-                  key={factor.id}
-                  className='flex flex-col justify-between gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-center'
-                >
-                  <div className='flex min-w-0 flex-col gap-0.5'>
-                    <span className='font-medium text-foreground'>{factor.commodityName}</span>
-                    <span className='text-meta text-muted-foreground'>
-                      {factor.source} · Versi {factor.version}
-                    </span>
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    <Badge variant='outline'>{factor.category}</Badge>
-                    <span className='font-mono text-sm font-semibold text-foreground'>
-                      {factor.factorKgCo2ePerKg} kg CO2e/kg
-                    </span>
-                  </div>
-                </div>
+                <Card key={factor.id} size='sm'>
+                  <CardContent className='flex flex-col justify-between gap-2 sm:flex-row sm:items-center'>
+                    <div className='flex min-w-0 flex-col gap-0.5'>
+                      <span className='font-medium text-foreground'>{factor.commodityName}</span>
+                      <span className='text-meta text-muted-foreground'>
+                        {factor.source} · Versi {factor.version}
+                      </span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <Badge variant='outline'>{factor.category}</Badge>
+                      <span className='font-mono text-sm font-semibold text-foreground'>
+                        {factor.factorKgCo2ePerKg} kg CO2e/kg
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}

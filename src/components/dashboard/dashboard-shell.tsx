@@ -104,7 +104,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             avatarUrl={currentUser?.avatarUrl}
             isAuthenticatedSession={Boolean(currentUser)}
           />
-          <div className='flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6'>
+          <div
+            data-dashboard-content='true'
+            className='flex min-w-0 flex-1 flex-col gap-5 p-3 sm:gap-6 sm:p-6'
+          >
             <RelaxedAuthBanner
               activeRole={activeRole}
               onPreviewRoleChange={(next) => setPreviewRoleOverride(next)}
