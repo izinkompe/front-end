@@ -1,16 +1,14 @@
 import { DASHBOARD_COOKIES, isAuthRelaxed, parseUserRole } from '@/lib/auth/rbac'
+import {
+  clearSessionRoleCookiesAction,
+  setPreviewRoleCookieAction,
+  setSessionRoleCookiesAction,
+} from '@/lib/auth/session-cookies-actions'
 import type { User, UserRole } from '@/types/api/auth'
 
-function buildCookieAttributes(maxAgeSeconds: number): string {
-  const secure =
-    typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : ''
-  return `Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax${secure}`
-}
-
-export function setSessionRoleCookies(role: UserRole, _token?: string): void {
-  if (typeof document === 'undefined') return
-  const attrs = buildCookieAttributes(60 * 60 * 24)
-  document.cookie = `${DASHBOARD_COOKIES.sessionRole}=${encodeURIComponent(role)}; ${attrs}`
+export async function setSessionRoleCookies(role: UserRole, _token?: string): Promise<void> {
+  if (typeof window === 'undefined') return
+  await setSessionRoleCookiesAction(role)
 }
 
 export function getCachedAuthUser(): User | null {
@@ -21,19 +19,15 @@ export function setCachedAuthUser(_user: User | null): void {
   return
 }
 
-export function clearSessionRoleCookies(): void {
+export async function clearSessionRoleCookies(): Promise<void> {
   setCachedAuthUser(null)
-  if (typeof document === 'undefined') return
-  const attrs = buildCookieAttributes(0)
-  document.cookie = `${DASHBOARD_COOKIES.sessionToken}=; ${attrs}`
-  document.cookie = `${DASHBOARD_COOKIES.sessionRole}=; ${attrs}`
-  document.cookie = `${DASHBOARD_COOKIES.previewRole}=; ${attrs}`
+  if (typeof window === 'undefined') return
+  await clearSessionRoleCookiesAction()
 }
 
-export function setPreviewRoleCookie(role: UserRole): void {
-  if (typeof document === 'undefined' || !isAuthRelaxed()) return
-  const attrs = buildCookieAttributes(60 * 60 * 24)
-  document.cookie = `${DASHBOARD_COOKIES.previewRole}=${encodeURIComponent(role)}; ${attrs}`
+export async function setPreviewRoleCookie(role: UserRole): Promise<void> {
+  if (typeof window === 'undefined' || !isAuthRelaxed()) return
+  await setPreviewRoleCookieAction(role)
 }
 
 export function getPreviewRoleCookie(): UserRole | null {
