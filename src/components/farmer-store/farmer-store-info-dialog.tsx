@@ -10,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
 import {
   formatJoinedMonthYearId,
   getCommodityCategoryLabel,
@@ -52,9 +51,7 @@ export function FarmerStoreInfoDialog({ farmer, open, onOpenChange }: FarmerStor
           </div>
         </div>
 
-        <Separator />
-
-        <div className='flex flex-col gap-2.5'>
+        <div className='flex flex-col gap-2.5 pt-2'>
           <div className='flex items-center gap-2 text-sm text-muted-foreground'>
             <MapPin className='size-4 shrink-0 text-primary' aria-hidden='true' />
             <span>

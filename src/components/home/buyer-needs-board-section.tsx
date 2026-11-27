@@ -7,7 +7,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useNeedsBoard } from '@/hooks/api/use-needs-board'
 import type { NeedRequest } from '@/types/api/needs-board'
@@ -119,8 +118,7 @@ function NeedRequestCard({ need }: NeedRequestCardProps) {
         </Progress>
       </div>
 
-      <div className='flex flex-col gap-3'>
-        <Separator />
+      <div className='pt-2'>
         <footer className='flex items-center justify-between gap-2 text-sm text-muted-foreground'>
           <span className='flex min-w-0 items-center gap-1.5'>
             <MapPin className='size-4 shrink-0' aria-hidden='true' />

@@ -1,10 +1,7 @@
 'use client'
 
-import { id } from 'date-fns/locale'
-import { Calendar as CalendarIcon, ChevronDown, type LucideIcon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar as CalendarIcon, type LucideIcon } from 'lucide-react'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   Select,
   SelectContent,
@@ -13,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import { formatPickupDateLabel } from './hero-search-params'
 
 const controlTriggerClassName =
@@ -92,54 +88,22 @@ export function PickupCalendarPopover({
   const pickupDateLabel = selectedDate ? formatPickupDateLabel(selectedDate) : 'Semua jadwal'
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger
-        render={
-          <Button
-            type='button'
-            variant='outline'
-            className={`${controlTriggerClassName} justify-between py-2 pr-3 pl-3.5 font-normal hover:text-foreground aria-expanded:bg-muted/50 aria-expanded:text-foreground`}
-            aria-label='Pilih tanggal jadwal pengambilan mandiri'
-          />
-        }
-      >
-        <span className='flex min-w-0 items-center gap-2'>
-          <CalendarIcon className={controlIconClassName} aria-hidden='true' />
-          <span className='truncate text-foreground'>{pickupDateLabel}</span>
-        </span>
-        <ChevronDown className={controlIconClassName} aria-hidden='true' />
-      </PopoverTrigger>
-
-      <PopoverContent
-        align='start'
-        className='w-auto max-w-[calc(100vw-2rem)] min-w-72 gap-0 p-0 sm:min-w-80'
-      >
-        <Calendar
-          mode='single'
-          selected={selectedDate}
-          onSelect={onSelectDate}
-          defaultMonth={selectedDate ?? today}
-          disabled={today ? { before: today } : undefined}
-          locale={id}
-          className='w-full'
-          classNames={{ root: 'w-full' }}
-        />
-        <Separator />
-        <div className='flex items-center justify-between gap-2 p-2.5'>
-          <Button type='button' variant='ghost' size='sm' onClick={onSelectToday}>
-            Hari ini
-          </Button>
-          <Button
-            type='button'
-            variant='ghost'
-            size='sm'
-            onClick={onClearDate}
-            disabled={!selectedDate}
-          >
-            Semua jadwal
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+    <DatePicker
+      open={open}
+      onOpenChange={onOpenChange}
+      value={selectedDate}
+      onValueChange={onSelectDate}
+      defaultMonth={selectedDate ?? today}
+      disabled={today ? { before: today } : undefined}
+      displayValue={pickupDateLabel}
+      ariaLabel='Pilih tanggal jadwal pengambilan mandiri'
+      leadingIcon={<CalendarIcon className={controlIconClassName} aria-hidden='true' />}
+      triggerClassName={`${controlTriggerClassName} py-2 pr-3 pl-3.5 hover:text-foreground aria-expanded:bg-muted/50 aria-expanded:text-foreground`}
+      showTodayAction
+      onToday={onSelectToday}
+      showClearAction
+      clearLabel='Semua jadwal'
+      onClear={onClearDate}
+    />
   )
 }

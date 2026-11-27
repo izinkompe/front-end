@@ -1,8 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { id } from 'date-fns/locale'
-import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react'
 import {
   categoryFilterOptions,
   deadlineOptions,
@@ -13,8 +11,8 @@ import {
   type BuyerRadiusOption,
 } from '@/components/home/hero-search-params'
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
 import { Checkbox } from '@/components/ui/checkbox'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
 import {
   InputGroup,
@@ -31,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import { CommoditySearchInput } from '@/components/shared/commodity-search-input'
 import {
   Sheet,
@@ -93,7 +90,6 @@ function FilterSheetBody({
   const [maxPriceText, setMaxPriceText] = useState(
     initialState.maxPrice !== null ? String(initialState.maxPrice) : ''
   )
-  const [calendarOpen, setCalendarOpen] = useState(false)
   const [today] = useState<Date>(() => getTodayStart())
 
   const selectedDate = parseIsoDate(draft.pickupDate)
@@ -421,73 +417,26 @@ function FilterSheetBody({
 
             <Field>
               <FieldLabel htmlFor='filter-pickup-date'>Tanggal jadwal ambil mandiri</FieldLabel>
-              <Button
+              <DatePicker
                 id='filter-pickup-date'
-                type='button'
-                variant='outline'
-                aria-expanded={calendarOpen}
-                aria-controls='filter-pickup-calendar'
-                onClick={() => setCalendarOpen((prev) => !prev)}
-                className='w-full justify-between font-normal'
-              >
-                <span className='flex min-w-0 items-center gap-2'>
-                  <CalendarIcon className='icon-sm text-muted-foreground' aria-hidden='true' />
-                  <span className='truncate'>{pickupDateLabel}</span>
-                </span>
-                <ChevronDown
-                  aria-hidden='true'
-                  className={`icon-sm text-muted-foreground transition-transform duration-150 ${calendarOpen ? 'rotate-180' : ''}`}
-                />
-              </Button>
-              {calendarOpen && (
-                <div
-                  id='filter-pickup-calendar'
-                  className='mt-2 w-full min-w-0 overflow-hidden rounded-xl border border-border bg-card'
-                >
-                  <Calendar
-                    mode='single'
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      setDraft((prev) => ({
-                        ...prev,
-                        pickupDate: date ? formatPickupDateIso(date) : null,
-                      }))
-                      setCalendarOpen(false)
-                    }}
-                    defaultMonth={selectedDate ?? today}
-                    disabled={{ before: today }}
-                    locale={id}
-                    className='w-full p-2 [--cell-size:clamp(2rem,8.5vw,2.5rem)]'
-                    classNames={{ root: 'w-full' }}
-                  />
-                  <Separator />
-                  <div className='flex items-center justify-between gap-2 p-2.5'>
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => {
-                        setDraft((prev) => ({ ...prev, pickupDate: formatPickupDateIso(today) }))
-                        setCalendarOpen(false)
-                      }}
-                    >
-                      Hari ini
-                    </Button>
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='sm'
-                      disabled={!draft.pickupDate}
-                      onClick={() => {
-                        setDraft((prev) => ({ ...prev, pickupDate: null }))
-                        setCalendarOpen(false)
-                      }}
-                    >
-                      Semua jadwal
-                    </Button>
-                  </div>
-                </div>
-              )}
+                value={selectedDate}
+                onValueChange={(date) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    pickupDate: date ? formatPickupDateIso(date) : null,
+                  }))
+                }
+                defaultMonth={selectedDate ?? today}
+                disabled={{ before: today }}
+                displayValue={pickupDateLabel}
+                showTodayAction
+                onToday={() =>
+                  setDraft((prev) => ({ ...prev, pickupDate: formatPickupDateIso(today) }))
+                }
+                showClearAction
+                clearLabel='Semua jadwal'
+                onClear={() => setDraft((prev) => ({ ...prev, pickupDate: null }))}
+              />
             </Field>
 
             <Field orientation='horizontal' className='items-center gap-3'>
@@ -506,9 +455,7 @@ function FilterSheetBody({
         </div>
       </ScrollArea>
 
-      <Separator />
-
-      <SheetFooter className='sticky-bar-safe flex-row gap-3 bg-background px-4 pt-3'>
+      <SheetFooter className='sticky-bar-safe flex-row gap-3 bg-background px-4 pt-4'>
         <Button type='button' variant='outline' className='flex-1' onClick={handleReset}>
           Atur ulang
         </Button>

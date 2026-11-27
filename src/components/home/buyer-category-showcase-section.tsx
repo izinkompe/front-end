@@ -8,7 +8,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useOffers } from '@/hooks/api/use-offers'
@@ -120,8 +119,7 @@ function CategorySummaryCard({ category, offers, location }: CategorySummaryCard
         <p className='text-sm leading-relaxed text-muted-foreground'>{category.examples}</p>
       </CardHeader>
 
-      <CardContent className='flex flex-col gap-3'>
-        <Separator />
+      <CardContent className='flex flex-col gap-4 pt-1'>
         <dl className='flex flex-col gap-3 text-sm'>
           <div className='flex items-baseline justify-between gap-2'>
             <dt className='text-muted-foreground'>Stok siap ambil</dt>

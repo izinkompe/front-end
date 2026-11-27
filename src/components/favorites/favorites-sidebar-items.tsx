@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { MapPin, Plus, ShieldCheck, Sprout, Trash2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { useToggleFollowFarmer } from '@/hooks/api/use-farmer-store'
 import {
@@ -217,9 +216,8 @@ export function CustomListDetail({
       )}
 
       {availableToAdd.length > 0 && (
-        <div className='flex flex-col gap-2 pt-2'>
-          <Separator />
-          <p className='pt-1 text-sm font-semibold text-muted-foreground'>Tambahkan dari Favorit</p>
+        <div className='flex flex-col gap-2 pt-3'>
+          <p className='text-sm font-semibold text-muted-foreground'>Tambahkan dari Favorit</p>
           <ul className='flex flex-col gap-2'>
             {availableToAdd.slice(0, 5).map((offer) => (
               <li

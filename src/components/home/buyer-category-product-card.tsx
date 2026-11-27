@@ -4,7 +4,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Flame, Layers, MapPin, Scale, Shapes, Sprout, type LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { buildFarmerStoreHref } from '@/lib/data/farmer-store-helpers'
 import { cn } from '@/lib/utils'
 import type { CommodityCondition, Offer } from '@/types/api/offers'
@@ -132,8 +131,7 @@ export function BuyerCategoryProductCard({ offer, distanceKm }: BuyerCategoryPro
           </div>
         </div>
 
-        <div className='flex flex-col gap-3'>
-          <Separator />
+        <div className='pt-2'>
           <footer className='flex items-center gap-2 text-sm text-muted-foreground'>
             <Sprout className='size-4 shrink-0 text-primary' aria-hidden='true' />
             <Link

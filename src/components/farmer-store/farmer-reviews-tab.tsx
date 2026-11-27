@@ -23,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import {
   Sheet,
   SheetContent,
@@ -99,9 +98,7 @@ function ReviewFilterControls({
         </FieldGroup>
       </FieldSet>
 
-      <Separator />
-
-      <FieldSet>
+      <FieldSet className='pt-2'>
         <FieldLegend variant='label'>Rating</FieldLegend>
         <FieldGroup className='gap-2.5'>
           {[5, 4, 3, 2, 1].map((stars) => {
@@ -130,9 +127,7 @@ function ReviewFilterControls({
         </FieldGroup>
       </FieldSet>
 
-      <Separator />
-
-      <FieldSet>
+      <FieldSet className='pt-2'>
         <FieldLegend variant='label'>Topik Ulasan</FieldLegend>
         <FieldGroup className='gap-2.5'>
           {FarmerReviewTopicSchema.options.map((topic) => {

@@ -31,8 +31,10 @@ import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useCurrentUser } from '@/hooks/api/use-auth'
 import { useOffers } from '@/hooks/api/use-offers'
+import { useHydrated } from '@/hooks/use-hydrated'
 import { cn } from '@/lib/utils'
 
 const HEADER_SHOW_STICKY_Y = 240
@@ -66,7 +68,8 @@ export function GlobalHeader({
   const { selectedLocation, setSelectedLocation } = useSelectedLocation()
   const { open: favoritesOpen, openFavorites } = useFavoritesSidebar()
   const pathname = usePathname()
-  const { data: currentUser } = useCurrentUser()
+  const isHydrated = useHydrated()
+  const { data: currentUser, isPending: isAuthPending } = useCurrentUser()
   const { data: offers = [] } = useOffers()
 
   const isHeroPage = pathname === '/'
@@ -197,8 +200,7 @@ export function GlobalHeader({
           isSticky
             ? cn(
                 'fixed inset-x-0 top-0 bg-background text-foreground shadow-sm',
-                !mobileMenuOpen &&
-                  stickyState === 'in' &&
+                stickyState === 'in' &&
                   'animate-in fade-in slide-in-from-top-full duration-300 ease-out motion-reduce:animate-none',
                 !mobileMenuOpen &&
                   stickyState === 'out' &&
@@ -243,7 +245,15 @@ export function GlobalHeader({
           </div>
         </div>
 
-        <Collapsible open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <Collapsible
+          open={mobileMenuOpen}
+          onOpenChange={(nextOpen) => {
+            if (nextOpen && stickyState === 'out') {
+              setStickyState('in')
+            }
+            setMobileMenuOpen(nextOpen)
+          }}
+        >
           <div
             className={cn(
               'border-b transition-colors duration-200',
@@ -412,7 +422,13 @@ export function GlobalHeader({
               </div>
 
               <div className='flex shrink-0 items-center justify-end gap-1.5 sm:gap-2'>
-                {currentUser ? (
+                {!isHydrated || (isAuthPending && !currentUser) ? (
+                  <div className='flex items-center gap-1.5 sm:gap-2' aria-hidden='true'>
+                    <Skeleton
+                      className={cn('h-9 w-28 rounded-lg', isTransparent && 'bg-white/20')}
+                    />
+                  </div>
+                ) : currentUser ? (
                   <>
                     <Button
                       variant='ghost'
@@ -485,8 +501,13 @@ export function GlobalHeader({
             )}
           </div>
 
-          <CollapsibleContent className='max-h-[calc(100dvh-10.3125rem)] overflow-y-auto border-b border-border bg-background transition-all duration-200 ease-out data-ending-style:opacity-0 data-starting-style:opacity-0 lg:hidden'>
-            <div className={cn('mx-auto px-4 py-3 sm:px-6', containerClassName)}>
+          <CollapsibleContent className='h-(--collapsible-panel-height) overflow-hidden border-b border-border bg-background transition-[height,opacity] duration-200 ease-out data-ending-style:h-0 data-ending-style:opacity-0 data-starting-style:h-0 data-starting-style:opacity-0 motion-reduce:transition-none lg:hidden'>
+            <div
+              className={cn(
+                'mx-auto max-h-[calc(100dvh-10.3125rem)] overflow-y-auto px-4 py-3 sm:px-6',
+                containerClassName
+              )}
+            >
               <nav aria-label='Navigasi Mobile' className='flex flex-col gap-1'>
                 <p className='px-3.5 pt-1 pb-1 text-sm font-semibold text-muted-foreground'>
                   Kategori

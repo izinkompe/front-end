@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useSelectedLocation } from '@/components/providers/location-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { buildProvinceMapHref, getNearbyHarvestHubs } from './home-discovery-helpers'
 import { formatStraightLineDistance } from './offer-card-helpers'
@@ -86,8 +85,7 @@ export function BuyerHarvestHubsSection() {
                   <p className='text-sm leading-relaxed text-muted-foreground'>{hub.highlights}</p>
                 </div>
 
-                <div className='flex flex-col gap-3'>
-                  <Separator />
+                <div className='pt-2'>
                   <footer className='flex flex-wrap items-center justify-between gap-2'>
                     <span className='text-sm font-semibold text-foreground tabular-nums'>
                       {hub.count} penawaran aktif

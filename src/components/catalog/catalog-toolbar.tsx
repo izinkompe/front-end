@@ -4,11 +4,13 @@ import {
   Apple,
   ArrowUpDown,
   Carrot,
+  ChevronDown,
   Clock,
   Flame,
   Layers,
   LayoutGrid,
   Leaf,
+  ListFilter,
   Package,
   Rows3,
   Scale,
@@ -21,6 +23,17 @@ import {
 import type { BuyerCategoryFilter } from '@/components/home/hero-search-params'
 import { Badge } from '@/components/ui/badge'
 import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Select,
   SelectContent,
   SelectGroup,
@@ -28,7 +41,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { mainCategories, type BuyerCategorySlug } from '@/lib/data/categories'
 import {
   catalogConditionOptions,
@@ -50,14 +62,10 @@ interface CatalogToolbarProps {
 
 const controlSurfaceClassName = 'pill-control border-muted-foreground/45 hover:border-foreground/65'
 
-const quickChipClassName = 'chip-toggle border-muted-foreground/45 hover:border-foreground/65'
-
 const toolbarSelectTriggerClassName = cn(
   controlSurfaceClassName,
-  'w-full min-w-0 max-w-full shrink-0 justify-between gap-2 rounded-full! sm:w-auto [&_svg]:text-foreground/80'
+  'w-auto min-w-0 max-w-full shrink-0 justify-between gap-2 rounded-full! [&_svg]:text-foreground/80'
 )
-
-const filterRowWrapClassName = 'scroll-strip min-w-0 flex-nowrap gap-1.5 sm:gap-2'
 
 const cardLayoutOptions: ReadonlyArray<{
   value: CatalogViewMode
@@ -81,24 +89,6 @@ const conditionIcons: Record<CommodityCondition, LucideIcon> = {
   imperfect_shape: Shapes,
 }
 
-function isCategoryToken(value: string): value is `cat:${BuyerCategorySlug}` {
-  return (
-    value === 'cat:sayuran' ||
-    value === 'cat:buah' ||
-    value === 'cat:padi-biji' ||
-    value === 'cat:rempah-umbi'
-  )
-}
-
-function isConditionToken(value: string): value is `cond:${CommodityCondition}` {
-  return (
-    value === 'cond:ripe_urgent' ||
-    value === 'cond:grade_b' ||
-    value === 'cond:surplus' ||
-    value === 'cond:imperfect_shape'
-  )
-}
-
 export function CatalogToolbar({
   state,
   fixedCategory,
@@ -111,228 +101,248 @@ export function CatalogToolbar({
   const selectedLayoutLabel =
     cardLayoutOptions.find((option) => option.value === state.view)?.label ?? 'Baris penuh'
 
-  const primarySelectedTokens: string[] = []
+  const activeQuickLabels: string[] = []
   if (!fixedCategory && state.category !== 'semua') {
-    primarySelectedTokens.push(`cat:${state.category}`)
+    const matchedCategory = mainCategories.find((item) => item.slug === state.category)
+    if (matchedCategory) {
+      activeQuickLabels.push(matchedCategory.shortLabel)
+    }
   }
   if (fixedCategory) {
     for (const condition of state.conditions) {
-      primarySelectedTokens.push(`cond:${condition}`)
+      const matchedCondition = catalogConditionOptions.find((item) => item.value === condition)
+      if (matchedCondition) {
+        activeQuickLabels.push(matchedCondition.shortLabel)
+      }
     }
   }
-
-  const secondarySelectedTokens: string[] = []
   if (state.sort === 'expiring') {
-    secondarySelectedTokens.push('expiring')
+    activeQuickLabels.push('Segera ditutup')
   }
   if (state.dynamicOnly) {
-    secondarySelectedTokens.push('dynamic')
+    activeQuickLabels.push('Harga turun')
   }
   if (state.minStockKg === 50) {
-    secondarySelectedTokens.push('stock50')
+    activeQuickLabels.push('Stok ≥ 50 kg')
   }
 
-  function handlePrimaryChange(nextTokens: string[]) {
-    if (!fixedCategory) {
-      const prevCategoryToken = state.category !== 'semua' ? `cat:${state.category}` : null
-      const nextCategoryTokens = nextTokens.filter(isCategoryToken)
+  const quickFilterLabel = activeQuickLabels.length === 1 ? activeQuickLabels[0] : 'Filter cepat'
 
-      let nextCategory: BuyerCategoryFilter = 'semua'
-      if (nextCategoryTokens.length === 1) {
-        nextCategory = nextCategoryTokens[0].replace('cat:', '') as BuyerCategorySlug
-      } else if (nextCategoryTokens.length > 1) {
-        const added = nextCategoryTokens.find((token) => token !== prevCategoryToken)
-        nextCategory = added
-          ? (added.replace('cat:', '') as BuyerCategorySlug)
-          : (nextCategoryTokens[0].replace('cat:', '') as BuyerCategorySlug)
-      }
-
-      onStateChange((prev) => ({
-        ...prev,
-        category: nextCategory,
-      }))
-      return
-    }
-
-    const nextConditions = nextTokens
-      .filter(isConditionToken)
-      .map((token) => token.replace('cond:', '') as CommodityCondition)
-
+  function handleConditionToggle(condition: CommodityCondition, checked: boolean) {
     onStateChange((prev) => ({
       ...prev,
-      conditions: nextConditions,
-    }))
-  }
-
-  function handleSecondaryChange(nextTokens: string[]) {
-    const wantsExpiring = nextTokens.includes('expiring')
-    const wantsDynamic = nextTokens.includes('dynamic')
-    const wantsStock50 = nextTokens.includes('stock50')
-    const hadStock50 = state.minStockKg === 50
-
-    onStateChange((prev) => ({
-      ...prev,
-      sort: wantsExpiring ? 'expiring' : prev.sort === 'expiring' ? 'nearest' : prev.sort,
-      dynamicOnly: wantsDynamic,
-      minStockKg: wantsStock50 ? 50 : hadStock50 ? null : prev.minStockKg,
+      conditions: checked
+        ? prev.conditions.includes(condition)
+          ? prev.conditions
+          : [...prev.conditions, condition]
+        : prev.conditions.filter((item) => item !== condition),
     }))
   }
 
   return (
-    <div className='flex flex-col gap-2.5'>
-      <ToggleGroup
-        multiple
-        variant='default'
-        spacing={1}
-        value={primarySelectedTokens}
-        onValueChange={handlePrimaryChange}
-        aria-label={fixedCategory ? 'Filter cepat kondisi' : 'Pilih kategori panen'}
-        className={filterRowWrapClassName}
+    <div className='scroll-strip min-w-0 flex-nowrap items-center gap-2'>
+      <button
+        type='button'
+        onClick={onOpenFilterSheet}
+        className={cn(controlSurfaceClassName, 'shrink-0 cursor-pointer')}
       >
-        {!fixedCategory
-          ? mainCategories.map((category) => {
-              const CategoryIcon = categoryIcons[category.slug]
-              return (
-                <ToggleGroupItem
-                  key={category.slug}
-                  value={`cat:${category.slug}`}
-                  className={quickChipClassName}
-                >
-                  <CategoryIcon className='icon-sm' aria-hidden='true' />
-                  <span>{category.shortLabel}</span>
-                </ToggleGroupItem>
-              )
-            })
-          : catalogConditionOptions.map((condition) => {
-              const ConditionIcon = conditionIcons[condition.value]
-              return (
-                <ToggleGroupItem
-                  key={condition.value}
-                  value={`cond:${condition.value}`}
-                  className={quickChipClassName}
-                >
-                  <ConditionIcon className='icon-sm' aria-hidden='true' />
-                  <span>{condition.shortLabel}</span>
-                </ToggleGroupItem>
-              )
-            })}
-      </ToggleGroup>
+        <SlidersHorizontal className='icon-sm' aria-hidden='true' />
+        <span>Semua filter</span>
+        {activeFilterCount > 0 && (
+          <Badge variant='default' className='ml-0.5 min-h-5 px-2 py-0 text-xs tabular-nums'>
+            {activeFilterCount}
+          </Badge>
+        )}
+      </button>
 
-      <ToggleGroup
-        multiple
-        variant='default'
-        spacing={1}
-        value={secondarySelectedTokens}
-        onValueChange={handleSecondaryChange}
-        aria-label='Filter cepat tambahan'
-        className={filterRowWrapClassName}
-      >
-        <ToggleGroupItem value='expiring' className={quickChipClassName}>
-          <Clock className='icon-sm' aria-hidden='true' />
-          <span>Segera ditutup</span>
-        </ToggleGroupItem>
-        <ToggleGroupItem value='dynamic' className={quickChipClassName}>
-          <TrendingDown className='icon-sm' aria-hidden='true' />
-          <span>Harga turun</span>
-        </ToggleGroupItem>
-        <ToggleGroupItem value='stock50' className={quickChipClassName}>
-          <Package className='icon-sm' aria-hidden='true' />
-          <span>Stok &ge; 50 kg</span>
-        </ToggleGroupItem>
-      </ToggleGroup>
-
-      <div className='flex flex-wrap items-center gap-2'>
-        <button
-          type='button'
-          onClick={onOpenFilterSheet}
-          className={cn(controlSurfaceClassName, 'shrink-0 cursor-pointer')}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type='button'
+              aria-label='Filter cepat komoditas'
+              className={cn(toolbarSelectTriggerClassName, 'cursor-pointer')}
+            />
+          }
         >
-          <SlidersHorizontal className='icon-sm' aria-hidden='true' />
-          <span>Semua filter</span>
-          {activeFilterCount > 0 && (
-            <Badge variant='default' className='ml-0.5 min-h-5 px-2 py-0 text-xs tabular-nums'>
-              {activeFilterCount}
-            </Badge>
+          <span className='flex items-center gap-2'>
+            <ListFilter className='size-4 shrink-0' aria-hidden='true' />
+            <span className='truncate text-foreground'>{quickFilterLabel}</span>
+            {activeQuickLabels.length > 1 && (
+              <Badge variant='default' className='min-h-5 px-1.5 py-0 text-xs tabular-nums'>
+                {activeQuickLabels.length}
+              </Badge>
+            )}
+          </span>
+          <ChevronDown className='size-4 shrink-0 text-foreground/80' aria-hidden='true' />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align='start'
+          sideOffset={8}
+          collisionPadding={12}
+          className='w-64 max-w-[calc(100vw-1.5rem)]'
+        >
+          {!fixedCategory ? (
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Kategori panen</DropdownMenuLabel>
+              <DropdownMenuRadioGroup
+                value={state.category}
+                onValueChange={(next) => {
+                  onStateChange((prev) => ({
+                    ...prev,
+                    category: next as BuyerCategoryFilter,
+                  }))
+                }}
+              >
+                <DropdownMenuRadioItem value='semua'>Semua kategori</DropdownMenuRadioItem>
+                {mainCategories.map((category) => {
+                  const CategoryIcon = categoryIcons[category.slug]
+                  return (
+                    <DropdownMenuRadioItem key={category.slug} value={category.slug}>
+                      <CategoryIcon className='icon-sm' aria-hidden='true' />
+                      <span>{category.shortLabel}</span>
+                    </DropdownMenuRadioItem>
+                  )
+                })}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuGroup>
+          ) : (
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Kondisi panen</DropdownMenuLabel>
+              {catalogConditionOptions.map((condition) => {
+                const ConditionIcon = conditionIcons[condition.value]
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={condition.value}
+                    checked={state.conditions.includes(condition.value)}
+                    onCheckedChange={(checked) => handleConditionToggle(condition.value, checked)}
+                  >
+                    <ConditionIcon className='icon-sm' aria-hidden='true' />
+                    <span>{condition.shortLabel}</span>
+                  </DropdownMenuCheckboxItem>
+                )
+              })}
+            </DropdownMenuGroup>
           )}
-        </button>
 
-        <div className='flex min-w-0 flex-1 items-center gap-2 sm:flex-none'>
-          <Select
-            value={state.sort}
-            onValueChange={(value) => {
-              if (
-                value === 'nearest' ||
-                value === 'expiring' ||
-                value === 'price_asc' ||
-                value === 'stock_desc' ||
-                value === 'newest'
-              ) {
-                onStateChange((prev) => ({ ...prev, sort: value as CatalogSortOption }))
-              }
-            }}
-          >
-            <SelectTrigger
-              size='sm'
-              aria-label='Urutkan penawaran'
-              className={cn(toolbarSelectTriggerClassName, 'sm:min-w-36')}
-            >
-              <SelectValue>
-                <ArrowUpDown className='size-4 shrink-0' aria-hidden='true' />
-                <span className='truncate text-foreground'>{selectedSortLabel}</span>
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align='end'>
-              <SelectGroup>
-                {catalogSortOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <DropdownMenuSeparator />
 
-          <Select
-            value={state.view}
-            onValueChange={(value) => {
-              if (value === 'row' || value === 'grid') {
-                onStateChange((prev) => ({ ...prev, view: value as CatalogViewMode }))
-              }
-            }}
-          >
-            <SelectTrigger
-              size='sm'
-              aria-label='Pilih tata letak kartu'
-              className={cn(toolbarSelectTriggerClassName, 'hidden sm:inline-flex sm:min-w-34')}
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Filter cepat</DropdownMenuLabel>
+            <DropdownMenuCheckboxItem
+              checked={state.sort === 'expiring'}
+              onCheckedChange={(checked) => {
+                onStateChange((prev) => ({
+                  ...prev,
+                  sort: checked ? 'expiring' : prev.sort === 'expiring' ? 'nearest' : prev.sort,
+                }))
+              }}
             >
-              <SelectValue>
-                {state.view === 'grid' ? (
-                  <LayoutGrid className='size-4 shrink-0' aria-hidden='true' />
-                ) : (
-                  <Rows3 className='size-4 shrink-0' aria-hidden='true' />
-                )}
-                <span className='truncate text-foreground'>{selectedLayoutLabel}</span>
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent align='end'>
-              <SelectGroup>
-                {cardLayoutOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <span className='flex items-center gap-2'>
-                      {option.value === 'grid' ? (
-                        <LayoutGrid className='size-4 shrink-0' aria-hidden='true' />
-                      ) : (
-                        <Rows3 className='size-4 shrink-0' aria-hidden='true' />
-                      )}
-                      <span>{option.label}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+              <Clock className='icon-sm' aria-hidden='true' />
+              <span>Segera ditutup</span>
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={state.dynamicOnly}
+              onCheckedChange={(checked) => {
+                onStateChange((prev) => ({
+                  ...prev,
+                  dynamicOnly: checked,
+                }))
+              }}
+            >
+              <TrendingDown className='icon-sm' aria-hidden='true' />
+              <span>Harga turun</span>
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={state.minStockKg === 50}
+              onCheckedChange={(checked) => {
+                onStateChange((prev) => ({
+                  ...prev,
+                  minStockKg: checked ? 50 : prev.minStockKg === 50 ? null : prev.minStockKg,
+                }))
+              }}
+            >
+              <Package className='icon-sm' aria-hidden='true' />
+              <span>Stok &ge; 50 kg</span>
+            </DropdownMenuCheckboxItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Select
+        value={state.sort}
+        onValueChange={(value) => {
+          if (
+            value === 'nearest' ||
+            value === 'expiring' ||
+            value === 'price_asc' ||
+            value === 'stock_desc' ||
+            value === 'newest'
+          ) {
+            onStateChange((prev) => ({ ...prev, sort: value as CatalogSortOption }))
+          }
+        }}
+      >
+        <SelectTrigger
+          size='sm'
+          aria-label='Urutkan penawaran'
+          className={cn(toolbarSelectTriggerClassName, 'sm:min-w-36')}
+        >
+          <SelectValue>
+            <ArrowUpDown className='size-4 shrink-0' aria-hidden='true' />
+            <span className='truncate text-foreground'>{selectedSortLabel}</span>
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent align='end'>
+          <SelectGroup>
+            {catalogSortOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={state.view}
+        onValueChange={(value) => {
+          if (value === 'row' || value === 'grid') {
+            onStateChange((prev) => ({ ...prev, view: value as CatalogViewMode }))
+          }
+        }}
+      >
+        <SelectTrigger
+          size='sm'
+          aria-label='Pilih tata letak kartu'
+          className={cn(toolbarSelectTriggerClassName, 'sm:min-w-34')}
+        >
+          <SelectValue>
+            {state.view === 'grid' ? (
+              <LayoutGrid className='size-4 shrink-0' aria-hidden='true' />
+            ) : (
+              <Rows3 className='size-4 shrink-0' aria-hidden='true' />
+            )}
+            <span className='truncate text-foreground'>{selectedLayoutLabel}</span>
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent align='end'>
+          <SelectGroup>
+            {cardLayoutOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                <span className='flex items-center gap-2'>
+                  {option.value === 'grid' ? (
+                    <LayoutGrid className='size-4 shrink-0' aria-hidden='true' />
+                  ) : (
+                    <Rows3 className='size-4 shrink-0' aria-hidden='true' />
+                  )}
+                  <span>{option.label}</span>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     </div>
   )
 }

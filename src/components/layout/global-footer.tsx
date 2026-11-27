@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { AccountLink } from '@/components/auth/account-link'
 import { BrandLogo } from '@/components/shared/brand-logo'
 import { buttonVariants } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 
 const footerColumns = [
@@ -174,10 +173,11 @@ export function GlobalFooter({ containerClassName = 'max-w-7xl' }: GlobalFooterP
         </div>
       </div>
 
-      <Separator />
-
       <div
-        className={cn('mx-auto flex flex-col gap-5 px-4 py-8 sm:px-6 lg:px-8', containerClassName)}
+        className={cn(
+          'mx-auto flex flex-col gap-5 px-4 pt-2 pb-8 sm:px-6 lg:px-8',
+          containerClassName
+        )}
       >
         <nav aria-label='Tautan Kebijakan' className='flex flex-wrap items-center gap-x-6 gap-y-1'>
           {legalLinks.map((link) => (
