@@ -101,6 +101,7 @@ export const UserSchema = z.object({
   organization: z.string().optional(),
   addresses: z.array(UserAddressSchema).optional(),
   isEmailVerified: z.boolean().optional(),
+  emailVerifiedAt: z.string().nullable().optional(),
   isPhoneVerified: z.boolean().optional(),
   isVerifiedFarmer: z.boolean().optional(),
   onboardingCompleted: z.boolean().optional(),
@@ -161,27 +162,51 @@ export const VerifyPhoneRequestSchema = z.object({
 })
 export type VerifyPhoneRequest = z.infer<typeof VerifyPhoneRequestSchema>
 
+export const StrongPasswordSchema = z
+  .string()
+  .min(8, 'Kata sandi minimal 8 karakter agar akun aman')
+  .max(128, 'Kata sandi maksimal 128 karakter')
+  .regex(/[A-Za-z]/, 'Kata sandi harus mengandung huruf')
+  .regex(/\d/, 'Kata sandi harus mengandung angka')
+
 export const LoginRequestSchema = z.object({
   email: z.string().trim().email('Masukkan alamat email yang benar, contoh: budi@email.com'),
-  password: z.string().min(6, 'Kata sandi minimal 6 karakter'),
+  password: z.string().min(1, 'Kata sandi wajib diisi'),
 })
 export type LoginRequest = z.infer<typeof LoginRequestSchema>
 
-export const BuyerRegisterRequestSchema = z.object({
-  name: z.string().trim().min(2, 'Nama minimal 2 karakter'),
-  email: z.string().trim().email('Format email tidak valid'),
-  password: z.string().min(6, 'Kata sandi minimal 6 karakter'),
-})
+export const BuyerRegisterRequestSchema = z
+  .object({
+    name: z.string().trim().min(2, 'Nama minimal 2 karakter'),
+    email: z.string().trim().email('Format email tidak valid'),
+    password: StrongPasswordSchema,
+    password_confirmation: z.string().min(1, 'Ulangi kata sandi Anda').optional(),
+    role: UserRoleSchema.default('buyer').optional(),
+  })
+  .refine(
+    (data) =>
+      data.password_confirmation === undefined || data.password === data.password_confirmation,
+    {
+      message: 'Konfirmasi kata sandi tidak cocok',
+      path: ['password_confirmation'],
+    }
+  )
 export type BuyerRegisterRequest = z.infer<typeof BuyerRegisterRequestSchema>
 
-export const RegisterRequestSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  phone: z.string().min(8),
-  password: z.string().min(6),
-  role: z.enum(['buyer', 'farmer']),
-  organization: z.string().optional(),
-})
+export const RegisterRequestSchema = z
+  .object({
+    name: z.string().min(2),
+    email: z.string().email(),
+    phone: z.string().min(8).optional(),
+    password: StrongPasswordSchema,
+    password_confirmation: z.string().min(1),
+    role: z.enum(['buyer', 'farmer']).default('buyer'),
+    organization: z.string().optional(),
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    message: 'Konfirmasi kata sandi tidak cocok',
+    path: ['password_confirmation'],
+  })
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>
 
 export const FarmerStep1Schema = z.object({
@@ -305,7 +330,36 @@ export const ResetPasswordRequestSchema = ForgotPasswordRequestSchema.extend({
   code: z
     .string()
     .trim()
-    .regex(/^\d{6}$/),
-  password: z.string().min(8).max(128),
-})
+    .regex(/^\d{6}$/)
+    .optional(),
+  token: z.string().trim().min(1).optional(),
+  password: StrongPasswordSchema,
+  password_confirmation: z.string().min(1, 'Ulangi kata sandi Anda').optional(),
+}).refine(
+  (data) =>
+    data.password_confirmation === undefined || data.password === data.password_confirmation,
+  {
+    message: 'Konfirmasi kata sandi tidak cocok',
+    path: ['password_confirmation'],
+  }
+)
 export type ResetPasswordRequest = z.infer<typeof ResetPasswordRequestSchema>
+
+export const VerifyEmailOtpRequestSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Kode verifikasi harus berisi 6 angka'),
+})
+export type VerifyEmailOtpRequest = z.infer<typeof VerifyEmailOtpRequestSchema>
+
+export const VerifyEmailUrlRequestSchema = z.object({
+  verificationUrl: z.string().url('URL verifikasi tidak valid'),
+})
+export type VerifyEmailUrlRequest = z.infer<typeof VerifyEmailUrlRequestSchema>
+
+export const UpdateEmailRequestSchema = z.object({
+  email: z.string().trim().email('Masukkan alamat email yang valid'),
+  current_password: z.string().min(1, 'Kata sandi saat ini wajib diisi'),
+})
+export type UpdateEmailRequest = z.infer<typeof UpdateEmailRequestSchema>

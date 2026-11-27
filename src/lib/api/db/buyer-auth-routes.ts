@@ -18,7 +18,22 @@ function findUser(email: string) {
   return Array.from(usersCollection.values()).find((user) => user.email.toLowerCase() === email)
 }
 
+function fallbackMockHash(password: string, salt: Uint8Array<ArrayBuffer>): string {
+  const input = `${Array.from(salt).join(',')}:${password}`
+  let h1 = 0x811c9dc5
+  let h2 = 0x9e3779b9
+  for (let i = 0; i < input.length; i += 1) {
+    const ch = input.charCodeAt(i)
+    h1 = Math.imul(h1 ^ ch, 0x01000193)
+    h2 = Math.imul(h2 ^ ch, 0x85ebca6b)
+  }
+  return `fallback:${(h1 >>> 0).toString(16)}:${(h2 >>> 0).toString(16)}`
+}
+
 async function hashPassword(password: string, salt: Uint8Array<ArrayBuffer>) {
+  if (typeof crypto === 'undefined' || !crypto.subtle) {
+    return fallbackMockHash(password, salt)
+  }
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(password),

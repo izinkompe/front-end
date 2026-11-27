@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { z } from 'zod'
-import { apiClient } from './client'
+import { apiClient, parseResponseBody } from './client'
 import { ApiError } from './errors'
 import { OfferSchema } from '../../types/api/offers'
 
@@ -76,5 +76,15 @@ describe('apiClient with TanStack DB adapter', () => {
       expect(error.status).toBe(400)
       expect(error.code).toBe('INVALID_ENDPOINT')
     }
+  })
+
+  it('handles 204 No Content and empty response bodies without JSON SyntaxError', async () => {
+    expect(await parseResponseBody(new Response(null, { status: 204 }))).toBeUndefined()
+    expect(await parseResponseBody(new Response('', { status: 200 }))).toBeUndefined()
+    expect(
+      await parseResponseBody(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+    ).toEqual({
+      ok: true,
+    })
   })
 })
