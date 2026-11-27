@@ -70,7 +70,7 @@ export function DashboardSidebar({ role, userName, organization }: DashboardSide
                         tooltip={item.title}
                         render={<Link href={item.href} />}
                       >
-                        <Icon aria-hidden='true' />
+                        <Icon className='icon-sm' aria-hidden='true' />
                         <span>{item.title}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -86,7 +86,7 @@ export function DashboardSidebar({ role, userName, organization }: DashboardSide
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton tooltip='Lihat Pasar Panen' render={<Link href='/' />}>
-              <ExternalLink aria-hidden='true' />
+              <ExternalLink className='icon-sm' aria-hidden='true' />
               <span>Pasar Panen</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -94,7 +94,7 @@ export function DashboardSidebar({ role, userName, organization }: DashboardSide
         <div className='flex flex-col gap-0.5 px-2 pt-1 group-data-[collapsible=icon]:hidden'>
           <span className='truncate text-sm font-medium text-sidebar-foreground'>{userName}</span>
           {organization && (
-            <span className='truncate text-xs text-muted-foreground'>{organization}</span>
+            <span className='truncate text-meta text-muted-foreground'>{organization}</span>
           )}
         </div>
       </SidebarFooter>

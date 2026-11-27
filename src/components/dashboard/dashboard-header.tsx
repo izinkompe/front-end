@@ -5,14 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { LogOut, Settings, Store, User as UserIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+import { BreadcrumbTrail } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -55,21 +48,18 @@ export function DashboardHeader({
   const avatarSrc = isSafeAvatarUrl(avatarUrl)
 
   return (
-    <header className='sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 px-4 backdrop-blur-sm'>
+    <header className='sticky top-0 z-20 flex min-h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 px-4 backdrop-blur-sm'>
       <div className='flex min-w-0 items-center gap-2'>
         <SidebarTrigger aria-label='Buka atau tutup menu samping' />
         <Separator orientation='vertical' className='h-5' />
-        <Breadcrumb className='min-w-0'>
-          <BreadcrumbList>
-            <BreadcrumbItem className='hidden sm:inline-flex'>
-              <BreadcrumbLink render={<Link href='/dashboard' />}>Dashboard</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator className='hidden sm:inline-flex' />
-            <BreadcrumbItem>
-              <BreadcrumbPage className='truncate'>{pageTitle}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        <BreadcrumbTrail
+          items={
+            pathname === '/dashboard'
+              ? [{ label: 'Dashboard' }]
+              : [{ label: 'Dashboard', href: '/dashboard' }, { label: pageTitle }]
+          }
+          className='min-w-0'
+        />
       </div>
 
       <div className='flex shrink-0 items-center gap-2'>
@@ -93,7 +83,7 @@ export function DashboardHeader({
               <Button
                 variant='ghost'
                 size='icon'
-                className='size-10 rounded-full p-0'
+                className='touch-target size-10 rounded-full p-0'
                 aria-label={`Menu akun ${userName}`}
               />
             }
@@ -103,11 +93,11 @@ export function DashboardHeader({
               <AvatarFallback>{getUserInitials(userName)}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' sideOffset={8} className='w-60'>
+          <DropdownMenuContent align='end' sideOffset={8} className='w-60 max-w-[calc(100vw-2rem)]'>
             <DropdownMenuGroup>
               <DropdownMenuLabel className='flex flex-col gap-0.5 py-1.5'>
                 <span className='truncate text-sm font-semibold text-foreground'>{userName}</span>
-                <span className='truncate text-xs font-normal text-muted-foreground'>
+                <span className='truncate text-meta font-normal text-muted-foreground'>
                   {userEmail}
                 </span>
               </DropdownMenuLabel>
@@ -115,15 +105,15 @@ export function DashboardHeader({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem render={<Link href='/akun/profil' />}>
-                <UserIcon aria-hidden='true' />
+                <UserIcon className='icon-sm' aria-hidden='true' />
                 <span>Data Profil</span>
               </DropdownMenuItem>
               <DropdownMenuItem render={<Link href='/akun/pengaturan' />}>
-                <Settings aria-hidden='true' />
+                <Settings className='icon-sm' aria-hidden='true' />
                 <span>Pengaturan Akun</span>
               </DropdownMenuItem>
               <DropdownMenuItem render={<Link href='/' />}>
-                <Store aria-hidden='true' />
+                <Store className='icon-sm' aria-hidden='true' />
                 <span>Pasar Panen</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -138,7 +128,7 @@ export function DashboardHeader({
                       router.push('/')
                     }}
                   >
-                    <LogOut aria-hidden='true' />
+                    <LogOut className='icon-sm' aria-hidden='true' />
                     <span>Keluar</span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>

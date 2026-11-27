@@ -91,7 +91,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           Lewati ke konten utama
         </a>
         <DashboardSidebar role={activeRole} userName={userName} organization={organization} />
-        <SidebarInset>
+        <SidebarInset className='min-w-0'>
           <DashboardHeader
             role={activeRole}
             userName={userName}
@@ -99,17 +99,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             avatarUrl={currentUser?.avatarUrl}
             isAuthenticatedSession={Boolean(currentUser)}
           />
-          <div className='flex flex-1 flex-col gap-6 p-4 sm:p-6'>
+          <div className='flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6'>
             <RelaxedAuthBanner
               activeRole={activeRole}
               onPreviewRoleChange={(next) => setPreviewRoleOverride(next)}
             />
             {isPathAllowed ? (
-              <main id='konten-utama' tabIndex={-1} className='flex flex-1 flex-col gap-6'>
+              <main id='konten-utama' tabIndex={-1} className='flex min-w-0 flex-1 flex-col gap-6'>
                 {children}
               </main>
             ) : (
-              <main id='konten-utama' tabIndex={-1} className='flex flex-1 flex-col'>
+              <main id='konten-utama' tabIndex={-1} className='flex min-w-0 flex-1 flex-col'>
                 <DashboardAccessDenied roleLabel={getRoleLabel(activeRole)} homeHref='/' />
               </main>
             )}
