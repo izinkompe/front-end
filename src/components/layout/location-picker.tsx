@@ -13,6 +13,7 @@ import {
   type ProvinceGroup,
   type SelectedLocation,
 } from '@/lib/data/regions'
+import { getGeolocationErrorMessage, requestCurrentPosition } from '@/lib/geolocation'
 import { cn } from '@/lib/utils'
 
 export { defaultLocation, type SelectedLocation }
@@ -59,29 +60,22 @@ export function LocationPicker({ selected, onSelect, variant = 'banner' }: Locat
     setOpen(false)
   }
 
-  function handleDetectLocation() {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setLocationMessage('Browser tidak mendukung deteksi lokasi.')
-      return
-    }
-
+  async function handleDetectLocation() {
     setLocating(true)
     setLocationMessage(null)
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const nearest = findNearestLocation(position.coords.latitude, position.coords.longitude)
-        onSelect(nearest)
-        setActiveProvinceId(nearest.provinceId)
-        setLocating(false)
-        setOpen(false)
-      },
-      () => {
-        setLocating(false)
-        setLocationMessage('Izin lokasi ditolak. Pilih wilayah secara manual.')
-      },
-      { timeout: 8000 }
-    )
+    const result = await requestCurrentPosition()
+    if (!result.ok) {
+      setLocating(false)
+      setLocationMessage(getGeolocationErrorMessage(result.reason, 'buyer'))
+      return
+    }
+
+    const nearest = findNearestLocation(result.latitude, result.longitude)
+    onSelect(nearest)
+    setActiveProvinceId(nearest.provinceId)
+    setLocating(false)
+    setOpen(false)
   }
 
   return (

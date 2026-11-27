@@ -32,12 +32,31 @@ import {
 } from '@/types/api/auth'
 import { useAuthStore } from '@/stores/use-auth-store'
 import { useCheckoutStore } from '@/stores/use-checkout-store'
+import { useFarmerOnboardingStore } from '@/stores/use-farmer-onboarding-store'
 
 function syncAuthUserCache(queryClient: QueryClient, user: User | null) {
   setCachedAuthUser(user)
   useAuthStore.getState().setUser(user)
   queryClient.setQueryData(queryKeys.auth.me, user)
   queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+}
+
+function clearSensitiveClientState(queryClient: QueryClient) {
+  const authStore = useAuthStore.getState()
+  authStore.clearAuth()
+  authStore.clearRegisterDraft()
+  useCheckoutStore.getState().resetCheckoutAttempt()
+  useFarmerOnboardingStore.getState().resetDraft()
+  syncAuthUserCache(queryClient, null)
+  queryClient.removeQueries({ queryKey: queryKeys.profile.detail })
+  queryClient.removeQueries({ queryKey: queryKeys.orders.all })
+  queryClient.removeQueries({ queryKey: queryKeys.notifications.all })
+  queryClient.removeQueries({ queryKey: queryKeys.favorites })
+  queryClient.removeQueries({ queryKey: queryKeys.complaints.all })
+  queryClient.removeQueries({ queryKey: ['farmer-management'] })
+  queryClient.removeQueries({ queryKey: ['verifications'] })
+  queryClient.removeQueries({ queryKey: ['admin'] })
+  queryClient.removeQueries({ queryKey: ['payments'] })
 }
 
 export function useCurrentUser() {
@@ -88,6 +107,7 @@ export function useLogin() {
       return data
     },
     onSuccess: (data) => {
+      useAuthStore.getState().clearRegisterDraft()
       syncAuthUserCache(queryClient, data.user)
     },
   })
@@ -110,6 +130,7 @@ export function useLoginFarmer() {
       return data
     },
     onSuccess: (data) => {
+      useFarmerOnboardingStore.getState().resetDraft()
       syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
     },
@@ -263,9 +284,7 @@ export function useLogout() {
       }),
     onSettled: () => {
       void clearSessionRoleCookies()
-      useCheckoutStore.getState().resetCheckoutAttempt()
-      syncAuthUserCache(queryClient, null)
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
+      clearSensitiveClientState(queryClient)
     },
   })
 }
