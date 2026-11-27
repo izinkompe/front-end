@@ -7,7 +7,6 @@ import {
   formatWeightKg,
 } from '@/components/home/offer-card-helpers'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { isSafeOfferPhotoUrl } from '@/lib/data/offer-detail-helpers'
 import type { Order } from '@/types/api/orders'
 
@@ -45,6 +44,8 @@ export function OrderCommodityCard({ order }: OrderCommodityCardProps) {
                 alt={order.commodityName}
                 fill
                 sizes='80px'
+                loading='eager'
+                fetchPriority='high'
                 className='object-cover'
               />
             ) : (
@@ -68,9 +69,7 @@ export function OrderCommodityCard({ order }: OrderCommodityCardProps) {
           </div>
         </div>
 
-        <Separator />
-
-        <dl className='flex flex-col gap-2.5 text-sm'>
+        <dl className='flex flex-col gap-2.5 pt-1 text-sm'>
           <div className='flex items-baseline justify-between gap-2'>
             <dt className='text-muted-foreground'>Subtotal komoditas</dt>
             <dd className='font-medium text-foreground tabular-nums'>
@@ -93,9 +92,7 @@ export function OrderCommodityCard({ order }: OrderCommodityCardProps) {
           </div>
         </dl>
 
-        <Separator />
-
-        <div className='flex items-baseline justify-between gap-2'>
+        <div className='flex items-baseline justify-between gap-2 pt-2'>
           <span className='text-base font-semibold text-foreground'>Total</span>
           <span className='text-xl font-bold text-primary tabular-nums'>
             {formatPlainRupiah(order.totalPrice)}

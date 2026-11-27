@@ -15,7 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { getOrderBankAccount } from '@/lib/data/checkout-helpers'
 import { formatDateTimeId, formatPickupSlotLabel } from '@/lib/data/offer-detail-helpers'
 import type { Order } from '@/types/api/orders'
@@ -112,9 +111,7 @@ export function OrderCompletedReceiptCard({
           </div>
         </dl>
 
-        <Separator />
-
-        <div className='flex items-baseline justify-between gap-2'>
+        <div className='flex items-baseline justify-between gap-2 pt-2'>
           <span className='font-medium text-muted-foreground'>Total pembayaran</span>
           <span className='text-lg font-bold text-foreground tabular-nums'>
             {formatPlainRupiah(order.totalPrice)}

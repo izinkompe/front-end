@@ -22,7 +22,11 @@ import {
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
-export function AccountProfileForm() {
+interface AccountProfileFormProps {
+  onVerificationClick?: () => void
+}
+
+export function AccountProfileForm({ onVerificationClick }: AccountProfileFormProps = {}) {
   const { data: currentUser } = useCurrentUser()
   const updateProfileMutation = useUpdateProfile()
 
@@ -321,9 +325,19 @@ export function AccountProfileForm() {
               />
               <FieldDescription id='profile-email-note'>
                 Status verifikasi kontak dapat dicek di{' '}
-                <Link href='/akun/verifikasi' className='underline underline-offset-4'>
-                  Kontak &amp; Verifikasi
-                </Link>
+                {onVerificationClick ? (
+                  <button
+                    type='button'
+                    onClick={onVerificationClick}
+                    className='underline underline-offset-4'
+                  >
+                    Kontak &amp; Verifikasi
+                  </button>
+                ) : (
+                  <Link href='/akun/verifikasi' className='underline underline-offset-4'>
+                    Kontak &amp; Verifikasi
+                  </Link>
+                )}
                 .
               </FieldDescription>
             </Field>

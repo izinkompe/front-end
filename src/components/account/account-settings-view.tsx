@@ -35,7 +35,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { useCurrentUser, useLogout, useUpdateProfile } from '@/hooks/api/use-auth'
@@ -128,8 +127,6 @@ export function AccountSettingsView() {
                 )}
               </form.Field>
 
-              <Separator />
-
               <form.Field name='harvestReminders'>
                 {(field) => (
                   <Field orientation='horizontal' className='justify-between gap-4'>
@@ -196,8 +193,6 @@ export function AccountSettingsView() {
                 }
               </form.Subscribe>
 
-              <Separator />
-
               <form.Field name='showOrganizationOnReceipts'>
                 {(field) => (
                   <Field orientation='horizontal' className='justify-between gap-4'>
@@ -220,8 +215,6 @@ export function AccountSettingsView() {
                   </Field>
                 )}
               </form.Field>
-
-              <Separator />
 
               <form.Field name='marketingEmails'>
                 {(field) => (

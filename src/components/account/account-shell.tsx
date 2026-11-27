@@ -189,21 +189,18 @@ export function AccountShell({ children }: { children: ReactNode }) {
               </div>
 
               {completion.percentage < 100 && (
-                <>
-                  <Separator />
-                  <div className='flex flex-col gap-2'>
-                    <div className='flex items-center justify-between gap-2 text-sm tabular-nums'>
-                      <span className='font-semibold text-primary'>{completion.percentage}%</span>
-                      <span className='text-muted-foreground'>
-                        {completion.completedCount} / {completion.totalCount} data terisi
-                      </span>
-                    </div>
-                    <Progress value={completion.percentage} aria-label='Kelengkapan data profil' />
-                    {completion.nextStepText && (
-                      <p className='text-xs text-muted-foreground'>{completion.nextStepText}</p>
-                    )}
+                <div className='flex flex-col gap-2 pt-2'>
+                  <div className='flex items-center justify-between gap-2 text-sm tabular-nums'>
+                    <span className='font-semibold text-primary'>{completion.percentage}%</span>
+                    <span className='text-muted-foreground'>
+                      {completion.completedCount} / {completion.totalCount} data terisi
+                    </span>
                   </div>
-                </>
+                  <Progress value={completion.percentage} aria-label='Kelengkapan data profil' />
+                  {completion.nextStepText && (
+                    <p className='text-xs text-muted-foreground'>{completion.nextStepText}</p>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>

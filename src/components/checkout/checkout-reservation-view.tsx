@@ -10,7 +10,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { useCurrentUser } from '@/hooks/api/use-auth'
 import { useOfferDetail } from '@/hooks/api/use-offers'
-import { parseCheckoutSearchParams } from '@/lib/data/checkout-helpers'
+import {
+  clearCheckoutDraft,
+  parseCheckoutSearchParams,
+  readCheckoutDraft,
+  updateCheckoutDraft,
+} from '@/lib/data/checkout-helpers'
 import { formatPickupSlotLabel, parseWeightInputKg } from '@/lib/data/offer-detail-helpers'
 import { CheckoutHeader } from './checkout-header'
 import { CheckoutProgress } from './checkout-progress'
@@ -44,6 +49,26 @@ export function CheckoutReservationView() {
     const intervalId = setInterval(updateNow, 1000)
     return () => clearInterval(intervalId)
   }, [])
+
+  useEffect(() => {
+    if (!initialQuery.offerId) return
+    const offerId = initialQuery.offerId
+    let active = true
+    queueMicrotask(() => {
+      if (!active) return
+      const draft = readCheckoutDraft(offerId)
+      if (!draft) return
+      if (draft.weightText !== undefined) {
+        setWeightText(draft.weightText)
+      }
+      if (draft.selectedSlotId !== undefined) {
+        setSelectedSlotId(draft.selectedSlotId)
+      }
+    })
+    return () => {
+      active = false
+    }
+  }, [initialQuery.offerId])
 
   if (!initialQuery.offerId) {
     return (
@@ -153,10 +178,17 @@ export function CheckoutReservationView() {
             expectedPricePerKg={initialQuery.expectedPricePerKg}
             weightText={weightText}
             selectedSlotId={selectedSlotId}
-            onWeightTextChange={setWeightText}
-            onSelectedSlotIdChange={setSelectedSlotId}
+            onWeightTextChange={(nextWeight) => {
+              setWeightText(nextWeight)
+              updateCheckoutDraft(offer.id, { weightText: nextWeight })
+            }}
+            onSelectedSlotIdChange={(nextSlotId) => {
+              setSelectedSlotId(nextSlotId)
+              updateCheckoutDraft(offer.id, { selectedSlotId: nextSlotId })
+            }}
             onRequireAuth={() => setAuthDialogOpen(true)}
             onOrderCreated={(createdOrder) => {
+              clearCheckoutDraft(offer.id)
               router.push(`/pesanan/${createdOrder.id}/bayar`)
             }}
           />

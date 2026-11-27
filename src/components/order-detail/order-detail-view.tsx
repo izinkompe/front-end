@@ -35,7 +35,6 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { useCurrentUser } from '@/hooks/api/use-auth'
 import { useCancelOrder, useOrderDetail } from '@/hooks/api/use-orders'
@@ -394,9 +393,7 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
                   </div>
                 )}
 
-                <Separator />
-
-                <div className='flex items-start gap-2.5'>
+                <div className='flex items-start gap-2.5 pt-1'>
                   <MapPin
                     className='mt-0.5 size-4 shrink-0 text-muted-foreground'
                     aria-hidden='true'

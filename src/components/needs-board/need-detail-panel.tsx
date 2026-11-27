@@ -20,8 +20,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
+import { useCurrentUser } from '@/hooks/api/use-auth'
 import { useUpdateNeedStatus } from '@/hooks/api/use-needs-board'
 import { useOfferDetail } from '@/hooks/api/use-offers'
 import {
@@ -157,6 +157,8 @@ export function NeedDetailPanel({
   isOwner: boolean
   closeHref?: string
 }) {
+  const { data: currentUser } = useCurrentUser()
+  const isFarmer = currentUser?.role === 'farmer'
   const isActive = isActiveNeed(need)
   const fulfilledKg = need.fulfilledQuantityKg ?? 0
   const progressPercent =
@@ -242,9 +244,7 @@ export function NeedDetailPanel({
           </div>
         )}
 
-        <Separator />
-
-        <section className='flex flex-col gap-3'>
+        <section className='flex flex-col gap-3 pt-2'>
           <h3 className='font-semibold text-foreground'>
             Tanggapan petani ({need.responses?.length ?? 0})
           </h3>
@@ -288,7 +288,15 @@ export function NeedDetailPanel({
               variant='outline'
               className='self-start'
               nativeButton={false}
-              render={<Link href='/masuk-petani' />}
+              render={
+                <Link
+                  href={
+                    isFarmer
+                      ? `/dashboard/papan-kebutuhan?request=${encodeURIComponent(need.id)}`
+                      : '/masuk-petani'
+                  }
+                />
+              }
             >
               Tanggapi sebagai petani
             </Button>

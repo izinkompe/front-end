@@ -17,12 +17,19 @@ import {
 } from '@/components/ui/dialog'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { useCurrentUser, useVerifyPhone } from '@/hooks/api/use-auth'
 import { VerifyPhoneRequestSchema } from '@/types/api/auth'
 
-export function AccountVerificationView() {
+interface AccountVerificationViewProps {
+  inDashboard?: boolean
+  onEditPhone?: () => void
+}
+
+export function AccountVerificationView({
+  inDashboard = false,
+  onEditPhone,
+}: AccountVerificationViewProps = {}) {
   const { data: currentUser } = useCurrentUser()
   const verifyPhoneMutation = useVerifyPhone()
 
@@ -138,6 +145,10 @@ export function AccountVerificationView() {
                   Verifikasi nomor
                 </Button>
               )
+            ) : onEditPhone ? (
+              <Button type='button' variant='outline' size='sm' onClick={onEditPhone}>
+                Isi nomor
+              </Button>
             ) : (
               <Button
                 variant='outline'
@@ -175,41 +186,40 @@ export function AccountVerificationView() {
               </div>
 
               {currentUser.bankAccount && (
-                <>
-                  <Separator />
-                  <dl className='grid grid-cols-1 gap-3 text-sm sm:grid-cols-3'>
-                    <div className='flex flex-col gap-0.5'>
-                      <dt className='text-xs text-muted-foreground'>Bank penerima</dt>
-                      <dd className='font-medium text-foreground'>
-                        {currentUser.bankAccount.bankName}
-                      </dd>
-                    </div>
-                    <div className='flex flex-col gap-0.5'>
-                      <dt className='text-xs text-muted-foreground'>Nomor rekening</dt>
-                      <dd className='font-medium text-foreground tabular-nums'>
-                        {currentUser.bankAccount.accountNumber}
-                      </dd>
-                    </div>
-                    <div className='flex flex-col gap-0.5'>
-                      <dt className='text-xs text-muted-foreground'>Atas nama</dt>
-                      <dd className='font-medium text-foreground'>
-                        {currentUser.bankAccount.accountHolderName}
-                      </dd>
-                    </div>
-                  </dl>
-                </>
+                <dl className='grid grid-cols-1 gap-3 pt-2 text-sm sm:grid-cols-3'>
+                  <div className='flex flex-col gap-0.5'>
+                    <dt className='text-xs text-muted-foreground'>Bank penerima</dt>
+                    <dd className='font-medium text-foreground'>
+                      {currentUser.bankAccount.bankName}
+                    </dd>
+                  </div>
+                  <div className='flex flex-col gap-0.5'>
+                    <dt className='text-xs text-muted-foreground'>Nomor rekening</dt>
+                    <dd className='font-medium text-foreground tabular-nums'>
+                      {currentUser.bankAccount.accountNumber}
+                    </dd>
+                  </div>
+                  <div className='flex flex-col gap-0.5'>
+                    <dt className='text-xs text-muted-foreground'>Atas nama</dt>
+                    <dd className='font-medium text-foreground'>
+                      {currentUser.bankAccount.accountHolderName}
+                    </dd>
+                  </div>
+                </dl>
               )}
 
-              <div className='flex justify-end'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  nativeButton={false}
-                  render={<Link href='/dashboard' />}
-                >
-                  Buka Dashboard Mitra
-                </Button>
-              </div>
+              {!inDashboard && (
+                <div className='flex justify-end'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    nativeButton={false}
+                    render={<Link href='/dashboard' />}
+                  >
+                    Buka Dashboard Mitra
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>

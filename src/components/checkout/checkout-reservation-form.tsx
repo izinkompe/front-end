@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from '@tanstack/react-form'
 import { AlertCircle, Lock } from 'lucide-react'
 import { formatPricePerKg, formatWeightKg } from '@/components/home/offer-card-helpers'
@@ -37,7 +37,12 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { ApiError } from '@/lib/api/errors'
 import { useCreateOrder } from '@/hooks/api/use-orders'
-import { hasOfferPriceChanged, validateCheckoutContact } from '@/lib/data/checkout-helpers'
+import {
+  hasOfferPriceChanged,
+  readCheckoutDraft,
+  updateCheckoutDraft,
+  validateCheckoutContact,
+} from '@/lib/data/checkout-helpers'
 import {
   formatPickupSlotLabel,
   getWeightPresetsKg,
@@ -214,6 +219,35 @@ export function CheckoutReservationForm({
 
   const showWeightError = (weightTouched || submitAttempted) && Boolean(weightError)
   const showSlotError = (slotTouched || submitAttempted) && Boolean(slotError)
+
+  useEffect(() => {
+    let active = true
+    queueMicrotask(() => {
+      if (!active) return
+      const draft = readCheckoutDraft(offer.id)
+      if (!draft) return
+      if (draft.selectedAddressId !== undefined) {
+        setSelectedAddressId(draft.selectedAddressId)
+      }
+      if (draft.customBuyerAddress !== undefined) {
+        setCustomBuyerAddress(draft.customBuyerAddress)
+      }
+      if (draft.notes !== undefined) {
+        form.setFieldValue('notes', draft.notes)
+      }
+      if (draft.contactName !== undefined) {
+        setNameTouched(true)
+        form.setFieldValue('contactName', draft.contactName)
+      }
+      if (draft.contactPhone !== undefined) {
+        setPhoneTouched(true)
+        form.setFieldValue('contactPhone', draft.contactPhone)
+      }
+    })
+    return () => {
+      active = false
+    }
+  }, [form, offer.id])
 
   return (
     <form
@@ -440,7 +474,11 @@ export function CheckoutReservationForm({
                     placeholder='Misal: membawa keranjang sendiri atau datang di awal jam slot'
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(event) => field.handleChange(event.target.value)}
+                    onChange={(event) => {
+                      const nextNotes = event.target.value
+                      field.handleChange(nextNotes)
+                      updateCheckoutDraft(offer.id, { notes: nextNotes })
+                    }}
                   />
                 </Field>
               )}
@@ -485,10 +523,12 @@ export function CheckoutReservationForm({
               onNameChange={(value) => {
                 setNameTouched(true)
                 form.setFieldValue('contactName', value)
+                updateCheckoutDraft(offer.id, { contactName: value })
               }}
               onPhoneChange={(value) => {
                 setPhoneTouched(true)
                 form.setFieldValue('contactPhone', value)
+                updateCheckoutDraft(offer.id, { contactPhone: value })
               }}
             />
           )
@@ -501,8 +541,14 @@ export function CheckoutReservationForm({
         addresses={buyerAddresses}
         selectedAddressId={resolvedAddressId}
         customDraftAddress={customBuyerAddress}
-        onSelectAddressId={setSelectedAddressId}
-        onSelectCustomAddress={setCustomBuyerAddress}
+        onSelectAddressId={(nextId) => {
+          setSelectedAddressId(nextId)
+          updateCheckoutDraft(offer.id, { selectedAddressId: nextId })
+        }}
+        onSelectCustomAddress={(nextAddress) => {
+          setCustomBuyerAddress(nextAddress)
+          updateCheckoutDraft(offer.id, { customBuyerAddress: nextAddress })
+        }}
         onRequireAuth={onRequireAuth}
       />
 

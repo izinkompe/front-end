@@ -57,6 +57,11 @@ const ACTIVE_STATUS_OPTIONS: ReadonlyArray<{ value: OrderStatus | 'all'; label: 
 
 const HISTORY_STATUS_OPTIONS: ReadonlyArray<{ value: OrderStatus | 'all'; label: string }> = [
   { value: 'all', label: 'Semua status' },
+  { value: 'pending_payment', label: 'Menunggu pembayaran' },
+  { value: 'payment_submitted', label: 'Menunggu verifikasi' },
+  { value: 'processing', label: 'Pembayaran disetujui' },
+  { value: 'ready_for_pickup', label: 'Siap diambil' },
+  { value: 'disputed', label: 'Dalam peninjauan' },
   { value: 'completed', label: 'Selesai' },
   { value: 'cancelled', label: 'Dibatalkan' },
 ]
@@ -90,6 +95,7 @@ function OrderListItem({ order, reorderHref }: { order: Order; reorderHref?: str
               alt={order.commodityName}
               fill
               sizes='64px'
+              loading='eager'
               className='object-cover'
             />
           ) : (
@@ -152,6 +158,45 @@ function OrderListItem({ order, reorderHref }: { order: Order; reorderHref?: str
         >
           Lihat detail
         </Button>
+      </div>
+    </div>
+  )
+}
+
+function OrdersListSkeleton() {
+  return (
+    <div className='flex flex-col gap-4' aria-busy='true' aria-label='Memuat daftar pesanan'>
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center'>
+        <Skeleton className='h-10 flex-1 rounded-lg' />
+        <Skeleton className='h-10 w-full rounded-lg sm:w-56' />
+      </div>
+      <div className='flex flex-col gap-3'>
+        {[0, 1].map((item) => (
+          <div
+            key={item}
+            className='flex flex-col gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-start sm:justify-between'
+          >
+            <div className='flex min-w-0 flex-1 gap-3.5'>
+              <Skeleton className='size-16 shrink-0 rounded-lg' />
+              <div className='flex min-w-0 flex-1 flex-col gap-2'>
+                <div className='flex flex-wrap items-center gap-2'>
+                  <Skeleton className='h-5 w-28 rounded-full' />
+                  <Skeleton className='h-4 w-20' />
+                  <Skeleton className='h-4 w-24' />
+                </div>
+                <Skeleton className='h-5 w-48 max-w-full' />
+                <div className='flex flex-wrap items-center gap-3'>
+                  <Skeleton className='h-4 w-28' />
+                  <Skeleton className='h-4 w-36' />
+                </div>
+              </div>
+            </div>
+            <div className='flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-end'>
+              <Skeleton className='h-9 w-28 rounded-lg' />
+              <Skeleton className='h-9 w-24 rounded-lg' />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -237,10 +282,7 @@ export function AccountOrdersView() {
           {activeTab !== 'terakhir-dilihat' && (
             <TabsContent value={activeTab} className='flex flex-col gap-4 pt-4'>
               {isPending ? (
-                <div className='flex flex-col gap-3'>
-                  <Skeleton className='h-28 w-full rounded-xl' />
-                  <Skeleton className='h-28 w-full rounded-xl' />
-                </div>
+                <OrdersListSkeleton />
               ) : isError ? (
                 <Alert variant='destructive'>
                   <AlertDescription className='flex flex-wrap items-center justify-between gap-2'>

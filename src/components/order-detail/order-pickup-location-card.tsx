@@ -3,7 +3,6 @@
 import { CalendarClock, ExternalLink, Store } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { formatPickupSlotLabel } from '@/lib/data/offer-detail-helpers'
 import { buildPickupMapsHref } from '@/lib/data/order-pickup-helpers'
 import type { Order } from '@/types/api/orders'
@@ -44,9 +43,7 @@ export function OrderPickupLocationCard({
           </div>
         </div>
 
-        <Separator />
-
-        <div className='flex items-start gap-2.5'>
+        <div className='flex items-start gap-2.5 pt-1'>
           <CalendarClock className='mt-0.5 size-4 shrink-0 text-primary' aria-hidden='true' />
           <div className='flex flex-col gap-0.5'>
             <span className='text-xs text-muted-foreground'>Jadwal ambil</span>
