@@ -33,12 +33,7 @@ export function AdminVerifikasiView() {
   return (
     <div className='flex flex-col gap-6'>
       <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex flex-col gap-1'>
-          <h1 className='type-h1 font-semibold text-foreground'>Verifikasi Petani</h1>
-          <p className='text-base text-muted-foreground'>
-            Tinjau profil usaha, wilayah lahan, dan status kelayakan mitra petani.
-          </p>
-        </div>
+        <h1 className='type-h1 font-semibold text-foreground'>Verifikasi Petani</h1>
 
         <ToggleGroup
           value={[filter]}
@@ -48,6 +43,7 @@ export function AdminVerifikasiView() {
           }}
           variant='outline'
           size='sm'
+          className='flex-wrap justify-start'
         >
           <ToggleGroupItem value='all'>Semua ({farmers.length})</ToggleGroupItem>
           <ToggleGroupItem value='pending'>
@@ -81,12 +77,12 @@ export function AdminVerifikasiView() {
       ) : (
         <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
           {filtered.map((farmer) => (
-            <Card key={farmer.id}>
+            <Card key={farmer.id} className='min-w-0'>
               <CardHeader>
                 <div className='flex items-start justify-between gap-2'>
-                  <div className='flex flex-col gap-1'>
+                  <div className='flex min-w-0 flex-col gap-1'>
                     <CardTitle>{farmer.organization || farmer.name}</CardTitle>
-                    <CardDescription>
+                    <CardDescription className='break-words'>
                       {farmer.name} · {farmer.email}
                     </CardDescription>
                   </div>
@@ -95,8 +91,8 @@ export function AdminVerifikasiView() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className='grid grid-cols-2 gap-3 text-sm'>
-                <div>
+              <CardContent className='grid grid-cols-1 gap-3 text-sm sm:grid-cols-2'>
+                <div className='min-w-0'>
                   <p className='text-muted-foreground'>Wilayah</p>
                   <p className='font-medium text-foreground'>{farmer.areaName || '-'}</p>
                 </div>

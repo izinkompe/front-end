@@ -20,12 +20,7 @@ export function AdminPenggunaView() {
   return (
     <div className='flex flex-col gap-6'>
       <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex flex-col gap-1'>
-          <h1 className='type-h1 font-semibold text-foreground'>Pengguna & Akses</h1>
-          <p className='text-base text-muted-foreground'>
-            Daftar akun terdaftar beserta peran RBAC yang berlaku pada sesi masing-masing.
-          </p>
-        </div>
+        <h1 className='type-h1 font-semibold text-foreground'>Pengguna & Akses</h1>
 
         <ToggleGroup
           value={[roleFilter]}
@@ -35,6 +30,7 @@ export function AdminPenggunaView() {
           }}
           variant='outline'
           size='sm'
+          className='flex-wrap justify-start'
         >
           <ToggleGroupItem value='all'>Semua ({users.length})</ToggleGroupItem>
           <ToggleGroupItem value='admin'>Admin</ToggleGroupItem>
@@ -53,9 +49,7 @@ export function AdminPenggunaView() {
       <Card>
         <CardHeader>
           <CardTitle>Daftar Akun Platform</CardTitle>
-          <CardDescription>
-            Menampilkan {filtered.length} akun sesuai filter peran aktif.
-          </CardDescription>
+          <CardDescription>{filtered.length} akun</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -67,9 +61,9 @@ export function AdminPenggunaView() {
                   key={user.id}
                   className='flex flex-col justify-between gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-center'
                 >
-                  <div className='flex flex-col gap-0.5'>
+                  <div className='flex min-w-0 flex-col gap-0.5'>
                     <span className='font-medium text-foreground'>{user.name}</span>
-                    <span className='text-xs text-muted-foreground'>
+                    <span className='break-words text-meta text-muted-foreground'>
                       {user.email}
                       {user.organization ? ` · ${user.organization}` : ''}
                     </span>

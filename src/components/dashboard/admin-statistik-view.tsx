@@ -13,12 +13,7 @@ export function AdminStatistikView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-1'>
-        <h1 className='type-h1 font-semibold text-foreground'>Statistik Distribusi</h1>
-        <p className='text-base text-muted-foreground'>
-          Volume pangan terselamatkan dan faktor konversi emisi karbon per kategori komoditas.
-        </p>
-      </div>
+      <h1 className='type-h1 font-semibold text-foreground'>Statistik Distribusi</h1>
 
       {statsError && (
         <Alert variant='destructive'>
@@ -36,36 +31,36 @@ export function AdminStatistikView() {
       ) : (
         stats && (
           <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'>
-            <Card>
+            <Card className='min-w-0'>
               <CardHeader className='pb-2'>
                 <CardDescription>Total distribusi</CardDescription>
-                <CardTitle className='font-mono text-2xl tabular-nums'>
+                <CardTitle className='type-kpi font-mono tabular-nums'>
                   {stats.totalDistributedWeightKg.toLocaleString('id-ID')} kg
                 </CardTitle>
               </CardHeader>
-              <CardContent className='text-xs text-muted-foreground'>
+              <CardContent className='text-meta text-muted-foreground'>
                 Pangan terselamatkan: {stats.totalRescuedFoodKg.toLocaleString('id-ID')} kg
               </CardContent>
             </Card>
-            <Card>
+            <Card className='min-w-0'>
               <CardHeader className='pb-2'>
                 <CardDescription>Emisi karbon tercegah</CardDescription>
-                <CardTitle className='font-mono text-2xl tabular-nums'>
+                <CardTitle className='type-kpi font-mono tabular-nums'>
                   {stats.totalCarbonSavedKgCo2e.toLocaleString('id-ID')} kg CO2e
                 </CardTitle>
               </CardHeader>
-              <CardContent className='text-xs text-muted-foreground'>
+              <CardContent className='text-meta text-muted-foreground'>
                 {stats.totalCompletedTransactions.toLocaleString('id-ID')} transaksi selesai
               </CardContent>
             </Card>
-            <Card>
+            <Card className='min-w-0'>
               <CardHeader className='pb-2'>
                 <CardDescription>Partisipasi pengguna</CardDescription>
-                <CardTitle className='font-mono text-2xl tabular-nums'>
+                <CardTitle className='type-kpi font-mono tabular-nums'>
                   {stats.activeFarmersCount + stats.activeBuyersCount} akun
                 </CardTitle>
               </CardHeader>
-              <CardContent className='text-xs text-muted-foreground'>
+              <CardContent className='text-meta text-muted-foreground'>
                 {stats.activeFarmersCount} petani · {stats.activeBuyersCount} pembeli
               </CardContent>
             </Card>
@@ -76,9 +71,6 @@ export function AdminStatistikView() {
       <Card>
         <CardHeader>
           <CardTitle>Faktor Emisi Karbon Komoditas</CardTitle>
-          <CardDescription>
-            Referensi perhitungan jejak karbon per kilogram pangan yang terselamatkan.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           {factorsLoading ? (
@@ -90,9 +82,9 @@ export function AdminStatistikView() {
                   key={factor.id}
                   className='flex flex-col justify-between gap-2 rounded-lg border border-border p-3 sm:flex-row sm:items-center'
                 >
-                  <div className='flex flex-col gap-0.5'>
+                  <div className='flex min-w-0 flex-col gap-0.5'>
                     <span className='font-medium text-foreground'>{factor.commodityName}</span>
-                    <span className='text-xs text-muted-foreground'>
+                    <span className='text-meta text-muted-foreground'>
                       {factor.source} · Versi {factor.version}
                     </span>
                   </div>
