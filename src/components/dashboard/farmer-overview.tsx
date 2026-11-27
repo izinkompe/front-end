@@ -18,7 +18,11 @@ import {
   useFarmerOffers,
   useFarmerStoreSettings,
 } from '@/hooks/api/use-farmer-management'
+import { useNeedsBoard } from '@/hooks/api/use-needs-board'
+import { isActiveNeed } from '@/lib/data/needs-board-helpers'
 import type { User } from '@/types/api/auth'
+import { DashboardPageHeader } from './dashboard-page-header'
+import { FarmerVerificationBanner } from './farmer/farmer-verification-banner'
 
 interface FarmerOverviewProps {
   user?: User | null
@@ -45,6 +49,11 @@ const FARMER_MODULES = [
     href: '/dashboard/pesanan',
     actionLabel: 'Lihat pesanan',
   },
+  {
+    title: 'Papan Kebutuhan',
+    href: '/dashboard/papan-kebutuhan',
+    actionLabel: 'Lihat permintaan',
+  },
 ] as const
 
 export function FarmerOverview({ user }: FarmerOverviewProps) {
@@ -52,6 +61,7 @@ export function FarmerOverview({ user }: FarmerOverviewProps) {
   const { data: farms = [], isLoading: farmsLoading } = useFarmerFarms()
   const { data: offers = [], isLoading: offersLoading } = useFarmerOffers()
   const { data: orders = [], isLoading: ordersLoading } = useFarmerOrders()
+  const { data: needs = [], isLoading: needsLoading } = useNeedsBoard()
 
   const displayName = user?.name ?? 'Mitra Petani'
   const organization = store?.storeName ?? user?.organization ?? 'Kelompok Tani Mitra'
@@ -61,24 +71,28 @@ export function FarmerOverview({ user }: FarmerOverviewProps) {
   const activeOffers = offers.filter((offer) => offer.status === 'active')
   const totalAvailableStock = activeOffers.reduce((sum, offer) => sum + offer.availableStockKg, 0)
   const pendingPickupOrders = orders.filter((order) => order.status === 'processing').length
-  const metricsLoading = storeLoading || farmsLoading || offersLoading || ordersLoading
+  const activeNeedsCount = needs.filter(isActiveNeed).length
+  const metricsLoading =
+    storeLoading || farmsLoading || offersLoading || ordersLoading || needsLoading
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex flex-col gap-1'>
-          <h1 className='type-h1 font-semibold text-foreground'>Selamat datang, {displayName}</h1>
-          <p className='text-base text-muted-foreground'>{organization}</p>
-        </div>
-        <div className='flex flex-wrap items-center gap-2'>
+      <DashboardPageHeader
+        title={`Selamat datang, ${displayName}`}
+        subtitle={organization}
+        badge={
           <Badge variant={isVerified ? 'default' : 'secondary'}>
             {isVerified ? 'Petani Terverifikasi' : 'Menunggu Verifikasi'}
           </Badge>
-          <Button nativeButton={false} render={<Link href='/dashboard/penawaran' />}>
-            Lihat penawaran
+        }
+        actions={
+          <Button nativeButton={false} render={<Link href='/dashboard/penawaran/baru' />}>
+            Buat penawaran
           </Button>
-        </div>
-      </div>
+        }
+      />
+
+      <FarmerVerificationBanner isVerified={isVerified} context='overview' />
 
       {metricsLoading ? (
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
@@ -121,17 +135,15 @@ export function FarmerOverview({ user }: FarmerOverviewProps) {
             </CardContent>
           </Card>
           <Card className='min-w-0'>
-            <CardHeader>
-              <CardDescription>Komoditas utama</CardDescription>
-              <CardTitle className='type-kpi font-mono tabular-nums'>
-                {store?.primaryCommodities.length ?? 0}
-              </CardTitle>
+            <CardHeader className='pb-2'>
+              <CardDescription>Papan Kebutuhan aktif</CardDescription>
+              <CardTitle className='type-kpi font-mono tabular-nums'>{activeNeedsCount}</CardTitle>
             </CardHeader>
           </Card>
         </div>
       )}
 
-      <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
         {FARMER_MODULES.map((item) => (
           <Card key={item.href} className='min-w-0'>
             <CardHeader>
