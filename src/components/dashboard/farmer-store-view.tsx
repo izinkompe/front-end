@@ -134,7 +134,11 @@ function FarmerStoreForm({ settings }: { settings: FarmerStoreSettings }) {
             </FieldGroup>
 
             <div className='flex justify-end'>
-              <Button type='submit' disabled={updateMutation.isPending}>
+              <Button
+                type='submit'
+                className='w-full sm:w-auto'
+                disabled={updateMutation.isPending}
+              >
                 {updateMutation.isPending && <Spinner data-icon='inline-start' />}
                 <span>Simpan perubahan</span>
               </Button>
@@ -169,12 +173,7 @@ export function FarmerStoreView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-1'>
-        <h1 className='type-h1 font-semibold text-foreground'>Toko Saya</h1>
-        <p className='text-base text-muted-foreground'>
-          Perbarui informasi toko publik yang dilihat pembeli pada halaman profil petani.
-        </p>
-      </div>
+      <h1 className='type-h1 font-semibold text-foreground'>Toko Saya</h1>
       <FarmerStoreForm key={settings.updatedAt} settings={settings} />
     </div>
   )

@@ -32,36 +32,36 @@ function FarmerOrderCard({ order }: { order: Order }) {
   const markReady = useMarkOrderReady(order.id)
 
   return (
-    <Card>
+    <Card className='min-w-0'>
       <CardHeader>
         <div className='flex items-start justify-between gap-2'>
-          <div className='flex flex-col gap-1'>
+          <div className='flex min-w-0 flex-col gap-1'>
             <CardTitle>{order.commodityName}</CardTitle>
-            <CardDescription className='font-mono text-xs'>{order.id}</CardDescription>
+            <CardDescription className='truncate font-mono text-meta'>{order.id}</CardDescription>
           </div>
           <Badge variant={order.status === 'processing' ? 'default' : 'secondary'}>
             {ORDER_STATUS_LABELS[order.status]}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className='grid grid-cols-2 gap-3 text-sm sm:grid-cols-4'>
-        <div>
+      <CardContent className='grid grid-cols-1 gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4'>
+        <div className='min-w-0'>
           <p className='text-muted-foreground'>Pembeli</p>
-          <p className='font-medium text-foreground'>{order.buyerContactName}</p>
+          <p className='truncate font-medium text-foreground'>{order.buyerContactName}</p>
         </div>
-        <div>
+        <div className='min-w-0'>
           <p className='text-muted-foreground'>Berat pesanan</p>
           <p className='font-mono font-medium text-foreground'>
             {order.quantityKg.toLocaleString('id-ID')} kg
           </p>
         </div>
-        <div>
+        <div className='min-w-0'>
           <p className='text-muted-foreground'>Total nilai</p>
           <p className='font-mono font-medium text-foreground'>
             Rp {order.totalPrice.toLocaleString('id-ID')}
           </p>
         </div>
-        <div>
+        <div className='min-w-0'>
           <p className='text-muted-foreground'>Jadwal ambil</p>
           <p className='text-foreground'>
             {order.scheduleSlot.date} ({order.scheduleSlot.startTime} - {order.scheduleSlot.endTime}
@@ -97,12 +97,7 @@ export function FarmerOrdersView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-1'>
-        <h1 className='type-h1 font-semibold text-foreground'>Pesanan Masuk</h1>
-        <p className='text-base text-muted-foreground'>
-          Konfirmasi kesiapan hasil panen agar pembeli dapat datang sesuai jadwal ambil mandiri.
-        </p>
-      </div>
+      <h1 className='type-h1 font-semibold text-foreground'>Pesanan Masuk</h1>
 
       {isError && (
         <Alert variant='destructive'>

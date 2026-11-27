@@ -16,7 +16,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -40,14 +39,14 @@ function FarmRowCard({ farm }: { farm: FarmerFarm }) {
   const isArchived = farm.status === 'archived'
 
   return (
-    <Card>
+    <Card className='min-w-0'>
       <CardHeader>
         <div className='flex items-start justify-between gap-2'>
-          <div className='flex flex-col gap-1'>
+          <div className='flex min-w-0 flex-col gap-1'>
             <CardTitle>{farm.name}</CardTitle>
             <CardDescription className='flex items-center gap-1.5'>
-              <MapPin className='size-4 shrink-0' aria-hidden='true' />
-              <span>{farm.areaName}</span>
+              <MapPin className='icon-sm' aria-hidden='true' />
+              <span className='truncate'>{farm.areaName}</span>
             </CardDescription>
           </div>
           <Badge variant={isArchived ? 'secondary' : 'default'}>
@@ -102,25 +101,17 @@ export function FarmerFarmsView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex flex-col gap-1'>
-          <h1 className='type-h1 font-semibold text-foreground'>Kebun Saya</h1>
-          <p className='text-base text-muted-foreground'>
-            Kelola titik lahan dan lokasi pengambilan mandiri hasil panen Anda.
-          </p>
-        </div>
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        <h1 className='type-h1 font-semibold text-foreground'>Kebun Saya</h1>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger render={<Button />}>
+          <DialogTrigger render={<Button className='w-full sm:w-auto' />}>
             <Plus data-icon='inline-start' />
             <span>Tambah kebun</span>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className='max-h-[90dvh] overflow-y-auto'>
             <DialogHeader>
               <DialogTitle>Tambah kebun baru</DialogTitle>
-              <DialogDescription>
-                Masukkan lokasi lahan dan catatan akses untuk pengambilan pembeli.
-              </DialogDescription>
             </DialogHeader>
             <form
               className='flex flex-col gap-4'
