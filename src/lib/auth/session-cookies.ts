@@ -1,5 +1,7 @@
 import { DASHBOARD_COOKIES, isAuthRelaxed, parseUserRole } from '@/lib/auth/rbac'
-import type { UserRole } from '@/types/api/auth'
+import { UserSchema, type User, type UserRole } from '@/types/api/auth'
+
+const AUTH_USER_CACHE_KEY = 'pangantani:cached-user'
 
 function buildCookieAttributes(maxAgeSeconds: number): string {
   const secure =
@@ -14,7 +16,37 @@ export function setSessionRoleCookies(role: UserRole, token = 'mock-session'): v
   document.cookie = `${DASHBOARD_COOKIES.sessionRole}=${encodeURIComponent(role)}; ${attrs}`
 }
 
+export function getCachedAuthUser(): User | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(AUTH_USER_CACHE_KEY)
+    if (!raw) return null
+    const parsed = UserSchema.safeParse(JSON.parse(raw))
+    if (!parsed.success) {
+      window.localStorage.removeItem(AUTH_USER_CACHE_KEY)
+      return null
+    }
+    return parsed.data
+  } catch {
+    return null
+  }
+}
+
+export function setCachedAuthUser(user: User | null): void {
+  if (typeof window === 'undefined') return
+  try {
+    if (user) {
+      window.localStorage.setItem(AUTH_USER_CACHE_KEY, JSON.stringify(user))
+    } else {
+      window.localStorage.removeItem(AUTH_USER_CACHE_KEY)
+    }
+  } catch {
+    return
+  }
+}
+
 export function clearSessionRoleCookies(): void {
+  setCachedAuthUser(null)
   if (typeof document === 'undefined') return
   const attrs = buildCookieAttributes(0)
   document.cookie = `${DASHBOARD_COOKIES.sessionToken}=; ${attrs}`

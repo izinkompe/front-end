@@ -1,4 +1,5 @@
 import { ApiError } from '../errors'
+import { createUniqueId } from '@/lib/utils'
 import { getOfferPriceSchedule } from '@/lib/data/offer-price-schedule'
 import { analyzeWeightDiscrepancy } from '@/lib/data/order-pickup-helpers'
 import { isSafeProofImageUrl } from '@/lib/data/checkout-helpers'
@@ -126,7 +127,7 @@ export function handleOrderRoute(ctx: OrderRouteContext): { handled: boolean; da
         : undefined
 
     const newOrder: Order = {
-      id: 'ord-' + crypto.randomUUID(),
+      id: createUniqueId('ord-'),
       buyerId: activeUser.id,
       farmerId: offer.farmerId,
       farmerName: offer.farmerName,

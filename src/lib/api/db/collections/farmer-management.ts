@@ -20,6 +20,7 @@ function buildStoreSettings(farmer: User): FarmerStoreSettings {
     publicPickupNotes:
       meta?.publicPickupNotes ?? 'Pengambilan mandiri mengikuti jadwal pada setiap penawaran.',
     primaryCommodities: farmer.primaryCommodities ?? [],
+    featuredOfferIds: [],
     updatedAt: farmer.updatedAt,
   }
 }

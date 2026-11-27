@@ -16,7 +16,11 @@ export const CommodityCategorySchema = z.enum([
 export type CommodityCategory = z.infer<typeof CommodityCategorySchema>
 
 export const FarmerBankAccountSchema = z.object({
-  bankName: z.string().trim().min(2, 'Pilih nama bank penerima dana'),
+  bankName: z
+    .string()
+    .trim()
+    .min(2, 'Pilih atau isi nama bank penerima dana')
+    .max(60, 'Nama bank maksimal 60 karakter'),
   accountNumber: z
     .string()
     .trim()

@@ -1,4 +1,5 @@
 import { ApiError } from '../errors'
+import { createUniqueId } from '@/lib/utils'
 import { complaintsCollection } from './collections/complaints'
 import { ordersCollection } from './collections/orders'
 import { requireBuyer, type RouteContext } from './route-context'
@@ -78,7 +79,7 @@ export function handleComplaintRoute({
     const now = new Date().toISOString()
     const complaint: Complaint = {
       ...payload,
-      id: 'complaint-' + crypto.randomUUID(),
+      id: createUniqueId('complaint-'),
       reporterId: buyer.id,
       reporterName: buyer.name,
       status: 'open',
@@ -116,7 +117,7 @@ export function handleComplaintRoute({
           ...(draft.clarificationMessages ?? []),
           {
             ...result.data,
-            id: crypto.randomUUID(),
+            id: createUniqueId(),
             senderRole: 'buyer',
             senderName: buyer.name,
             createdAt: new Date().toISOString(),

@@ -4,7 +4,7 @@ export function getNotificationHref(path?: string) {
   if (!path) return undefined
   if (/^\/(?:akun(?:\/(?:notifikasi|pengaduan|transaksi))?|favorit|pasar)$/.test(path)) return path
   if (
-    /^\/(?:pesanan\/[\w-]+(?:\/bayar)?|pasar\/penawaran\/[\w-]+|papan-kebutuhan(?:\?request=[\w-]+)?)$/.test(
+    /^\/(?:pesanan\/[\w-]+(?:\/bayar)?|pasar\/penawaran\/[\w-]+|papan-kebutuhan(?:\?request=[\w-]+)?|dashboard(?:\/(?:toko|kebun|penawaran|pesanan|papan-kebutuhan)(?:\?[\w=&-]+)?)?)$/.test(
       path
     )
   )

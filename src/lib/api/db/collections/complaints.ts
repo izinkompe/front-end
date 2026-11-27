@@ -21,11 +21,31 @@ const demoComplaint: Complaint = {
   ],
 }
 
+const demoComplaintFarmer: Complaint = {
+  id: 'complaint-demo-002',
+  orderId: 'ord-demo-008',
+  reporterId: 'usr-pb-01',
+  reporterName: 'Ibu Ratna',
+  type: 'weight_discrepancy',
+  description: 'Timbangan di lokasi menunjukkan 18,5 kg dari pesanan 20 kg.',
+  status: 'in_investigation',
+  createdAt: new Date().toISOString(),
+  clarificationMessages: [
+    {
+      id: 'complaint-message-demo-002',
+      senderRole: 'admin',
+      senderName: 'Administrator',
+      message: 'Mohon Pak Joko konfirmasi foto timbangan atau catatan sortir sebelum serah terima.',
+      createdAt: new Date().toISOString(),
+    },
+  ],
+}
+
 export const complaintsCollection = createCollection(
   localOnlyCollectionOptions({
     id: 'complaints',
     schema: ComplaintSchema,
     getKey: (complaint) => complaint.id,
-    initialData: [demoComplaint],
+    initialData: [demoComplaint, demoComplaintFarmer],
   })
 )

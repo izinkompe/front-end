@@ -23,6 +23,27 @@ export const mockUsersData: User[] = [
     updatedAt: '2026-11-01T10:00:00Z',
   },
   {
+    id: 'usr-pb-02',
+    name: 'Andi Pratama',
+    email: 'pembeli@pangantani.id',
+    phone: '081298761234',
+    role: 'buyer',
+    organization: 'Katering Nusantara',
+    addresses: [
+      {
+        id: 'addr-02',
+        label: 'Kantor Utama',
+        fullAddress: 'Jl. Dago No. 48, Coblong, Bandung',
+        areaName: 'Coblong, Bandung',
+        latitude: -6.8904,
+        longitude: 107.6129,
+        isDefault: true,
+      },
+    ],
+    createdAt: '2026-11-02T10:00:00Z',
+    updatedAt: '2026-11-02T10:00:00Z',
+  },
+  {
     id: 'usr-pt-01',
     name: 'Pak Joko',
     email: 'joko@suburmakmur.id',

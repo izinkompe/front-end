@@ -24,7 +24,7 @@ export type RefundBankAccount = z.infer<typeof RefundBankAccountSchema>
 
 export const ComplaintMessageSchema = z.object({
   id: z.string(),
-  senderRole: z.enum(['admin', 'buyer']),
+  senderRole: z.enum(['admin', 'buyer', 'farmer']),
   senderName: z.string(),
   message: z.string(),
   attachments: z.array(z.string()).optional(),

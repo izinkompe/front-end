@@ -230,6 +230,41 @@ const urgentOffersData: Offer[] = [
     createdAt: getRelativeTimestamp(-14 * HOUR_MS),
     updatedAt: getRelativeTimestamp(-4 * HOUR_MS),
   },
+  {
+    id: 'off-draft-001',
+    farmerId: 'usr-pt-01',
+    farmerName: 'Pak Joko (Kelompok Tani Subur Makmur)',
+    commodityName: 'Cabai Rawit Merah Sortir Kebun',
+    category: 'Sayuran',
+    condition: 'surplus',
+    surplusReason: 'Panen susulan blok selatan, menunggu penimbangan akhir sebelum terbit',
+    estimatedPortionNote: 'Estimasi ±250–300 buah per kg',
+    harvestDate: getRelativeTimestamp(-2 * HOUR_MS),
+    availableStockKg: 24,
+    reservedStockKg: 0,
+    soldStockKg: 0,
+    pricePerKg: 32000,
+    orderDeadline: getRelativeTimestamp(24 * HOUR_MS),
+    pickupAddressArea: 'Lembang, Bandung Barat',
+    pickupAddressFull: 'Jl. Raya Maribaya No. 45, Lembang',
+    latitude: -6.8167,
+    longitude: 107.6167,
+    pickupScheduleSlots: [
+      {
+        id: 'slot-d1',
+        date: tomorrowDate,
+        startTime: '08:00',
+        endTime: '11:00',
+        isAvailable: true,
+      },
+    ],
+    photos: [
+      'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=640&q=80',
+    ],
+    status: 'draft',
+    createdAt: getRelativeTimestamp(-2 * HOUR_MS),
+    updatedAt: getRelativeTimestamp(-1 * HOUR_MS),
+  },
 ]
 
 export const mockOffersData: Offer[] = [...urgentOffersData, ...regularCatalogOffersData]

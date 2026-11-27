@@ -1,13 +1,16 @@
 'use client'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
+import { useHydrated } from '@/hooks/use-hydrated'
 import { apiClient } from '@/lib/api/client'
 import { ApiError } from '@/lib/api/errors'
 import { queryKeys } from '@/lib/api/query-keys'
 import { isAuthRelaxed } from '@/lib/auth/rbac'
 import {
   clearSessionRoleCookies,
+  getCachedAuthUser,
+  setCachedAuthUser,
   setPreviewRoleCookie,
   setSessionRoleCookies,
 } from '@/lib/auth/session-cookies'
@@ -26,21 +29,36 @@ import {
   type VerifyPhoneRequest,
 } from '@/types/api/auth'
 
+function syncAuthUserCache(queryClient: QueryClient, user: User | null) {
+  setCachedAuthUser(user)
+  queryClient.setQueryData(queryKeys.auth.me, user)
+  queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+}
+
 export function useCurrentUser() {
+  const hydrated = useHydrated()
+
   return useQuery({
     queryKey: queryKeys.auth.me,
     queryFn: async () => {
       try {
-        return await apiClient<User | null>('/api/auth/me', UserSchema.nullable(), {
+        const user = await apiClient<User | null>('/api/auth/me', UserSchema.nullable(), {
           silentStatuses: [401, 404],
         })
+        setCachedAuthUser(user)
+        if (!user) {
+          clearSessionRoleCookies()
+        }
+        return user
       } catch (error) {
         if (error instanceof ApiError && (error.status === 401 || error.status === 404)) {
+          clearSessionRoleCookies()
           return null
         }
         throw error
       }
     },
+    placeholderData: () => (hydrated ? (getCachedAuthUser() ?? undefined) : undefined),
     staleTime: 5 * 60 * 1000,
     retry: false,
   })
@@ -57,8 +75,7 @@ export function useLogin() {
       }),
     onSuccess: (data) => {
       setSessionRoleCookies(data.user.role, data.token)
-      queryClient.setQueryData(queryKeys.auth.me, data.user)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, data.user)
     },
   })
 }
@@ -74,8 +91,7 @@ export function useLoginFarmer() {
       }),
     onSuccess: (data) => {
       setSessionRoleCookies(data.user.role, data.token)
-      queryClient.setQueryData(queryKeys.auth.me, data.user)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
     },
   })
@@ -92,8 +108,7 @@ export function useLoginAdmin() {
       }),
     onSuccess: (data) => {
       setSessionRoleCookies(data.user.role, data.token)
-      queryClient.setQueryData(queryKeys.auth.me, data.user)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats() })
     },
   })
@@ -110,8 +125,7 @@ export function useRegisterBuyer() {
       }),
     onSuccess: (data) => {
       setSessionRoleCookies(data.user.role, data.token)
-      queryClient.setQueryData(queryKeys.auth.me, data.user)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, data.user)
     },
   })
 }
@@ -127,8 +141,7 @@ export function useRegisterFarmer() {
       }),
     onSuccess: (data) => {
       setSessionRoleCookies(data.user.role, data.token)
-      queryClient.setQueryData(queryKeys.auth.me, data.user)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
     },
   })
@@ -144,8 +157,7 @@ export function useSaveBuyerAddress() {
         body: JSON.stringify(payload),
       }),
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData(queryKeys.auth.me, updatedUser)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, updatedUser)
     },
   })
 }
@@ -159,8 +171,7 @@ export function useDeleteBuyerAddress() {
         method: 'DELETE',
       }),
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData(queryKeys.auth.me, updatedUser)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, updatedUser)
     },
   })
 }
@@ -175,8 +186,7 @@ export function useUpdateProfile() {
         body: JSON.stringify(payload),
       }),
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData(queryKeys.auth.me, updatedUser)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, updatedUser)
       queryClient.invalidateQueries({ queryKey: queryKeys.profile.detail })
     },
   })
@@ -192,8 +202,7 @@ export function useVerifyPhone() {
         body: JSON.stringify(payload),
       }),
     onSuccess: (updatedUser) => {
-      queryClient.setQueryData(queryKeys.auth.me, updatedUser)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, updatedUser)
     },
   })
 }
@@ -208,8 +217,7 @@ export function useLogout() {
       }),
     onSuccess: () => {
       clearSessionRoleCookies()
-      queryClient.setQueryData(queryKeys.auth.me, null)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, null)
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
     },
   })
@@ -236,8 +244,7 @@ export function useSwitchPreviewRole() {
     onSuccess: (data) => {
       setPreviewRoleCookie(data.user.role)
       setSessionRoleCookies(data.user.role, 'preview-session')
-      queryClient.setQueryData(queryKeys.auth.me, data.user)
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+      syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats() })
     },
   })

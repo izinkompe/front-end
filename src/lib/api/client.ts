@@ -95,10 +95,14 @@ export async function apiClient<T>(
 
     return rawData as T
   } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw err
+    }
     const sanitizedEndpoint = endpoint.split('?')[0]
+    const log = typeof window !== 'undefined' ? logger.warn.bind(logger) : logger.error.bind(logger)
     if (err instanceof ApiError) {
       if (!options.silentStatuses?.includes(err.status)) {
-        logger.error(
+        log(
           {
             endpoint: sanitizedEndpoint,
             status: err.status,
@@ -108,7 +112,7 @@ export async function apiClient<T>(
         )
       }
     } else if (err instanceof Error) {
-      logger.error({ endpoint: sanitizedEndpoint }, 'Unexpected Error: ' + err.message)
+      log({ endpoint: sanitizedEndpoint }, 'Unexpected Error: ' + err.message)
     }
     throw err
   }
