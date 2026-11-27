@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from '@tanstack/react-form'
@@ -21,6 +21,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useLogin, useRegisterBuyer } from '@/hooks/api/use-auth'
 import { sanitizeCallbackUrl } from '@/lib/auth/rbac'
+import { useAuthStore } from '@/stores/use-auth-store'
 import {
   BuyerRegisterRequestSchema,
   LoginRequestSchema,
@@ -58,6 +59,8 @@ export function BuyerAuthPageView({ defaultTab = 'login' }: { defaultTab?: 'logi
 
   const login = useLogin()
   const register = useRegisterBuyer()
+  const setRegisterDraft = useAuthStore((state) => state.setRegisterDraft)
+  const clearRegisterDraft = useAuthStore((state) => state.clearRegisterDraft)
 
   const handleAuthSuccess = (user: User) => {
     if (user.emailVerifiedAt === null || user.isEmailVerified === false) {
@@ -91,12 +94,36 @@ export function BuyerAuthPageView({ defaultTab = 'login' }: { defaultTab?: 'logi
     onSubmit: async ({ value }) => {
       try {
         const data = await register.mutateAsync({ ...value, role: 'buyer' })
+        clearRegisterDraft()
         handleAuthSuccess(data.user)
       } catch {
         return
       }
     },
   })
+
+  useEffect(() => {
+    const syncDraft = () => {
+      const draft = useAuthStore.getState().registerDraft
+      if (draft.name) {
+        registerForm.setFieldValue('name', draft.name)
+      }
+      if (draft.email) {
+        registerForm.setFieldValue('email', draft.email)
+      }
+    }
+
+    if (useAuthStore.persist.hasHydrated()) {
+      syncDraft()
+      return
+    }
+    const unsub = useAuthStore.persist.onFinishHydration(() => {
+      syncDraft()
+    })
+    return () => {
+      unsub()
+    }
+  }, [registerForm])
 
   return (
     <div className='container mx-auto flex min-h-[75dvh] max-w-md items-center justify-center px-4 py-10'>
@@ -150,7 +177,11 @@ export function BuyerAuthPageView({ defaultTab = 'login' }: { defaultTab?: 'logi
                             autoComplete='email'
                             value={field.state.value}
                             onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
+                            onChange={(e) => {
+                              const nextEmail = e.target.value
+                              field.handleChange(nextEmail)
+                              setRegisterDraft({ email: nextEmail })
+                            }}
                             placeholder='budi@email.com'
                           />
                           <FieldError errors={getFieldErrorMessages(field.state.meta.errors)} />
@@ -169,6 +200,7 @@ export function BuyerAuthPageView({ defaultTab = 'login' }: { defaultTab?: 'logi
                               value={field.state.value}
                               onBlur={field.handleBlur}
                               onChange={(e) => field.handleChange(e.target.value)}
+                              placeholder='Masukkan kata sandi'
                             />
                             <InputGroupAddon align='inline-end'>
                               <InputGroupButton
@@ -236,7 +268,11 @@ export function BuyerAuthPageView({ defaultTab = 'login' }: { defaultTab?: 'logi
                             autoComplete='name'
                             value={field.state.value}
                             onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
+                            onChange={(e) => {
+                              const nextName = e.target.value
+                              field.handleChange(nextName)
+                              setRegisterDraft({ name: nextName })
+                            }}
                             placeholder='Budi Santoso'
                           />
                           <FieldError errors={getFieldErrorMessages(field.state.meta.errors)} />
@@ -253,7 +289,11 @@ export function BuyerAuthPageView({ defaultTab = 'login' }: { defaultTab?: 'logi
                             autoComplete='email'
                             value={field.state.value}
                             onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
+                            onChange={(e) => {
+                              const nextEmail = e.target.value
+                              field.handleChange(nextEmail)
+                              setRegisterDraft({ email: nextEmail })
+                            }}
                             placeholder='budi@email.com'
                           />
                           <FieldError errors={getFieldErrorMessages(field.state.meta.errors)} />

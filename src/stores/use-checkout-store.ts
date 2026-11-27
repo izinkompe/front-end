@@ -56,7 +56,7 @@ export const useCheckoutStore = create<CheckoutState>()(
     }),
     {
       name: 'pangantani:checkout-attempt',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
     }
   )
 )

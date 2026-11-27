@@ -4,8 +4,9 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { CommodityCategory, FarmerType } from '@/types/api/auth'
 
-interface FarmerOnboardingDraft {
+export interface FarmerOnboardingDraft {
   step: number
+  highestCompletedStep: number
   farmerType?: FarmerType
   farmName?: string
   primaryCommodities?: CommodityCategory[]
@@ -19,6 +20,8 @@ interface FarmerOnboardingDraft {
   latitude?: number
   longitude?: number
   pickupNotes?: string
+  bankName?: string
+  accountHolderName?: string
 }
 
 interface FarmerOnboardingState {
@@ -28,20 +31,25 @@ interface FarmerOnboardingState {
   resetDraft: () => void
 }
 
+const initialDraft: FarmerOnboardingDraft = {
+  step: 1,
+  highestCompletedStep: 0,
+}
+
 export const useFarmerOnboardingStore = create<FarmerOnboardingState>()(
   persist(
     (set) => ({
-      draft: { step: 1 },
+      draft: initialDraft,
       setStep: (step) => set((state) => ({ draft: { ...state.draft, step } })),
       updateDraft: (partial) =>
         set((state) => ({
           draft: { ...state.draft, ...partial },
         })),
-      resetDraft: () => set({ draft: { step: 1 } }),
+      resetDraft: () => set({ draft: initialDraft }),
     }),
     {
       name: 'pangantani:farmer-onboarding-draft',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
     }
   )
 )
