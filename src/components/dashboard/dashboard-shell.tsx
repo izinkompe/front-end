@@ -48,14 +48,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (!hydrated || isLoading) {
     return (
-      <div className='flex min-h-screen flex-col gap-4 p-6'>
-        <Skeleton className='h-12 w-full' />
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-          <Skeleton className='h-32 w-full' />
-          <Skeleton className='h-32 w-full' />
-          <Skeleton className='h-32 w-full' />
+      <>
+        <div className='flex min-h-screen flex-col gap-4 p-6'>
+          <Skeleton className='h-12 w-full' />
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+            <Skeleton className='h-32 w-full' />
+            <Skeleton className='h-32 w-full' />
+            <Skeleton className='h-32 w-full' />
+          </div>
         </div>
-      </div>
+        <div className='hidden' aria-hidden='true'>
+          {children}
+        </div>
+      </>
     )
   }
 
