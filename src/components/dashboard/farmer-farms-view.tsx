@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { AlertCircle, MapPin, Plus } from 'lucide-react'
+import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,7 +24,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
@@ -32,7 +34,12 @@ import {
   useFarmerFarms,
   useUpdateFarmerFarm,
 } from '@/hooks/api/use-farmer-management'
-import type { FarmerFarm } from '@/types/api/farmer-management'
+import type { CommodityCategory } from '@/types/api/auth'
+import {
+  CreateFarmerFarmRequestSchema,
+  type CreateFarmerFarmRequest,
+  type FarmerFarm,
+} from '@/types/api/farmer-management'
 
 function FarmRowCard({ farm }: { farm: FarmerFarm }) {
   const updateFarm = useUpdateFarmerFarm(farm.id)
@@ -92,12 +99,31 @@ function FarmRowCard({ farm }: { farm: FarmerFarm }) {
 export function FarmerFarmsView() {
   const { data: farms = [], isLoading, isError } = useFarmerFarms()
   const createFarm = useCreateFarmerFarm()
-
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [name, setName] = useState('')
-  const [areaName, setAreaName] = useState('')
-  const [fullAddress, setFullAddress] = useState('')
-  const [pickupNotes, setPickupNotes] = useState('')
+
+  const form = useForm({
+    defaultValues: {
+      name: '',
+      areaName: '',
+      fullAddress: '',
+      primaryCommodities: ['sayuran'] as CommodityCategory[],
+      pickupNotes: '',
+    } as CreateFarmerFarmRequest,
+    validators: {
+      onSubmit: CreateFarmerFarmRequestSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await createFarm.mutateAsync({
+        name: value.name.trim(),
+        areaName: value.areaName.trim(),
+        fullAddress: value.fullAddress.trim(),
+        primaryCommodities: value.primaryCommodities,
+        pickupNotes: value.pickupNotes?.trim() || undefined,
+      })
+      form.reset()
+      setDialogOpen(false)
+    },
+  })
 
   return (
     <div className='flex flex-col gap-6'>
@@ -114,21 +140,12 @@ export function FarmerFarmsView() {
               <DialogTitle>Tambah kebun baru</DialogTitle>
             </DialogHeader>
             <form
+              noValidate
               className='flex flex-col gap-4'
-              onSubmit={async (event) => {
+              onSubmit={(event) => {
                 event.preventDefault()
-                await createFarm.mutateAsync({
-                  name,
-                  areaName,
-                  fullAddress,
-                  primaryCommodities: ['sayuran'],
-                  pickupNotes: pickupNotes || undefined,
-                })
-                setName('')
-                setAreaName('')
-                setFullAddress('')
-                setPickupNotes('')
-                setDialogOpen(false)
+                event.stopPropagation()
+                void form.handleSubmit()
               }}
             >
               {createFarm.isError && (
@@ -138,54 +155,102 @@ export function FarmerFarmsView() {
                 </Alert>
               )}
               <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor='farm-name'>Nama kebun</FieldLabel>
-                  <Input
-                    id='farm-name'
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    placeholder='Contoh: Kebun Lembang Blok B'
-                    required
-                    minLength={3}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor='farm-area'>Kecamatan / Kabupaten</FieldLabel>
-                  <Input
-                    id='farm-area'
-                    value={areaName}
-                    onChange={(event) => setAreaName(event.target.value)}
-                    placeholder='Contoh: Lembang, Bandung Barat'
-                    required
-                    minLength={3}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor='farm-address'>Alamat lengkap</FieldLabel>
-                  <Textarea
-                    id='farm-address'
-                    rows={2}
-                    value={fullAddress}
-                    onChange={(event) => setFullAddress(event.target.value)}
-                    required
-                    minLength={8}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor='farm-notes'>Catatan pengambilan</FieldLabel>
-                  <Input
-                    id='farm-notes'
-                    value={pickupNotes}
-                    onChange={(event) => setPickupNotes(event.target.value)}
-                    placeholder='Contoh: Akses mobil bak sampai teras gudang'
-                  />
-                </Field>
+                <form.Field name='name'>
+                  {(field) => {
+                    const errors = getFieldErrorMessages(field.state.meta.errors)
+                    const isInvalid = field.state.meta.isTouched && errors.length > 0
+                    return (
+                      <Field data-invalid={isInvalid || undefined}>
+                        <FieldLabel htmlFor='farm-name'>Nama kebun</FieldLabel>
+                        <Input
+                          id='farm-name'
+                          name={field.name}
+                          value={field.state.value ?? ''}
+                          onBlur={field.handleBlur}
+                          onChange={(event) => field.handleChange(event.target.value)}
+                          placeholder='Contoh: Kebun Lembang Blok B'
+                          aria-invalid={isInvalid || undefined}
+                        />
+                        {isInvalid && <FieldError errors={errors} />}
+                      </Field>
+                    )
+                  }}
+                </form.Field>
+                <form.Field name='areaName'>
+                  {(field) => {
+                    const errors = getFieldErrorMessages(field.state.meta.errors)
+                    const isInvalid = field.state.meta.isTouched && errors.length > 0
+                    return (
+                      <Field data-invalid={isInvalid || undefined}>
+                        <FieldLabel htmlFor='farm-area'>Kecamatan / Kabupaten</FieldLabel>
+                        <Input
+                          id='farm-area'
+                          name={field.name}
+                          value={field.state.value ?? ''}
+                          onBlur={field.handleBlur}
+                          onChange={(event) => field.handleChange(event.target.value)}
+                          placeholder='Contoh: Lembang, Bandung Barat'
+                          aria-invalid={isInvalid || undefined}
+                        />
+                        {isInvalid && <FieldError errors={errors} />}
+                      </Field>
+                    )
+                  }}
+                </form.Field>
+                <form.Field name='fullAddress'>
+                  {(field) => {
+                    const errors = getFieldErrorMessages(field.state.meta.errors)
+                    const isInvalid = field.state.meta.isTouched && errors.length > 0
+                    return (
+                      <Field data-invalid={isInvalid || undefined}>
+                        <FieldLabel htmlFor='farm-address'>Alamat lengkap</FieldLabel>
+                        <Textarea
+                          id='farm-address'
+                          name={field.name}
+                          rows={2}
+                          value={field.state.value ?? ''}
+                          onBlur={field.handleBlur}
+                          onChange={(event) => field.handleChange(event.target.value)}
+                          aria-invalid={isInvalid || undefined}
+                        />
+                        {isInvalid && <FieldError errors={errors} />}
+                      </Field>
+                    )
+                  }}
+                </form.Field>
+                <form.Field name='pickupNotes'>
+                  {(field) => {
+                    const errors = getFieldErrorMessages(field.state.meta.errors)
+                    const isInvalid = field.state.meta.isTouched && errors.length > 0
+                    return (
+                      <Field data-invalid={isInvalid || undefined}>
+                        <FieldLabel htmlFor='farm-notes'>Catatan pengambilan</FieldLabel>
+                        <Input
+                          id='farm-notes'
+                          name={field.name}
+                          value={field.state.value ?? ''}
+                          onBlur={field.handleBlur}
+                          onChange={(event) => field.handleChange(event.target.value)}
+                          placeholder='Contoh: Akses mobil bak sampai teras gudang'
+                          aria-invalid={isInvalid || undefined}
+                        />
+                        {isInvalid && <FieldError errors={errors} />}
+                      </Field>
+                    )
+                  }}
+                </form.Field>
               </FieldGroup>
               <DialogFooter>
-                <Button type='submit' disabled={createFarm.isPending}>
-                  {createFarm.isPending && <Spinner data-icon='inline-start' />}
-                  <span>Simpan kebun</span>
-                </Button>
+                <form.Subscribe selector={(state) => state.isSubmitting}>
+                  {(isSubmitting) => (
+                    <Button type='submit' disabled={isSubmitting || createFarm.isPending}>
+                      {(isSubmitting || createFarm.isPending) && (
+                        <Spinner data-icon='inline-start' />
+                      )}
+                      <span>Simpan kebun</span>
+                    </Button>
+                  )}
+                </form.Subscribe>
               </DialogFooter>
             </form>
           </DialogContent>

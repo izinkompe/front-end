@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { AlertCircle, CheckCircle2 } from 'lucide-react'
+import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
@@ -16,7 +18,10 @@ import {
   useUpdateFarmerStoreSettings,
 } from '@/hooks/api/use-farmer-management'
 import type { CommodityCategory } from '@/types/api/auth'
-import type { FarmerStoreSettings } from '@/types/api/farmer-management'
+import {
+  UpdateFarmerStoreSettingsRequestSchema,
+  type FarmerStoreSettings,
+} from '@/types/api/farmer-management'
 
 const COMMODITY_OPTIONS: ReadonlyArray<{ value: CommodityCategory; label: string }> = [
   { value: 'sayuran', label: 'Sayuran' },
@@ -28,14 +33,24 @@ const COMMODITY_OPTIONS: ReadonlyArray<{ value: CommodityCategory; label: string
 
 function FarmerStoreForm({ settings }: { settings: FarmerStoreSettings }) {
   const updateMutation = useUpdateFarmerStoreSettings()
-
-  const [storeName, setStoreName] = useState(settings.storeName)
-  const [description, setDescription] = useState(settings.description)
-  const [publicPickupNotes, setPublicPickupNotes] = useState(settings.publicPickupNotes)
-  const [primaryCommodities, setPrimaryCommodities] = useState<CommodityCategory[]>(
-    settings.primaryCommodities
-  )
   const [savedNotice, setSavedNotice] = useState(false)
+
+  const form = useForm({
+    defaultValues: {
+      storeName: settings.storeName,
+      description: settings.description,
+      publicPickupNotes: settings.publicPickupNotes,
+      primaryCommodities: settings.primaryCommodities,
+    },
+    validators: {
+      onSubmit: UpdateFarmerStoreSettingsRequestSchema,
+    },
+    onSubmit: async ({ value }) => {
+      setSavedNotice(false)
+      await updateMutation.mutateAsync(value)
+      setSavedNotice(true)
+    },
+  })
 
   return (
     <div className='flex flex-col gap-6'>
@@ -62,86 +77,125 @@ function FarmerStoreForm({ settings }: { settings: FarmerStoreSettings }) {
         </CardHeader>
         <CardContent>
           <form
+            noValidate
             className='flex flex-col gap-6'
-            onSubmit={async (event) => {
+            onSubmit={(event) => {
               event.preventDefault()
-              setSavedNotice(false)
-              await updateMutation.mutateAsync({
-                storeName,
-                description,
-                publicPickupNotes,
-                primaryCommodities,
-              })
-              setSavedNotice(true)
+              event.stopPropagation()
+              void form.handleSubmit()
             }}
           >
             <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor='store-name'>Nama toko atau kelompok tani</FieldLabel>
-                <Input
-                  id='store-name'
-                  value={storeName}
-                  onChange={(event) => setStoreName(event.target.value)}
-                  required
-                  minLength={3}
-                  maxLength={100}
-                />
-              </Field>
+              <form.Field name='storeName'>
+                {(field) => {
+                  const errors = getFieldErrorMessages(field.state.meta.errors)
+                  const isInvalid = field.state.meta.isTouched && errors.length > 0
+                  return (
+                    <Field data-invalid={isInvalid || undefined}>
+                      <FieldLabel htmlFor='store-name'>Nama toko atau kelompok tani</FieldLabel>
+                      <Input
+                        id='store-name'
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(event) => field.handleChange(event.target.value)}
+                        maxLength={100}
+                        aria-invalid={isInvalid || undefined}
+                      />
+                      {isInvalid && <FieldError errors={errors} />}
+                    </Field>
+                  )
+                }}
+              </form.Field>
 
-              <Field>
-                <FieldLabel htmlFor='store-description'>Deskripsi singkat toko</FieldLabel>
-                <Textarea
-                  id='store-description'
-                  rows={3}
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  maxLength={500}
-                />
-              </Field>
+              <form.Field name='description'>
+                {(field) => {
+                  const errors = getFieldErrorMessages(field.state.meta.errors)
+                  const isInvalid = field.state.meta.isTouched && errors.length > 0
+                  return (
+                    <Field data-invalid={isInvalid || undefined}>
+                      <FieldLabel htmlFor='store-description'>Deskripsi singkat toko</FieldLabel>
+                      <Textarea
+                        id='store-description'
+                        name={field.name}
+                        rows={3}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(event) => field.handleChange(event.target.value)}
+                        maxLength={500}
+                        aria-invalid={isInvalid || undefined}
+                      />
+                      {isInvalid && <FieldError errors={errors} />}
+                    </Field>
+                  )
+                }}
+              </form.Field>
 
-              <Field>
-                <FieldLabel htmlFor='store-pickup-notes'>
-                  Catatan pengambilan untuk pembeli
-                </FieldLabel>
-                <Textarea
-                  id='store-pickup-notes'
-                  rows={2}
-                  value={publicPickupNotes}
-                  onChange={(event) => setPublicPickupNotes(event.target.value)}
-                  maxLength={240}
-                />
-                <FieldDescription>
-                  Ditampilkan di profil publik sebelum pembeli melakukan reservasi.
-                </FieldDescription>
-              </Field>
+              <form.Field name='publicPickupNotes'>
+                {(field) => {
+                  const errors = getFieldErrorMessages(field.state.meta.errors)
+                  const isInvalid = field.state.meta.isTouched && errors.length > 0
+                  return (
+                    <Field data-invalid={isInvalid || undefined}>
+                      <FieldLabel htmlFor='store-pickup-notes'>
+                        Catatan pengambilan untuk pembeli
+                      </FieldLabel>
+                      <Textarea
+                        id='store-pickup-notes'
+                        name={field.name}
+                        rows={2}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(event) => field.handleChange(event.target.value)}
+                        maxLength={240}
+                        aria-invalid={isInvalid || undefined}
+                      />
+                      <FieldDescription>
+                        Ditampilkan di profil publik sebelum pembeli melakukan reservasi.
+                      </FieldDescription>
+                      {isInvalid && <FieldError errors={errors} />}
+                    </Field>
+                  )
+                }}
+              </form.Field>
 
-              <Field>
-                <FieldLabel>Kategori komoditas utama</FieldLabel>
-                <ToggleGroup
-                  multiple
-                  variant='outline'
-                  value={primaryCommodities}
-                  onValueChange={(values) => setPrimaryCommodities(values as CommodityCategory[])}
-                  className='flex-wrap justify-start'
-                >
-                  {COMMODITY_OPTIONS.map((option) => (
-                    <ToggleGroupItem key={option.value} value={option.value}>
-                      {option.label}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              </Field>
+              <form.Field name='primaryCommodities'>
+                {(field) => (
+                  <Field>
+                    <FieldLabel>Kategori komoditas utama</FieldLabel>
+                    <ToggleGroup
+                      multiple
+                      variant='outline'
+                      value={field.state.value}
+                      onValueChange={(values) => field.handleChange(values as CommodityCategory[])}
+                      className='flex-wrap justify-start'
+                    >
+                      {COMMODITY_OPTIONS.map((option) => (
+                        <ToggleGroupItem key={option.value} value={option.value}>
+                          {option.label}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </Field>
+                )}
+              </form.Field>
             </FieldGroup>
 
             <div className='flex justify-end'>
-              <Button
-                type='submit'
-                className='w-full sm:w-auto'
-                disabled={updateMutation.isPending}
-              >
-                {updateMutation.isPending && <Spinner data-icon='inline-start' />}
-                <span>Simpan perubahan</span>
-              </Button>
+              <form.Subscribe selector={(state) => state.isSubmitting}>
+                {(isSubmitting) => (
+                  <Button
+                    type='submit'
+                    className='w-full sm:w-auto'
+                    disabled={isSubmitting || updateMutation.isPending}
+                  >
+                    {(isSubmitting || updateMutation.isPending) && (
+                      <Spinner data-icon='inline-start' />
+                    )}
+                    <span>Simpan perubahan</span>
+                  </Button>
+                )}
+              </form.Subscribe>
             </div>
           </form>
         </CardContent>
