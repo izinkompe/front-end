@@ -17,6 +17,7 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { findNearestLocation, findRegionCoordinates, provinceGroups } from '@/lib/data/regions'
+import { getGeolocationErrorMessage, requestCurrentPosition } from '@/lib/geolocation'
 import type { FarmerStep4Values } from '@/types/api/auth'
 
 interface StepFarmLocationProps {
@@ -62,37 +63,26 @@ export function StepFarmLocation({
     })
   }
 
-  function handleDetectGps() {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setLocationInfo(
-        'HP atau browser ini belum mendukung deteksi otomatis. Pilih wilayah di bawah.'
-      )
-      return
-    }
-
+  async function handleDetectGps() {
     setLocating(true)
     setLocationInfo(null)
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const nearest = findNearestLocation(position.coords.latitude, position.coords.longitude)
-        onChange({
-          provinceId: nearest.provinceId,
-          areaName: nearest.label,
-          latitude: Number(position.coords.latitude.toFixed(5)),
-          longitude: Number(position.coords.longitude.toFixed(5)),
-        })
-        setLocationInfo(`Titik lokasi berhasil ditemukan di sekitar ${nearest.label}.`)
-        setLocating(false)
-      },
-      () => {
-        setLocating(false)
-        setLocationInfo(
-          'Izin lokasi belum diaktifkan. Tidak apa-apa, cukup pilih Provinsi dan Wilayah di bawah.'
-        )
-      },
-      { timeout: 8000 }
-    )
+    const result = await requestCurrentPosition()
+    if (!result.ok) {
+      setLocating(false)
+      setLocationInfo(getGeolocationErrorMessage(result.reason, 'farmer'))
+      return
+    }
+
+    const nearest = findNearestLocation(result.latitude, result.longitude)
+    onChange({
+      provinceId: nearest.provinceId,
+      areaName: nearest.label,
+      latitude: Number(result.latitude.toFixed(5)),
+      longitude: Number(result.longitude.toFixed(5)),
+    })
+    setLocationInfo(`Titik lokasi berhasil ditemukan di sekitar ${nearest.label}.`)
+    setLocating(false)
   }
 
   return (

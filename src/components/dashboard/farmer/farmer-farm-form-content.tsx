@@ -23,6 +23,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useCreateFarmerFarm, useUpdateFarmerFarm } from '@/hooks/api/use-farmer-management'
+import { getGeolocationErrorMessage, requestCurrentPosition } from '@/lib/geolocation'
 import { findNearestLocation, findRegionCoordinates, provinceGroups } from '@/lib/data/regions'
 import type { CommodityCategory } from '@/types/api/auth'
 import {
@@ -125,29 +126,24 @@ export function FarmFormContent({ farm }: { farm?: FarmerFarm }) {
     }
   }
 
-  function handleDetectGps() {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setGpsStatus('Perangkat belum mendukung deteksi lokasi otomatis.')
-      return
-    }
+  async function handleDetectGps() {
     setLocating(true)
     setGpsStatus(null)
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const nearest = findNearestLocation(position.coords.latitude, position.coords.longitude)
-        setSelectedProvinceId(nearest.provinceId)
-        form.setFieldValue('areaName', nearest.label)
-        form.setFieldValue('latitude', String(Number(position.coords.latitude.toFixed(5))))
-        form.setFieldValue('longitude', String(Number(position.coords.longitude.toFixed(5))))
-        setGpsStatus(`Titik ditemukan di sekitar ${nearest.label}.`)
-        setLocating(false)
-      },
-      () => {
-        setGpsStatus('Izin lokasi belum aktif. Isi wilayah dan koordinat secara manual.')
-        setLocating(false)
-      },
-      { timeout: 8000 }
-    )
+
+    const result = await requestCurrentPosition()
+    if (!result.ok) {
+      setGpsStatus(getGeolocationErrorMessage(result.reason, 'farmer'))
+      setLocating(false)
+      return
+    }
+
+    const nearest = findNearestLocation(result.latitude, result.longitude)
+    setSelectedProvinceId(nearest.provinceId)
+    form.setFieldValue('areaName', nearest.label)
+    form.setFieldValue('latitude', String(Number(result.latitude.toFixed(5))))
+    form.setFieldValue('longitude', String(Number(result.longitude.toFixed(5))))
+    setGpsStatus(`Titik ditemukan di sekitar ${nearest.label}.`)
+    setLocating(false)
   }
 
   return (
