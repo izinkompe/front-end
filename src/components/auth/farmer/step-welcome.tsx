@@ -5,7 +5,6 @@ import { CheckCircle2, Clock, FileEdit, Lock } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 
 interface StepWelcomeProps {
   farmerName: string
@@ -37,7 +36,7 @@ export function StepWelcome({ farmerName, farmName }: StepWelcomeProps) {
         <CardHeader>
           <CardTitle>Apa yang bisa Anda lakukan sekarang?</CardTitle>
         </CardHeader>
-        <CardContent className='flex flex-col gap-3.5 text-base leading-relaxed text-muted-foreground'>
+        <CardContent className='flex flex-col gap-4 text-base leading-relaxed text-muted-foreground'>
           <div className='flex items-start gap-3'>
             <FileEdit className='mt-1 size-4.5 shrink-0 text-primary' aria-hidden='true' />
             <p>
@@ -46,7 +45,6 @@ export function StepWelcome({ farmerName, farmName }: StepWelcomeProps) {
               <span className='font-medium text-foreground'>draf penawaran hasil panen</span>.
             </p>
           </div>
-          <Separator />
           <div className='flex items-start gap-3'>
             <Lock className='mt-1 size-4.5 shrink-0 text-muted-foreground' aria-hidden='true' />
             <p>

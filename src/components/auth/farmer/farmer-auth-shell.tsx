@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { Lock } from 'lucide-react'
 import { BrandLogo } from '@/components/shared/brand-logo'
 import { Progress, ProgressLabel } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 
 interface FarmerAuthShellProps {
@@ -58,20 +57,18 @@ export function FarmerAuthShell({
         </div>
       </main>
 
-      <footer className='mt-auto w-full border-t border-border bg-background'>
-        <div className='mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-5 gap-y-1 px-4 py-5 text-sm text-muted-foreground sm:px-6'>
+      <footer className='mt-auto w-full bg-background'>
+        <div className='mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 py-6 text-sm text-muted-foreground sm:px-6'>
           <Link
             href='/privasi'
             className='inline-flex min-h-10 items-center rounded-sm px-1 underline underline-offset-4 transition-colors pointer-coarse:min-h-11 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           >
             Kebijakan Privasi
           </Link>
-          <Separator orientation='vertical' className='hidden h-4 sm:block' />
           <span className='inline-flex min-h-10 items-center gap-1.5 font-medium text-foreground/80'>
             <Lock className='size-4 text-primary' aria-hidden='true' />
             <span>Aman &amp; Terenkripsi</span>
           </span>
-          <Separator orientation='vertical' className='hidden h-4 sm:block' />
           <Link
             href='/bantuan'
             className='inline-flex min-h-10 items-center rounded-sm px-1 underline underline-offset-4 transition-colors pointer-coarse:min-h-11 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'

@@ -15,7 +15,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group'
-import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { FarmerAuthShell } from '@/components/auth/farmer/farmer-auth-shell'
 import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
@@ -166,9 +165,7 @@ export function FarmerLoginForm() {
           </form.Subscribe>
         </form>
 
-        <Separator />
-
-        <div className='flex flex-col items-center gap-1 text-center text-base text-muted-foreground'>
+        <div className='flex flex-col items-center gap-1 pt-2 text-center text-base text-muted-foreground'>
           <p>Baru pertama kali ingin berjualan hasil panen di PanganTani?</p>
           <Link
             href='/daftar-petani'
