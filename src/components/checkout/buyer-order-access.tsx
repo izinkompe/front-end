@@ -19,10 +19,14 @@ import { CheckoutSkeleton } from './checkout-skeleton'
 
 export function BuyerOrderAccess({ children }: { children: ReactNode }) {
   const isHydrated = useHydrated()
-  const { data: user, isPending } = useCurrentUser()
+  const { data: user, isPending, isError, error, refetch } = useCurrentUser()
   const [open, setOpen] = useState(false)
-  if (isHydrated && user?.role === 'buyer') return children
-  const isWrongRole = Boolean(isHydrated && user && user.role !== 'buyer')
+  if (isHydrated && !isError && user?.role === 'buyer') return children
+  const isWrongRole = Boolean(isHydrated && !isError && user && user.role !== 'buyer')
+  const errorMessage =
+    isError && error instanceof Error && error.message
+      ? error.message
+      : 'Terjadi kesalahan saat memverifikasi sesi akun Anda.'
 
   return (
     <div className='flex min-h-screen flex-col'>
@@ -30,6 +34,29 @@ export function BuyerOrderAccess({ children }: { children: ReactNode }) {
       <div className='flex-1'>
         {!isHydrated || isPending ? (
           <CheckoutSkeleton />
+        ) : isError ? (
+          <main className='mx-auto w-full max-w-4xl px-4 py-10 sm:px-6'>
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>Gagal memverifikasi sesi akun</EmptyTitle>
+                <EmptyDescription>{errorMessage}</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent className='flex-row flex-wrap justify-center'>
+                <Button
+                  type='button'
+                  onClick={() => {
+                    void refetch()
+                  }}
+                >
+                  Coba lagi
+                </Button>
+                <Button type='button' variant='outline' onClick={() => setOpen(true)}>
+                  Masuk ulang
+                </Button>
+              </EmptyContent>
+            </Empty>
+            <BuyerAuthDialog open={open} onOpenChange={setOpen} />
+          </main>
         ) : (
           <main className='mx-auto w-full max-w-4xl px-4 py-10 sm:px-6'>
             <Empty>

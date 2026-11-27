@@ -38,9 +38,13 @@ export function AdminLoginForm() {
       onSubmit: LoginRequestSchema,
     },
     onSubmit: async ({ value }) => {
-      await loginMutation.mutateAsync(value)
-      router.push(nextPath)
-      router.refresh()
+      try {
+        await loginMutation.mutateAsync(value)
+        router.push(nextPath)
+        router.refresh()
+      } catch {
+        return
+      }
     },
   })
 

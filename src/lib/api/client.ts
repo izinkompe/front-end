@@ -11,6 +11,17 @@ export interface FetchOptions extends RequestInit {
 
 const isMockEnabled = env.NEXT_PUBLIC_USE_MOCK
 
+function normalizeBackendEndpoint(endpoint: string): string {
+  if (endpoint === '/api/auth/me') return '/me'
+  if (endpoint === '/api/auth/login-farmer' || endpoint === '/api/auth/login-admin') {
+    return '/auth/login'
+  }
+  if (endpoint === '/api/auth/register-farmer') return '/auth/register'
+  if (endpoint === '/api/profile') return '/me'
+  if (endpoint.startsWith('/api/')) return endpoint.slice(4)
+  return endpoint
+}
+
 function validateEndpoint(endpoint: string, baseUrl: string): URL {
   if (!endpoint.startsWith('/') || endpoint.startsWith('//')) {
     throw new ApiError(
@@ -20,15 +31,29 @@ function validateEndpoint(endpoint: string, baseUrl: string): URL {
     )
   }
 
-  const base = baseUrl || 'http://localhost:3000'
-  const expectedOrigin = new URL(base).origin
-  const resolvedUrl = new URL(endpoint, expectedOrigin)
+  const normalizedEndpoint = isMockEnabled ? endpoint : normalizeBackendEndpoint(endpoint)
+  const base = baseUrl || 'http://localhost:8000/api/v1'
+  const parsedBase = new URL(base)
+  const expectedOrigin = parsedBase.origin
+  const basePath = parsedBase.pathname.replace(/\/+$/, '')
+  const resolvedUrl = new URL(`${expectedOrigin}${basePath}${normalizedEndpoint}`)
 
   if (resolvedUrl.origin !== expectedOrigin) {
     throw new ApiError(400, 'Origin endpoint tidak diizinkan', 'INVALID_ORIGIN')
   }
 
   return resolvedUrl
+}
+
+export async function parseResponseBody(response: Response): Promise<unknown> {
+  if (response.status === 204 || response.status === 205) {
+    return undefined
+  }
+  const text = await response.text()
+  if (!text.trim()) {
+    return undefined
+  }
+  return JSON.parse(text)
 }
 
 export async function apiClient<T>(
@@ -54,11 +79,16 @@ export async function apiClient<T>(
         })
       }
 
+      const isFormData = typeof FormData !== 'undefined' && restOptions.body instanceof FormData
+      const mergedHeaders: Record<string, string> = {
+        Accept: 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+        ...(headers as Record<string, string> | undefined),
+      }
+
       const response = await fetch(url.toString(), {
-        headers: {
-          'Content-Type': 'application/json',
-          ...headers,
-        },
+        credentials: 'include',
+        headers: mergedHeaders,
         ...restOptions,
       })
 
@@ -77,7 +107,7 @@ export async function apiClient<T>(
         )
       }
 
-      rawData = await response.json()
+      rawData = await parseResponseBody(response)
     }
 
     if (schema) {

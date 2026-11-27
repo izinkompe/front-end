@@ -19,7 +19,9 @@ function applyDashboardSecurityHeaders(response: NextResponse): NextResponse {
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
-  const sessionToken = request.cookies.get(DASHBOARD_COOKIES.sessionToken)?.value
+  const sessionToken =
+    request.cookies.get('pangantani_token')?.value ??
+    request.cookies.get(DASHBOARD_COOKIES.sessionToken)?.value
   const sessionRole = parseUserRole(request.cookies.get(DASHBOARD_COOKIES.sessionRole)?.value)
   const previewRole = parseUserRole(request.cookies.get(DASHBOARD_COOKIES.previewRole)?.value)
 

@@ -8,7 +8,11 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { DashboardHeader } from '@/components/dashboard/dashboard-header'
 import { DashboardSidebar } from '@/components/dashboard/dashboard-sidebar'
 import { RelaxedAuthBanner } from '@/components/dashboard/relaxed-auth-banner'
-import { DashboardAccessDenied, DashboardAuthRequired } from '@/components/dashboard/role-gate'
+import {
+  DashboardAccessDenied,
+  DashboardAuthError,
+  DashboardAuthRequired,
+} from '@/components/dashboard/role-gate'
 import { useCurrentUser } from '@/hooks/api/use-auth'
 import { useHydrated } from '@/hooks/use-hydrated'
 import {
@@ -42,7 +46,7 @@ const PREVIEW_USER_META: Record<UserRole, { name: string; email: string; organiz
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const hydrated = useHydrated()
-  const { data: currentUser, isLoading } = useCurrentUser()
+  const { data: currentUser, isLoading, isError, error, refetch } = useCurrentUser()
   const [previewRoleOverride, setPreviewRoleOverride] = useState<UserRole | null>(null)
   const relaxed = isAuthRelaxed()
 
@@ -61,6 +65,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </>
+    )
+  }
+
+  if (isError) {
+    return (
+      <DashboardAuthError
+        error={error}
+        nextPath={pathname}
+        onRetry={() => {
+          void refetch()
+        }}
+      />
     )
   }
 

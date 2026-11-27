@@ -5,6 +5,7 @@ import { FavoritesSidebarProvider } from '@/components/favorites/favorites-sideb
 import { AccessibilityProvider } from '@/components/providers/accessibility-provider'
 import { LocationProvider } from '@/components/providers/location-provider'
 import { QueryProvider } from '@/components/providers/query-provider'
+import { StoreSyncEffect } from '@/components/providers/store-sync-effect'
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_OG_IMAGE,
@@ -75,6 +76,7 @@ export default function RootLayout({
     >
       <body className='min-h-full flex flex-col font-sans text-base'>
         <QueryProvider>
+          <StoreSyncEffect />
           <AccessibilityProvider>
             <LocationProvider>
               <BuyerAuthPromptProvider>

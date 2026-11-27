@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/api/client'
 import { ApiError } from '@/lib/api/errors'
 import { queryKeys } from '@/lib/api/query-keys'
 import { isAuthRelaxed } from '@/lib/auth/rbac'
+import { AuthMeResponseSchema, AuthSessionResponseSchema } from '@/lib/auth/auth-response'
 import {
   clearSessionRoleCookies,
   getCachedAuthUser,
@@ -26,11 +27,15 @@ import {
   type UpdateProfileRequest,
   type User,
   type UserRole,
+  type VerifyEmailOtpRequest,
   type VerifyPhoneRequest,
 } from '@/types/api/auth'
+import { useAuthStore } from '@/stores/use-auth-store'
+import { useCheckoutStore } from '@/stores/use-checkout-store'
 
 function syncAuthUserCache(queryClient: QueryClient, user: User | null) {
   setCachedAuthUser(user)
+  useAuthStore.getState().setUser(user)
   queryClient.setQueryData(queryKeys.auth.me, user)
   queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
 }
@@ -42,17 +47,19 @@ export function useCurrentUser() {
     queryKey: queryKeys.auth.me,
     queryFn: async () => {
       try {
-        const user = await apiClient<User | null>('/api/auth/me', UserSchema.nullable(), {
+        const user = await apiClient<User | null>('/api/auth/me', AuthMeResponseSchema, {
           silentStatuses: [401, 404],
         })
         setCachedAuthUser(user)
+        useAuthStore.getState().setUser(user)
         if (!user) {
-          clearSessionRoleCookies()
+          void clearSessionRoleCookies()
         }
         return user
       } catch (error) {
+        void clearSessionRoleCookies()
+        useAuthStore.getState().setUser(null)
         if (error instanceof ApiError && (error.status === 401 || error.status === 404)) {
-          clearSessionRoleCookies()
           return null
         }
         throw error
@@ -68,13 +75,19 @@ export function useLogin() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (credentials: LoginRequest) =>
-      apiClient<{ token: string; user: User }>('/api/auth/login', undefined, {
-        method: 'POST',
-        body: JSON.stringify(credentials),
-      }),
+    mutationFn: async (credentials: LoginRequest) => {
+      const data = await apiClient<{ token?: string; user: User }>(
+        '/api/auth/login',
+        AuthSessionResponseSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify(credentials),
+        }
+      )
+      await setSessionRoleCookies(data.user.role, data.token)
+      return data
+    },
     onSuccess: (data) => {
-      setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
     },
   })
@@ -84,13 +97,19 @@ export function useLoginFarmer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (credentials: LoginRequest) =>
-      apiClient<{ token: string; user: User }>('/api/auth/login-farmer', undefined, {
-        method: 'POST',
-        body: JSON.stringify(credentials),
-      }),
+    mutationFn: async (credentials: LoginRequest) => {
+      const data = await apiClient<{ token?: string; user: User }>(
+        '/api/auth/login-farmer',
+        AuthSessionResponseSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify(credentials),
+        }
+      )
+      await setSessionRoleCookies(data.user.role, data.token)
+      return data
+    },
     onSuccess: (data) => {
-      setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
     },
@@ -101,13 +120,19 @@ export function useLoginAdmin() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (credentials: LoginRequest) =>
-      apiClient<{ token: string; user: User }>('/api/auth/login-admin', undefined, {
-        method: 'POST',
-        body: JSON.stringify(credentials),
-      }),
+    mutationFn: async (credentials: LoginRequest) => {
+      const data = await apiClient<{ token?: string; user: User }>(
+        '/api/auth/login-admin',
+        AuthSessionResponseSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify(credentials),
+        }
+      )
+      await setSessionRoleCookies(data.user.role, data.token)
+      return data
+    },
     onSuccess: (data) => {
-      setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats() })
     },
@@ -118,13 +143,22 @@ export function useRegisterBuyer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: BuyerRegisterRequest) =>
-      apiClient<{ token: string; user: User }>('/api/auth/register', undefined, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
+    mutationFn: async (payload: BuyerRegisterRequest) => {
+      const data = await apiClient<{ token?: string; user: User }>(
+        '/api/auth/register',
+        AuthSessionResponseSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            ...payload,
+            password_confirmation: payload.password_confirmation ?? payload.password,
+          }),
+        }
+      )
+      await setSessionRoleCookies(data.user.role, data.token)
+      return data
+    },
     onSuccess: (data) => {
-      setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
     },
   })
@@ -134,13 +168,24 @@ export function useRegisterFarmer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: FarmerRegisterRequest) =>
-      apiClient<{ token: string; user: User }>('/api/auth/register-farmer', undefined, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
+    mutationFn: async (payload: FarmerRegisterRequest) => {
+      const data = await apiClient<{ token?: string; user: User }>(
+        '/api/auth/register-farmer',
+        AuthSessionResponseSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            ...payload,
+            role: 'farmer',
+            organization: payload.farmName,
+            password_confirmation: payload.password,
+          }),
+        }
+      )
+      await setSessionRoleCookies(data.user.role, data.token)
+      return data
+    },
     onSuccess: (data) => {
-      setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
     },
@@ -214,9 +259,11 @@ export function useLogout() {
     mutationFn: () =>
       apiClient<{ success: boolean }>('/api/auth/logout', undefined, {
         method: 'POST',
+        silentStatuses: [401],
       }),
-    onSuccess: () => {
-      clearSessionRoleCookies()
+    onSettled: () => {
+      void clearSessionRoleCookies()
+      useCheckoutStore.getState().resetCheckoutAttempt()
       syncAuthUserCache(queryClient, null)
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
     },
@@ -227,7 +274,7 @@ export function useSwitchPreviewRole() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (role: UserRole) => {
+    mutationFn: async (role: UserRole) => {
       if (!isAuthRelaxed()) {
         throw new ApiError(
           403,
@@ -236,14 +283,19 @@ export function useSwitchPreviewRole() {
         )
       }
       const parsed = UserRoleSchema.parse(role)
-      return apiClient<{ user: User }>('/api/auth/preview-role', z.object({ user: UserSchema }), {
-        method: 'POST',
-        body: JSON.stringify({ role: parsed }),
-      })
+      const data = await apiClient<{ user: User }>(
+        '/api/auth/preview-role',
+        z.object({ user: UserSchema }),
+        {
+          method: 'POST',
+          body: JSON.stringify({ role: parsed }),
+        }
+      )
+      await setPreviewRoleCookie(data.user.role)
+      await setSessionRoleCookies(data.user.role, 'preview-session')
+      return data
     },
     onSuccess: (data) => {
-      setPreviewRoleCookie(data.user.role)
-      setSessionRoleCookies(data.user.role, 'preview-session')
       syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats() })
     },
@@ -266,7 +318,71 @@ export function useConfirmPasswordReset() {
     mutationFn: (payload: ResetPasswordRequest) =>
       apiClient('/api/auth/reset-password', z.object({ success: z.literal(true) }), {
         method: 'POST',
+        body: JSON.stringify({
+          ...payload,
+          password_confirmation: payload.password_confirmation ?? payload.password,
+        }),
+      }),
+  })
+}
+
+export function useVerifyEmailUrl() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (verificationUrl: string) => {
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ verificationUrl }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new ApiError(
+          response.status,
+          data.message || 'Gagal memverifikasi email',
+          'VERIFY_EMAIL_FAILED',
+          data.details
+        )
+      }
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+    },
+  })
+}
+
+export function useResendVerificationEmail() {
+  return useMutation({
+    mutationFn: () =>
+      apiClient<{ message?: string }>('/auth/email/verification-notification', undefined, {
+        method: 'POST',
+      }),
+  })
+}
+
+export function useSendEmailOtp() {
+  return useMutation({
+    mutationFn: () =>
+      apiClient<{ message?: string }>('/auth/email/otp', undefined, {
+        method: 'POST',
+      }),
+  })
+}
+
+export function useVerifyEmailOtp() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: VerifyEmailOtpRequest) =>
+      apiClient<{ message?: string }>('/auth/email/verify-otp', undefined, {
+        method: 'POST',
         body: JSON.stringify(payload),
       }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me })
+    },
   })
 }

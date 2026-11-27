@@ -6,7 +6,6 @@ import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { FarmerAuthShell } from '@/components/auth/farmer/farmer-auth-shell'
 import {
-  ONBOARDING_STORAGE_KEY,
   ONBOARDING_TOTAL_STEPS,
   normalizeBankName,
 } from '@/components/auth/farmer/farmer-form-helpers'
@@ -22,6 +21,7 @@ import {
 import { StepWelcome } from '@/components/auth/farmer/step-welcome'
 import { useRegisterFarmer } from '@/hooks/api/use-auth'
 import { defaultLocation, provinceGroups } from '@/lib/data/regions'
+import { useFarmerOnboardingStore } from '@/stores/use-farmer-onboarding-store'
 import {
   FarmerStep1Schema,
   FarmerStep2Schema,
@@ -43,16 +43,6 @@ const stepLabels: Record<number, string> = {
   4: 'Lokasi Pengambilan',
   5: 'Rekening Bank',
   6: 'Verifikasi Identitas',
-}
-
-interface PersistedDraft {
-  currentStep: number
-  highestCompletedStep: number
-  step1: FarmerStep1Values
-  step2: FarmerStep2Values
-  step3Public: Pick<FarmerStep3Values, 'name' | 'email' | 'phone'>
-  step4: FarmerStep4Values
-  step5Public: Pick<FarmerStep5Values, 'bankName' | 'accountHolderName'>
 }
 
 const initialRegion = provinceGroups[0].regions[0]
@@ -114,6 +104,7 @@ export function FarmerOnboardingFlow({ resumeNotice = false }: { resumeNotice?: 
   const [currentStep, setCurrentStep] = useState(1)
   const [highestCompletedStep, setHighestCompletedStep] = useState(0)
   const [completed, setCompleted] = useState(false)
+  const [draftLoaded, setDraftLoaded] = useState(false)
 
   const [step1, setStep1] = useState<FarmerStep1Values>(defaultStep1)
   const [step2, setStep2] = useState<FarmerStep2Values>(defaultStep2)
@@ -142,74 +133,85 @@ export function FarmerOnboardingFlow({ resumeNotice = false }: { resumeNotice?: 
   >({})
 
   const registerMutation = useRegisterFarmer()
+  const updateDraft = useFarmerOnboardingStore((state) => state.updateDraft)
+  const resetDraft = useFarmerOnboardingStore((state) => state.resetDraft)
 
   useEffect(() => {
-    let cancelled = false
-    queueMicrotask(() => {
-      if (cancelled) return
-      try {
-        const raw = window.sessionStorage.getItem(ONBOARDING_STORAGE_KEY)
-        if (!raw) return
-        const parsed = JSON.parse(raw) as Partial<PersistedDraft>
-        if (parsed.step1) setStep1((prev) => ({ ...prev, ...parsed.step1 }))
-        if (parsed.step2) setStep2((prev) => ({ ...prev, ...parsed.step2 }))
-        if (parsed.step3Public) {
-          setStep3((prev) => ({
-            ...prev,
-            name: parsed.step3Public?.name ?? prev.name,
-            email: parsed.step3Public?.email ?? prev.email,
-            phone: parsed.step3Public?.phone ?? prev.phone,
-          }))
-        }
-        if (parsed.step4) setStep4((prev) => ({ ...prev, ...parsed.step4 }))
-        if (parsed.step5Public) {
-          setStep5((prev) => ({
-            ...prev,
-            bankName: parsed.step5Public?.bankName ?? prev.bankName,
-            accountHolderName: parsed.step5Public?.accountHolderName ?? prev.accountHolderName,
-          }))
-        }
-        if (typeof parsed.highestCompletedStep === 'number') {
-          const safeHighest = Math.max(0, Math.min(parsed.highestCompletedStep, 5))
-          setHighestCompletedStep(safeHighest)
-          const requestedStep =
-            typeof parsed.currentStep === 'number' ? parsed.currentStep : safeHighest + 1
-          setCurrentStep(Math.max(1, Math.min(requestedStep, safeHighest + 1, 3)))
-        }
-      } catch {
-        window.sessionStorage.removeItem(ONBOARDING_STORAGE_KEY)
-      }
+    const applyDraft = () => {
+      const persisted = useFarmerOnboardingStore.getState().draft
+      setStep1((prev) => ({
+        ...prev,
+        farmerType: persisted.farmerType ?? prev.farmerType,
+        farmName: persisted.farmName ?? prev.farmName,
+      }))
+      setStep2((prev) => ({
+        ...prev,
+        primaryCommodities: persisted.primaryCommodities ?? prev.primaryCommodities,
+        customCommodity: persisted.customCommodity ?? prev.customCommodity,
+      }))
+      setStep3((prev) => ({
+        ...prev,
+        name: persisted.name ?? prev.name,
+        email: persisted.email ?? prev.email,
+        phone: persisted.phone ?? prev.phone,
+      }))
+      setStep4((prev) => ({
+        ...prev,
+        provinceId: persisted.provinceId ?? prev.provinceId,
+        areaName: persisted.areaName ?? prev.areaName,
+        fullAddress: persisted.fullAddress ?? prev.fullAddress,
+        latitude: persisted.latitude ?? prev.latitude,
+        longitude: persisted.longitude ?? prev.longitude,
+        pickupNotes: persisted.pickupNotes ?? prev.pickupNotes,
+      }))
+      setStep5((prev) => ({
+        ...prev,
+        bankName: persisted.bankName ?? prev.bankName,
+        accountHolderName: persisted.accountHolderName ?? prev.accountHolderName,
+      }))
+      const safeHighest = Math.max(0, Math.min(persisted.highestCompletedStep ?? 0, 5))
+      setHighestCompletedStep(safeHighest)
+      const requestedStep = typeof persisted.step === 'number' ? persisted.step : safeHighest + 1
+      setCurrentStep(Math.max(1, Math.min(requestedStep, safeHighest + 1, 3)))
+      setDraftLoaded(true)
+    }
+
+    if (useFarmerOnboardingStore.persist.hasHydrated()) {
+      applyDraft()
+      return
+    }
+    const unsub = useFarmerOnboardingStore.persist.onFinishHydration(() => {
+      applyDraft()
     })
     return () => {
-      cancelled = true
+      unsub()
     }
   }, [])
 
   useEffect(() => {
-    if (completed) return
-    const draft: PersistedDraft = {
-      currentStep,
+    if (!draftLoaded || completed) return
+    updateDraft({
+      step: currentStep,
       highestCompletedStep,
-      step1,
-      step2,
-      step3Public: {
-        name: step3.name,
-        email: step3.email,
-        phone: step3.phone,
-      },
-      step4,
-      step5Public: {
-        bankName: step5.bankName,
-        accountHolderName: step5.accountHolderName,
-      },
-    }
-    try {
-      window.sessionStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(draft))
-    } catch {
-      return
-    }
+      farmerType: step1.farmerType,
+      farmName: step1.farmName,
+      primaryCommodities: step2.primaryCommodities,
+      customCommodity: step2.customCommodity,
+      name: step3.name,
+      email: step3.email,
+      phone: step3.phone,
+      provinceId: step4.provinceId,
+      areaName: step4.areaName,
+      fullAddress: step4.fullAddress,
+      latitude: step4.latitude,
+      longitude: step4.longitude,
+      pickupNotes: step4.pickupNotes,
+      bankName: step5.bankName,
+      accountHolderName: step5.accountHolderName,
+    })
   }, [
     completed,
+    draftLoaded,
     currentStep,
     highestCompletedStep,
     step1,
@@ -220,6 +222,7 @@ export function FarmerOnboardingFlow({ resumeNotice = false }: { resumeNotice?: 
     step4,
     step5.accountHolderName,
     step5.bankName,
+    updateDraft,
   ])
 
   function advanceToStep(nextStep: number, completedStep: number) {
@@ -290,39 +293,39 @@ export function FarmerOnboardingFlow({ resumeNotice = false }: { resumeNotice?: 
     }
     setStep6Errors({})
 
-    await registerMutation.mutateAsync({
-      farmerType: step1.farmerType,
-      farmName: step1.farmName.trim(),
-      primaryCommodities: step2.primaryCommodities,
-      customCommodity: step2.primaryCommodities.includes('lainnya')
-        ? step2.customCommodity?.trim()
-        : undefined,
-      name: step3.name.trim(),
-      email: step3.email.trim(),
-      phone: step3.phone.trim(),
-      password: step3.password,
-      provinceId: step4.provinceId,
-      areaName: step4.areaName.trim(),
-      fullAddress: step4.fullAddress.trim(),
-      latitude: step4.latitude,
-      longitude: step4.longitude,
-      pickupNotes: step4.pickupNotes.trim(),
-      bankAccount: {
-        bankName: normalizeBankName(step5.bankName),
-        accountNumber: step5.accountNumber.trim(),
-        accountHolderName: step5.accountHolderName.trim(),
-      },
-      idCardNumber: parsed.data.idCardNumber,
-      identityDocument: parsed.data.identityDocument,
-      farmDocument: parsed.data.farmDocument,
-      agreedToTerms: parsed.data.agreedToTerms,
-    })
-
     try {
-      window.sessionStorage.removeItem(ONBOARDING_STORAGE_KEY)
+      await registerMutation.mutateAsync({
+        farmerType: step1.farmerType,
+        farmName: step1.farmName.trim(),
+        primaryCommodities: step2.primaryCommodities,
+        customCommodity: step2.primaryCommodities.includes('lainnya')
+          ? step2.customCommodity?.trim()
+          : undefined,
+        name: step3.name.trim(),
+        email: step3.email.trim(),
+        phone: step3.phone.trim(),
+        password: step3.password,
+        provinceId: step4.provinceId,
+        areaName: step4.areaName.trim(),
+        fullAddress: step4.fullAddress.trim(),
+        latitude: step4.latitude,
+        longitude: step4.longitude,
+        pickupNotes: step4.pickupNotes.trim(),
+        bankAccount: {
+          bankName: normalizeBankName(step5.bankName),
+          accountNumber: step5.accountNumber.trim(),
+          accountHolderName: step5.accountHolderName.trim(),
+        },
+        idCardNumber: parsed.data.idCardNumber,
+        identityDocument: parsed.data.identityDocument,
+        farmDocument: parsed.data.farmDocument,
+        agreedToTerms: parsed.data.agreedToTerms,
+      })
     } catch {
       return
     }
+
+    resetDraft()
     setCompleted(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
