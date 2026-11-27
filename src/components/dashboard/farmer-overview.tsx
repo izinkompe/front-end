@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { Package, ShoppingBasket, Sprout, Store } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,31 +27,23 @@ interface FarmerOverviewProps {
 const FARMER_MODULES = [
   {
     title: 'Toko Saya',
-    description: 'Atur nama toko publik, deskripsi panen, dan catatan untuk pembeli.',
     href: '/dashboard/toko',
     actionLabel: 'Kelola toko',
-    icon: Store,
   },
   {
     title: 'Kebun Saya',
-    description: 'Catat lokasi lahan, koordinat pengambilan, dan catatan akses kendaraan.',
     href: '/dashboard/kebun',
     actionLabel: 'Kelola kebun',
-    icon: Sprout,
   },
   {
     title: 'Penawaran Panen',
-    description: 'Publikasikan hasil panen surplus lengkap dengan stok dan jadwal tutup.',
     href: '/dashboard/penawaran',
     actionLabel: 'Lihat penawaran',
-    icon: Package,
   },
   {
     title: 'Pesanan Masuk',
-    description: 'Pantau reservasi pembeli dan tandai pesanan yang siap diambil.',
     href: '/dashboard/pesanan',
     actionLabel: 'Lihat pesanan',
-    icon: ShoppingBasket,
   },
 ] as const
 
@@ -79,7 +70,7 @@ export function FarmerOverview({ user }: FarmerOverviewProps) {
           <h1 className='type-h1 font-semibold text-foreground'>Selamat datang, {displayName}</h1>
           <p className='text-base text-muted-foreground'>{organization}</p>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex flex-wrap items-center gap-2'>
           <Badge variant={isVerified ? 'default' : 'secondary'}>
             {isVerified ? 'Petani Terverifikasi' : 'Menunggu Verifikasi'}
           </Badge>
@@ -98,71 +89,61 @@ export function FarmerOverview({ user }: FarmerOverviewProps) {
         </div>
       ) : (
         <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-          <Card>
+          <Card className='min-w-0'>
             <CardHeader className='pb-2'>
               <CardDescription>Kebun aktif</CardDescription>
-              <CardTitle className='font-mono text-2xl tabular-nums'>{activeFarmsCount}</CardTitle>
+              <CardTitle className='type-kpi font-mono tabular-nums'>{activeFarmsCount}</CardTitle>
             </CardHeader>
-            <CardContent className='text-xs text-muted-foreground'>
+            <CardContent className='text-meta text-muted-foreground'>
               Dari total {farms.length} kebun terdaftar
             </CardContent>
           </Card>
-          <Card>
+          <Card className='min-w-0'>
             <CardHeader className='pb-2'>
               <CardDescription>Penawaran aktif</CardDescription>
-              <CardTitle className='font-mono text-2xl tabular-nums'>
+              <CardTitle className='type-kpi font-mono tabular-nums'>
                 {activeOffers.length}
               </CardTitle>
             </CardHeader>
-            <CardContent className='text-xs text-muted-foreground'>
+            <CardContent className='text-meta text-muted-foreground'>
               Stok tersedia {totalAvailableStock.toLocaleString('id-ID')} kg
             </CardContent>
           </Card>
-          <Card>
+          <Card className='min-w-0'>
             <CardHeader className='pb-2'>
               <CardDescription>Perlu disiapkan</CardDescription>
-              <CardTitle className='font-mono text-2xl tabular-nums'>
+              <CardTitle className='type-kpi font-mono tabular-nums'>
                 {pendingPickupOrders}
               </CardTitle>
             </CardHeader>
-            <CardContent className='text-xs text-muted-foreground'>
+            <CardContent className='text-meta text-muted-foreground'>
               Dari total {orders.length} pesanan masuk
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className='pb-2'>
+          <Card className='min-w-0'>
+            <CardHeader>
               <CardDescription>Komoditas utama</CardDescription>
-              <CardTitle className='font-mono text-2xl tabular-nums'>
+              <CardTitle className='type-kpi font-mono tabular-nums'>
                 {store?.primaryCommodities.length ?? 0}
               </CardTitle>
             </CardHeader>
-            <CardContent className='truncate text-xs text-muted-foreground'>
-              {store?.storeName ?? organization}
-            </CardContent>
           </Card>
         </div>
       )}
 
       <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-        {FARMER_MODULES.map((item) => {
-          const Icon = item.icon
-          return (
-            <Card key={item.href}>
-              <CardHeader>
-                <div className='flex items-center gap-2'>
-                  <Icon className='size-5 text-primary' aria-hidden='true' />
-                  <CardTitle>{item.title}</CardTitle>
-                </div>
-                <CardDescription>{item.description}</CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button variant='outline' nativeButton={false} render={<Link href={item.href} />}>
-                  {item.actionLabel}
-                </Button>
-              </CardFooter>
-            </Card>
-          )
-        })}
+        {FARMER_MODULES.map((item) => (
+          <Card key={item.href} className='min-w-0'>
+            <CardHeader>
+              <CardTitle>{item.title}</CardTitle>
+            </CardHeader>
+            <CardFooter>
+              <Button variant='outline' nativeButton={false} render={<Link href={item.href} />}>
+                {item.actionLabel}
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
       </div>
     </div>
   )
