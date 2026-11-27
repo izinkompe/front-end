@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { Download } from 'lucide-react'
+import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
 import { formatPlainRupiah } from '@/components/home/offer-card-helpers'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -34,56 +36,50 @@ export function ComplaintDetailPanel({
 }) {
   const id = useId()
   const reply = useReplyComplaint(report.id)
-  const [message, setMessage] = useState('')
   const [files, setFiles] = useState<File[]>([])
-  const [touched, setTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const messageRef = useRef<HTMLTextAreaElement | null>(null)
 
   const proofUrl = isSafeProofImageUrl(report.refundProofUrl)
-  const trimmedMessage = message.trim()
-  const messageError =
-    trimmedMessage.length === 0
-      ? 'Tuliskan balasan klarifikasi terlebih dahulu.'
-      : trimmedMessage.length > 2000
-        ? 'Balasan maksimal 2.000 karakter.'
-        : null
   const filesError = validateComplaintFiles(files)
-  const showMessageError = Boolean((submitted || touched) && messageError)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (submitting) return
-    setSubmitted(true)
-    setSubmitError('')
+  const form = useForm({
+    defaultValues: {
+      message: '',
+    },
+    onSubmit: async ({ value }) => {
+      if (submitting) return
+      setSubmitted(true)
+      setSubmitError('')
 
-    if (messageError) {
-      messageRef.current?.focus()
-      return
-    }
-    if (filesError) {
-      return
-    }
+      const trimmedMessage = value.message.trim()
+      if (trimmedMessage.length === 0 || trimmedMessage.length > 2000) {
+        messageRef.current?.focus()
+        return
+      }
+      if (filesError) {
+        return
+      }
 
-    setSubmitting(true)
-    try {
-      const attachments = await readComplaintPhotos(files)
-      await reply.mutateAsync({
-        message: trimmedMessage,
-        attachments: attachments.length ? attachments : undefined,
-      })
-      setMessage('')
-      setFiles([])
-      setTouched(false)
-      setSubmitted(false)
-    } catch (cause) {
-      setSubmitError(cause instanceof Error ? cause.message : 'Coba kirim balasan lagi.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
+      setSubmitting(true)
+      try {
+        const attachments = await readComplaintPhotos(files)
+        await reply.mutateAsync({
+          message: trimmedMessage,
+          attachments: attachments.length ? attachments : undefined,
+        })
+        form.reset()
+        setFiles([])
+        setSubmitted(false)
+      } catch (cause) {
+        setSubmitError(cause instanceof Error ? cause.message : 'Coba kirim balasan lagi.')
+      } finally {
+        setSubmitting(false)
+      }
+    },
+  })
 
   return (
     <Card>
@@ -214,30 +210,55 @@ export function ComplaintDetailPanel({
         {report.status === 'in_investigation' && (
           <>
             <Separator />
-            <form noValidate onSubmit={handleSubmit} className='flex flex-col gap-3'>
+            <form
+              noValidate
+              onSubmit={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                void form.handleSubmit()
+              }}
+              className='flex flex-col gap-3'
+            >
               <FieldGroup>
-                <Field data-invalid={showMessageError || undefined}>
-                  <FieldLabel htmlFor={id}>Balasan klarifikasi</FieldLabel>
-                  <FieldDescription id={id + '-hint'}>
-                    Tambahkan penjelasan atau bukti tambahan untuk administrator.
-                  </FieldDescription>
-                  <Textarea
-                    ref={messageRef}
-                    id={id}
-                    name='message'
-                    maxLength={2000}
-                    rows={3}
-                    value={message}
-                    placeholder='Tulis balasan klarifikasi Anda'
-                    aria-invalid={showMessageError ? 'true' : 'false'}
-                    aria-describedby={showMessageError ? `${id}-hint ${id}-error` : `${id}-hint`}
-                    onBlur={() => setTouched(true)}
-                    onChange={(event) => setMessage(event.target.value)}
-                  />
-                  {showMessageError && (
-                    <FieldError id={id + '-error'} errors={[{ message: messageError as string }]} />
-                  )}
-                </Field>
+                <form.Field
+                  name='message'
+                  validators={{
+                    onChange: ({ value }) => {
+                      const trimmed = value.trim()
+                      if (trimmed.length === 0)
+                        return 'Tuliskan balasan klarifikasi terlebih dahulu.'
+                      if (trimmed.length > 2000) return 'Balasan maksimal 2.000 karakter.'
+                      return undefined
+                    },
+                  }}
+                >
+                  {(field) => {
+                    const errors = getFieldErrorMessages(field.state.meta.errors)
+                    const isInvalid = field.state.meta.isTouched && errors.length > 0
+                    return (
+                      <Field data-invalid={isInvalid || undefined}>
+                        <FieldLabel htmlFor={id}>Balasan klarifikasi</FieldLabel>
+                        <FieldDescription id={id + '-hint'}>
+                          Tambahkan penjelasan atau bukti tambahan untuk administrator.
+                        </FieldDescription>
+                        <Textarea
+                          ref={messageRef}
+                          id={id}
+                          name={field.name}
+                          maxLength={2000}
+                          rows={3}
+                          value={field.state.value}
+                          placeholder='Tulis balasan klarifikasi Anda'
+                          aria-invalid={isInvalid ? 'true' : 'false'}
+                          aria-describedby={isInvalid ? `${id}-hint ${id}-error` : `${id}-hint`}
+                          onBlur={field.handleBlur}
+                          onChange={(event) => field.handleChange(event.target.value)}
+                        />
+                        {isInvalid && <FieldError id={id + '-error'} errors={errors} />}
+                      </Field>
+                    )
+                  }}
+                </form.Field>
                 <ComplaintPhotoField
                   files={files}
                   onFilesChange={setFiles}

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useForm } from '@tanstack/react-form'
 import { CheckCircle2, LogOut } from 'lucide-react'
 import { AccessibilityControls } from '@/components/info/accessibility-controls'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -39,7 +40,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { useCurrentUser, useLogout, useUpdateProfile } from '@/hooks/api/use-auth'
 import { DEFAULT_ACCOUNT_PREFERENCES } from '@/lib/data/profile-helpers'
-import { ReminderRadiusSchema, type AccountPreferences } from '@/types/api/auth'
+import { ReminderRadiusSchema } from '@/types/api/auth'
 
 export function AccountSettingsView() {
   const router = useRouter()
@@ -48,33 +49,24 @@ export function AccountSettingsView() {
   const logoutMutation = useLogout()
 
   const serverPreferences = currentUser?.preferences ?? DEFAULT_ACCOUNT_PREFERENCES
-  const [draftPreferences, setDraftPreferences] = useState<AccountPreferences | null>(null)
-  const preferences = draftPreferences ?? serverPreferences
   const [savedNotice, setSavedNotice] = useState(false)
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
 
+  const form = useForm({
+    defaultValues: serverPreferences,
+    onSubmit: async ({ value }) => {
+      if (!currentUser) return
+      setSavedNotice(false)
+      await updateProfileMutation.mutateAsync({
+        name: currentUser.name,
+        preferences: value,
+      })
+      setSavedNotice(true)
+    },
+  })
+
   if (!currentUser) {
     return null
-  }
-
-  function updatePref<K extends keyof AccountPreferences>(key: K, value: AccountPreferences[K]) {
-    setDraftPreferences((prev) => ({ ...(prev ?? serverPreferences), [key]: value }))
-    setSavedNotice(false)
-  }
-
-  async function handleSavePreferences(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (!currentUser) return
-    setSavedNotice(false)
-    updateProfileMutation.mutate(
-      { name: currentUser.name, preferences },
-      {
-        onSuccess: () => {
-          setDraftPreferences(null)
-          setSavedNotice(true)
-        },
-      }
-    )
   }
 
   async function handleLogout() {
@@ -85,7 +77,14 @@ export function AccountSettingsView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <form onSubmit={handleSavePreferences}>
+      <form
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          void form.handleSubmit()
+        }}
+      >
         <Card>
           <CardHeader>
             <CardTitle>Notifikasi &amp; Privasi</CardTitle>
@@ -108,103 +107,142 @@ export function AccountSettingsView() {
             )}
 
             <FieldGroup>
-              <Field orientation='horizontal' className='justify-between gap-4'>
-                <FieldContent>
-                  <FieldLabel htmlFor='pref-order-updates'>Pembaruan status pesanan</FieldLabel>
-                  <FieldDescription>
-                    Kirim pemberitahuan saat pembayaran diverifikasi atau panen siap diambil.
-                  </FieldDescription>
-                </FieldContent>
-                <Switch
-                  id='pref-order-updates'
-                  checked={preferences.orderStatusUpdates}
-                  onCheckedChange={(checked) => updatePref('orderStatusUpdates', checked)}
-                />
-              </Field>
+              <form.Field name='orderStatusUpdates'>
+                {(field) => (
+                  <Field orientation='horizontal' className='justify-between gap-4'>
+                    <FieldContent>
+                      <FieldLabel htmlFor='pref-order-updates'>Pembaruan status pesanan</FieldLabel>
+                      <FieldDescription>
+                        Kirim pemberitahuan saat pembayaran diverifikasi atau panen siap diambil.
+                      </FieldDescription>
+                    </FieldContent>
+                    <Switch
+                      id='pref-order-updates'
+                      checked={field.state.value}
+                      onCheckedChange={(checked) => {
+                        field.handleChange(checked)
+                        setSavedNotice(false)
+                      }}
+                    />
+                  </Field>
+                )}
+              </form.Field>
 
               <Separator />
 
-              <Field orientation='horizontal' className='justify-between gap-4'>
-                <FieldContent>
-                  <FieldLabel htmlFor='pref-harvest-reminders'>Pengingat penawaran baru</FieldLabel>
-                  <FieldDescription>
-                    Beri tahu saya saat ada penawaran baru dari petani yang saya ikuti atau kategori
-                    favorit dalam radius pilihan.
-                  </FieldDescription>
-                </FieldContent>
-                <Switch
-                  id='pref-harvest-reminders'
-                  checked={preferences.harvestReminders}
-                  onCheckedChange={(checked) => updatePref('harvestReminders', checked)}
-                />
-              </Field>
+              <form.Field name='harvestReminders'>
+                {(field) => (
+                  <Field orientation='horizontal' className='justify-between gap-4'>
+                    <FieldContent>
+                      <FieldLabel htmlFor='pref-harvest-reminders'>
+                        Pengingat penawaran baru
+                      </FieldLabel>
+                      <FieldDescription>
+                        Beri tahu saya saat ada penawaran baru dari petani yang saya ikuti atau
+                        kategori favorit dalam radius pilihan.
+                      </FieldDescription>
+                    </FieldContent>
+                    <Switch
+                      id='pref-harvest-reminders'
+                      checked={field.state.value}
+                      onCheckedChange={(checked) => {
+                        field.handleChange(checked)
+                        setSavedNotice(false)
+                      }}
+                    />
+                  </Field>
+                )}
+              </form.Field>
 
-              {preferences.harvestReminders && (
-                <Field>
-                  <FieldLabel htmlFor='pref-reminder-radius'>
-                    Radius pengingat dari alamat utama
-                  </FieldLabel>
-                  <Select
-                    value={String(preferences.reminderRadiusKm ?? 10)}
-                    onValueChange={(value) => {
-                      if (value !== null) {
-                        updatePref('reminderRadiusKm', ReminderRadiusSchema.parse(Number(value)))
-                      }
-                    }}
-                  >
-                    <SelectTrigger id='pref-reminder-radius'>
-                      <SelectValue>{preferences.reminderRadiusKm ?? 10} km</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {[5, 10, 25, 50].map((radius) => (
-                          <SelectItem key={radius} value={String(radius)}>
-                            {radius} km
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                  <FieldDescription>
-                    Jarak dihitung dalam garis lurus. Tambahkan alamat utama untuk memakai
-                    pengingat.
-                  </FieldDescription>
-                </Field>
-              )}
+              <form.Subscribe selector={(state) => state.values.harvestReminders}>
+                {(harvestReminders) =>
+                  harvestReminders && (
+                    <form.Field name='reminderRadiusKm'>
+                      {(field) => (
+                        <Field>
+                          <FieldLabel htmlFor='pref-reminder-radius'>
+                            Radius pengingat dari alamat utama
+                          </FieldLabel>
+                          <Select
+                            value={String(field.state.value ?? 10)}
+                            onValueChange={(value) => {
+                              if (value !== null) {
+                                field.handleChange(ReminderRadiusSchema.parse(Number(value)))
+                                setSavedNotice(false)
+                              }
+                            }}
+                          >
+                            <SelectTrigger id='pref-reminder-radius'>
+                              <SelectValue>{field.state.value ?? 10} km</SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                {[5, 10, 25, 50].map((radius) => (
+                                  <SelectItem key={radius} value={String(radius)}>
+                                    {radius} km
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                          <FieldDescription>
+                            Jarak dihitung dalam garis lurus. Tambahkan alamat utama untuk memakai
+                            pengingat.
+                          </FieldDescription>
+                        </Field>
+                      )}
+                    </form.Field>
+                  )
+                }
+              </form.Subscribe>
 
               <Separator />
 
-              <Field orientation='horizontal' className='justify-between gap-4'>
-                <FieldContent>
-                  <FieldLabel htmlFor='pref-show-org'>
-                    Tampilkan nama organisasi pada nota
-                  </FieldLabel>
-                  <FieldDescription>
-                    Sertakan nama usaha atau lembaga Anda pada rincian pesanan petani.
-                  </FieldDescription>
-                </FieldContent>
-                <Switch
-                  id='pref-show-org'
-                  checked={preferences.showOrganizationOnReceipts}
-                  onCheckedChange={(checked) => updatePref('showOrganizationOnReceipts', checked)}
-                />
-              </Field>
+              <form.Field name='showOrganizationOnReceipts'>
+                {(field) => (
+                  <Field orientation='horizontal' className='justify-between gap-4'>
+                    <FieldContent>
+                      <FieldLabel htmlFor='pref-show-org'>
+                        Tampilkan nama organisasi pada nota
+                      </FieldLabel>
+                      <FieldDescription>
+                        Sertakan nama usaha atau lembaga Anda pada rincian pesanan petani.
+                      </FieldDescription>
+                    </FieldContent>
+                    <Switch
+                      id='pref-show-org'
+                      checked={field.state.value}
+                      onCheckedChange={(checked) => {
+                        field.handleChange(checked)
+                        setSavedNotice(false)
+                      }}
+                    />
+                  </Field>
+                )}
+              </form.Field>
 
               <Separator />
 
-              <Field orientation='horizontal' className='justify-between gap-4'>
-                <FieldContent>
-                  <FieldLabel htmlFor='pref-marketing'>Ringkasan panen mingguan</FieldLabel>
-                  <FieldDescription>
-                    Terima informasi stok panen surplus terbaru melalui email terdaftar.
-                  </FieldDescription>
-                </FieldContent>
-                <Switch
-                  id='pref-marketing'
-                  checked={preferences.marketingEmails}
-                  onCheckedChange={(checked) => updatePref('marketingEmails', checked)}
-                />
-              </Field>
+              <form.Field name='marketingEmails'>
+                {(field) => (
+                  <Field orientation='horizontal' className='justify-between gap-4'>
+                    <FieldContent>
+                      <FieldLabel htmlFor='pref-marketing'>Ringkasan panen mingguan</FieldLabel>
+                      <FieldDescription>
+                        Terima informasi stok panen surplus terbaru melalui email terdaftar.
+                      </FieldDescription>
+                    </FieldContent>
+                    <Switch
+                      id='pref-marketing'
+                      checked={field.state.value}
+                      onCheckedChange={(checked) => {
+                        field.handleChange(checked)
+                        setSavedNotice(false)
+                      }}
+                    />
+                  </Field>
+                )}
+              </form.Field>
             </FieldGroup>
           </CardContent>
 
@@ -216,10 +254,20 @@ export function AccountSettingsView() {
               Syarat dan ketentuan
             </Link>
 
-            <Button type='submit' disabled={updateProfileMutation.isPending}>
-              {updateProfileMutation.isPending && <Spinner data-icon='inline-start' />}
-              <span>{updateProfileMutation.isPending ? 'Menyimpan...' : 'Simpan pengaturan'}</span>
-            </Button>
+            <form.Subscribe selector={(state) => state.isSubmitting}>
+              {(isSubmitting) => (
+                <Button type='submit' disabled={isSubmitting || updateProfileMutation.isPending}>
+                  {(isSubmitting || updateProfileMutation.isPending) && (
+                    <Spinner data-icon='inline-start' />
+                  )}
+                  <span>
+                    {isSubmitting || updateProfileMutation.isPending
+                      ? 'Menyimpan...'
+                      : 'Simpan pengaturan'}
+                  </span>
+                </Button>
+              )}
+            </form.Subscribe>
           </CardFooter>
         </Card>
       </form>

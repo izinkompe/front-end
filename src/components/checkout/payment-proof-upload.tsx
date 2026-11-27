@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import Image from 'next/image'
+import { useForm } from '@tanstack/react-form'
 import { AlertCircle, ImageUp, Trash2 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -47,8 +48,39 @@ export function PaymentProofUpload({
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null)
-  const [notes, setNotes] = useState('')
   const [fileError, setFileError] = useState<string | null>(null)
+
+  const form = useForm({
+    defaultValues: {
+      notes: '',
+    },
+    onSubmit: async ({ value }) => {
+      if (disabled) return
+
+      const validationError = validatePaymentProofFile(
+        selectedFile
+          ? {
+              name: selectedFile.name,
+              type: selectedFile.type,
+              size: selectedFile.size,
+            }
+          : null
+      )
+
+      if (validationError || !previewDataUrl) {
+        setFileError(validationError || 'Pilih foto bukti transfer berformat JPG atau PNG.')
+        fileInputRef.current?.focus()
+        return
+      }
+
+      await submitPaymentMutation.mutateAsync({
+        proofUrl: previewDataUrl,
+        notes: value.notes.trim() || undefined,
+      })
+
+      onSubmitted?.()
+    },
+  })
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const nextFile = event.target.files?.[0] ?? null
@@ -90,34 +122,6 @@ export function PaymentProofUpload({
     }
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (disabled) return
-
-    const validationError = validatePaymentProofFile(
-      selectedFile
-        ? {
-            name: selectedFile.name,
-            type: selectedFile.type,
-            size: selectedFile.size,
-          }
-        : null
-    )
-
-    if (validationError || !previewDataUrl) {
-      setFileError(validationError || 'Pilih foto bukti transfer berformat JPG atau PNG.')
-      fileInputRef.current?.focus()
-      return
-    }
-
-    await submitPaymentMutation.mutateAsync({
-      proofUrl: previewDataUrl,
-      notes: notes.trim() || undefined,
-    })
-
-    onSubmitted?.()
-  }
-
   const safePreview = isSafeProofImageUrl(previewDataUrl ?? existingProofUrl)
   const hasFileError = Boolean(fileError)
 
@@ -133,7 +137,15 @@ export function PaymentProofUpload({
       </CardHeader>
 
       <CardContent>
-        <form noValidate onSubmit={handleSubmit} className='flex flex-col gap-5'>
+        <form
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            void form.handleSubmit()
+          }}
+          className='flex flex-col gap-5'
+        >
           {submitPaymentMutation.isError && (
             <Alert variant='destructive'>
               <AlertCircle aria-hidden='true' />
@@ -201,39 +213,48 @@ export function PaymentProofUpload({
               )}
             </Field>
 
-            <Field>
-              <FieldLabel htmlFor='payment-proof-notes'>Catatan transfer (opsional)</FieldLabel>
-              <Textarea
-                id='payment-proof-notes'
-                name='notes'
-                rows={2}
-                placeholder='Misal: transfer atas nama Dapur Umum Kasih via BRI'
-                value={notes}
-                disabled={disabled || submitPaymentMutation.isPending}
-                onChange={(event) => setNotes(event.target.value)}
-              />
-            </Field>
+            <form.Field name='notes'>
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor='payment-proof-notes'>Catatan transfer (opsional)</FieldLabel>
+                  <Textarea
+                    id='payment-proof-notes'
+                    name={field.name}
+                    rows={2}
+                    placeholder='Misal: transfer atas nama Dapur Umum Kasih via BRI'
+                    value={field.state.value}
+                    disabled={disabled || submitPaymentMutation.isPending}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                  />
+                </Field>
+              )}
+            </form.Field>
           </FieldGroup>
 
-          <Button
-            type='submit'
-            size='lg'
-            disabled={disabled || submitPaymentMutation.isPending}
-            className='w-full sm:w-auto sm:self-end'
-          >
-            {submitPaymentMutation.isPending ? (
-              <Spinner data-icon='inline-start' />
-            ) : (
-              <ImageUp data-icon='inline-start' aria-hidden='true' />
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button
+                type='submit'
+                size='lg'
+                disabled={disabled || isSubmitting || submitPaymentMutation.isPending}
+                className='w-full sm:w-auto sm:self-end'
+              >
+                {isSubmitting || submitPaymentMutation.isPending ? (
+                  <Spinner data-icon='inline-start' />
+                ) : (
+                  <ImageUp data-icon='inline-start' aria-hidden='true' />
+                )}
+                <span>
+                  {isSubmitting || submitPaymentMutation.isPending
+                    ? 'Mengirim bukti...'
+                    : isReupload
+                      ? 'Kirim ulang bukti transfer'
+                      : 'Kirim bukti transfer'}
+                </span>
+              </Button>
             )}
-            <span>
-              {submitPaymentMutation.isPending
-                ? 'Mengirim bukti...'
-                : isReupload
-                  ? 'Kirim ulang bukti transfer'
-                  : 'Kirim bukti transfer'}
-            </span>
-          </Button>
+          </form.Subscribe>
         </form>
       </CardContent>
     </Card>

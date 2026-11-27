@@ -1,7 +1,9 @@
 'use client'
 
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { CheckCircle2, Eye, EyeOff, KeyRound } from 'lucide-react'
+import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -43,12 +45,7 @@ function validateNewPassword(value: string) {
 
 export function BuyerPasswordResetForm({ onBack }: { onBack: () => void }) {
   const id = useId()
-  const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [touched, setTouched] = useState<Record<string, boolean>>({})
-  const [submitted, setSubmitted] = useState(false)
 
   const emailRef = useRef<HTMLInputElement | null>(null)
   const codeRef = useRef<HTMLInputElement | null>(null)
@@ -59,41 +56,40 @@ export function BuyerPasswordResetForm({ onBack }: { onBack: () => void }) {
   const sent = request.isSuccess
   const pending = request.isPending || reset.isPending
 
-  const emailError = validateEmailInput(email)
-  const codeError = sent ? validateResetCode(code) : null
-  const passwordError = sent ? validateNewPassword(password) : null
+  const form = useForm({
+    defaultValues: {
+      email: '',
+      code: '',
+      password: '',
+    },
+    onSubmit: async ({ value }) => {
+      if (pending) return
 
-  const showEmailError = Boolean((submitted || touched.email) && emailError)
-  const showCodeError = Boolean((submitted || touched.code) && codeError)
-  const showPasswordError = Boolean((submitted || touched.password) && passwordError)
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (pending) return
-    setSubmitted(true)
-
-    if (!sent) {
-      if (emailError) {
-        emailRef.current?.focus()
+      const emailErr = validateEmailInput(value.email)
+      if (!sent) {
+        if (emailErr) {
+          emailRef.current?.focus()
+          return
+        }
+        request.mutate({ email: value.email.trim() })
         return
       }
-      setSubmitted(false)
-      setTouched({})
-      request.mutate({ email: email.trim() })
-      return
-    }
 
-    if (codeError) {
-      codeRef.current?.focus()
-      return
-    }
-    if (passwordError) {
-      passwordRef.current?.focus()
-      return
-    }
+      const codeErr = validateResetCode(value.code)
+      if (codeErr) {
+        codeRef.current?.focus()
+        return
+      }
 
-    reset.mutate({ email: email.trim(), code: code.trim(), password })
-  }
+      const passwordErr = validateNewPassword(value.password)
+      if (passwordErr) {
+        passwordRef.current?.focus()
+        return
+      }
+
+      reset.mutate({ email: value.email.trim(), code: value.code.trim(), password: value.password })
+    },
+  })
 
   if (reset.isSuccess) {
     return (
@@ -113,30 +109,49 @@ export function BuyerPasswordResetForm({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className='flex flex-col gap-4'>
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        void form.handleSubmit()
+      }}
+      className='flex flex-col gap-4'
+    >
       <FieldGroup>
-        <Field data-invalid={showEmailError || undefined}>
-          <FieldLabel htmlFor={id + '-email'}>Alamat email</FieldLabel>
-          <Input
-            ref={emailRef}
-            id={id + '-email'}
-            name='email'
-            type='email'
-            autoComplete='email'
-            placeholder='nama@email.com'
-            maxLength={254}
-            readOnly={sent || pending}
-            value={email}
-            aria-invalid={showEmailError ? 'true' : 'false'}
-            aria-describedby={showEmailError ? `${id}-email-error` : undefined}
-            onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
-            onChange={(event) => setEmail(event.target.value)}
-            autoFocus={!sent}
-          />
-          {showEmailError && (
-            <FieldError id={id + '-email-error'} errors={[{ message: emailError as string }]} />
-          )}
-        </Field>
+        <form.Field
+          name='email'
+          validators={{
+            onChange: ({ value }) => validateEmailInput(value) ?? undefined,
+          }}
+        >
+          {(field) => {
+            const errors = getFieldErrorMessages(field.state.meta.errors)
+            const isInvalid = field.state.meta.isTouched && errors.length > 0
+            return (
+              <Field data-invalid={isInvalid || undefined}>
+                <FieldLabel htmlFor={id + '-email'}>Alamat email</FieldLabel>
+                <Input
+                  ref={emailRef}
+                  id={id + '-email'}
+                  name={field.name}
+                  type='email'
+                  autoComplete='email'
+                  placeholder='nama@email.com'
+                  maxLength={254}
+                  readOnly={sent || pending}
+                  value={field.state.value}
+                  aria-invalid={isInvalid ? 'true' : 'false'}
+                  aria-describedby={isInvalid ? `${id}-email-error` : undefined}
+                  onBlur={field.handleBlur}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  autoFocus={!sent}
+                />
+                {isInvalid && <FieldError id={id + '-email-error'} errors={errors} />}
+              </Field>
+            )
+          }}
+        </form.Field>
 
         {sent && (
           <>
@@ -152,68 +167,91 @@ export function BuyerPasswordResetForm({ onBack }: { onBack: () => void }) {
               </AlertDescription>
             </Alert>
 
-            <Field data-invalid={showCodeError || undefined}>
-              <FieldLabel htmlFor={id + '-code'}>Kode verifikasi</FieldLabel>
-              <Input
-                ref={codeRef}
-                id={id + '-code'}
-                name='code'
-                inputMode='numeric'
-                autoComplete='one-time-code'
-                placeholder='6 digit angka'
-                maxLength={6}
-                value={code}
-                aria-invalid={showCodeError ? 'true' : 'false'}
-                aria-describedby={showCodeError ? `${id}-code-error` : undefined}
-                onBlur={() => setTouched((prev) => ({ ...prev, code: true }))}
-                onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
-                autoFocus
-              />
-              {showCodeError && (
-                <FieldError id={id + '-code-error'} errors={[{ message: codeError as string }]} />
-              )}
-            </Field>
+            <form.Field
+              name='code'
+              validators={{
+                onChange: ({ value }) =>
+                  sent ? (validateResetCode(value) ?? undefined) : undefined,
+              }}
+            >
+              {(field) => {
+                const errors = getFieldErrorMessages(field.state.meta.errors)
+                const isInvalid = field.state.meta.isTouched && errors.length > 0
+                return (
+                  <Field data-invalid={isInvalid || undefined}>
+                    <FieldLabel htmlFor={id + '-code'}>Kode verifikasi</FieldLabel>
+                    <Input
+                      ref={codeRef}
+                      id={id + '-code'}
+                      name={field.name}
+                      inputMode='numeric'
+                      autoComplete='one-time-code'
+                      placeholder='6 digit angka'
+                      maxLength={6}
+                      value={field.state.value}
+                      aria-invalid={isInvalid ? 'true' : 'false'}
+                      aria-describedby={isInvalid ? `${id}-code-error` : undefined}
+                      onBlur={field.handleBlur}
+                      onChange={(event) =>
+                        field.handleChange(event.target.value.replace(/\D/g, ''))
+                      }
+                      autoFocus
+                    />
+                    {isInvalid && <FieldError id={id + '-code-error'} errors={errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
 
-            <Field data-invalid={showPasswordError || undefined}>
-              <FieldLabel htmlFor={id + '-password'}>Kata sandi baru</FieldLabel>
-              <InputGroup>
-                <InputGroupInput
-                  ref={passwordRef}
-                  id={id + '-password'}
-                  name='password'
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete='new-password'
-                  placeholder='Minimal 8 karakter'
-                  maxLength={128}
-                  value={password}
-                  aria-invalid={showPasswordError ? 'true' : 'false'}
-                  aria-describedby={
-                    showPasswordError ? `${id}-hint ${id}-password-error` : `${id}-hint`
-                  }
-                  onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
-                  onChange={(event) => setPassword(event.target.value)}
-                />
-                <InputGroupAddon align='inline-end'>
-                  <InputGroupButton
-                    size='icon-sm'
-                    aria-pressed={showPassword}
-                    aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
-                    onClick={() => setShowPassword((prev) => !prev)}
-                  >
-                    {showPassword ? <EyeOff /> : <Eye />}
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
-              <FieldDescription id={id + '-hint'}>
-                Gunakan minimal 8 karakter untuk keamanan akun.
-              </FieldDescription>
-              {showPasswordError && (
-                <FieldError
-                  id={id + '-password-error'}
-                  errors={[{ message: passwordError as string }]}
-                />
-              )}
-            </Field>
+            <form.Field
+              name='password'
+              validators={{
+                onChange: ({ value }) =>
+                  sent ? (validateNewPassword(value) ?? undefined) : undefined,
+              }}
+            >
+              {(field) => {
+                const errors = getFieldErrorMessages(field.state.meta.errors)
+                const isInvalid = field.state.meta.isTouched && errors.length > 0
+                return (
+                  <Field data-invalid={isInvalid || undefined}>
+                    <FieldLabel htmlFor={id + '-password'}>Kata sandi baru</FieldLabel>
+                    <InputGroup>
+                      <InputGroupInput
+                        ref={passwordRef}
+                        id={id + '-password'}
+                        name={field.name}
+                        type={showPassword ? 'text' : 'password'}
+                        autoComplete='new-password'
+                        placeholder='Minimal 8 karakter'
+                        maxLength={128}
+                        value={field.state.value}
+                        aria-invalid={isInvalid ? 'true' : 'false'}
+                        aria-describedby={
+                          isInvalid ? `${id}-hint ${id}-password-error` : `${id}-hint`
+                        }
+                        onBlur={field.handleBlur}
+                        onChange={(event) => field.handleChange(event.target.value)}
+                      />
+                      <InputGroupAddon align='inline-end'>
+                        <InputGroupButton
+                          size='icon-sm'
+                          aria-pressed={showPassword}
+                          aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
+                          onClick={() => setShowPassword((prev) => !prev)}
+                        >
+                          {showPassword ? <EyeOff /> : <Eye />}
+                        </InputGroupButton>
+                      </InputGroupAddon>
+                    </InputGroup>
+                    <FieldDescription id={id + '-hint'}>
+                      Gunakan minimal 8 karakter untuk keamanan akun.
+                    </FieldDescription>
+                    {isInvalid && <FieldError id={id + '-password-error'} errors={errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
           </>
         )}
       </FieldGroup>
@@ -225,10 +263,14 @@ export function BuyerPasswordResetForm({ onBack }: { onBack: () => void }) {
       )}
 
       <div className='flex flex-wrap gap-2'>
-        <Button type='submit' disabled={pending}>
-          {pending && <Spinner data-icon='inline-start' />}
-          <span>{sent ? 'Simpan kata sandi baru' : 'Minta kode reset'}</span>
-        </Button>
+        <form.Subscribe selector={(state) => state.isSubmitting}>
+          {(isSubmitting) => (
+            <Button type='submit' disabled={pending || isSubmitting}>
+              {(pending || isSubmitting) && <Spinner data-icon='inline-start' />}
+              <span>{sent ? 'Simpan kata sandi baru' : 'Minta kode reset'}</span>
+            </Button>
+          )}
+        </form.Subscribe>
         {sent && (
           <Button
             type='button'
@@ -237,10 +279,8 @@ export function BuyerPasswordResetForm({ onBack }: { onBack: () => void }) {
             onClick={() => {
               request.reset()
               reset.reset()
-              setCode('')
-              setPassword('')
-              setTouched({})
-              setSubmitted(false)
+              form.setFieldValue('code', '')
+              form.setFieldValue('password', '')
             }}
           >
             Minta kode baru

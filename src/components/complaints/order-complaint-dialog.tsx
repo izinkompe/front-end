@@ -1,6 +1,8 @@
 'use client'
 
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState } from 'react'
+import { useForm } from '@tanstack/react-form'
+import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -80,17 +82,7 @@ export function OrderComplaintDialog({
       : 'quality_issue'
 
   const [open, setOpen] = useState(false)
-  const [type, setType] = useState<ComplaintType>(defaultType)
-  const [description, setDescription] = useState(
-    defaultType === 'weight_discrepancy' ? (order.weightDiscrepancyNote ?? '') : ''
-  )
   const [files, setFiles] = useState<File[]>([])
-  const [bankValues, setBankValues] = useState<Record<BankFieldKey, string>>({
-    bankName: '',
-    accountNumber: '',
-    accountHolderName: '',
-  })
-  const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -98,92 +90,77 @@ export function OrderComplaintDialog({
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null)
   const bankInputRefs = useRef<Partial<Record<BankFieldKey, HTMLInputElement | null>>>({})
 
-  const needsAccount =
-    cancellation ||
-    type === 'pickup_failure' ||
-    (type === 'weight_discrepancy' && (order.confirmedWeightKg ?? 0) < order.quantityKg)
-
-  const descriptionError = validateComplaintDescription(description, cancellation)
   const filesError = cancellation ? null : validateComplaintFiles(files)
-  const bankErrors: Record<BankFieldKey, string | null> = {
-    bankName: needsAccount ? validateRefundBankField('bankName', bankValues.bankName) : null,
-    accountNumber: needsAccount
-      ? validateRefundBankField('accountNumber', bankValues.accountNumber)
-      : null,
-    accountHolderName: needsAccount
-      ? validateRefundBankField('accountHolderName', bankValues.accountHolderName)
-      : null,
-  }
+
+  const form = useForm({
+    defaultValues: {
+      type: defaultType as ComplaintType,
+      description: defaultType === 'weight_discrepancy' ? (order.weightDiscrepancyNote ?? '') : '',
+      bankName: '',
+      accountNumber: '',
+      accountHolderName: '',
+    },
+    onSubmit: async ({ value }) => {
+      if (submitting) return
+      setSubmitted(true)
+      setSubmitError('')
+
+      const needsAccount =
+        cancellation ||
+        value.type === 'pickup_failure' ||
+        (value.type === 'weight_discrepancy' && (order.confirmedWeightKg ?? 0) < order.quantityKg)
+
+      if (validateComplaintDescription(value.description, cancellation)) {
+        descriptionRef.current?.focus()
+        return
+      }
+      if (filesError) {
+        return
+      }
+      if (needsAccount) {
+        for (const field of bankFields) {
+          if (validateRefundBankField(field.name, value[field.name])) {
+            bankInputRefs.current[field.name]?.focus()
+            return
+          }
+        }
+      }
+
+      setSubmitting(true)
+      try {
+        const evidencePhotos = cancellation ? undefined : await readComplaintPhotos(files)
+        await mutation.mutateAsync({
+          orderId: order.id,
+          type: value.type,
+          description: value.description.trim(),
+          evidencePhotos: evidencePhotos?.length ? evidencePhotos : undefined,
+          refundBankAccount: needsAccount
+            ? {
+                bankName: value.bankName.trim(),
+                accountNumber: value.accountNumber.trim(),
+                accountHolderName: value.accountHolderName.trim(),
+              }
+            : undefined,
+        })
+        setOpen(false)
+        form.reset()
+        setFiles([])
+        setSubmitted(false)
+        setSubmitError('')
+      } catch (cause) {
+        setSubmitError(cause instanceof Error ? cause.message : 'Coba kirim pengaduan lagi.')
+      } finally {
+        setSubmitting(false)
+      }
+    },
+  })
 
   function resetForm() {
-    setType(defaultType)
-    setDescription(defaultType === 'weight_discrepancy' ? (order.weightDiscrepancyNote ?? '') : '')
+    form.reset()
     setFiles([])
-    setBankValues({ bankName: '', accountNumber: '', accountHolderName: '' })
-    setTouched({})
     setSubmitted(false)
     setSubmitError('')
   }
-
-  function handleTypeChange(nextType: ComplaintType | null) {
-    if (!nextType) return
-    setType(nextType)
-    if (nextType === 'weight_discrepancy' && !description.trim() && order.weightDiscrepancyNote) {
-      setDescription(order.weightDiscrepancyNote)
-    }
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (submitting) return
-    setSubmitted(true)
-    setSubmitError('')
-
-    if (descriptionError) {
-      descriptionRef.current?.focus()
-      return
-    }
-    if (filesError) {
-      return
-    }
-    if (needsAccount) {
-      for (const field of bankFields) {
-        if (bankErrors[field.name]) {
-          bankInputRefs.current[field.name]?.focus()
-          return
-        }
-      }
-    }
-
-    setSubmitting(true)
-    try {
-      const evidencePhotos = cancellation ? undefined : await readComplaintPhotos(files)
-      await mutation.mutateAsync({
-        orderId: order.id,
-        type,
-        description: description.trim(),
-        evidencePhotos: evidencePhotos?.length ? evidencePhotos : undefined,
-        refundBankAccount: needsAccount
-          ? {
-              bankName: bankValues.bankName.trim(),
-              accountNumber: bankValues.accountNumber.trim(),
-              accountHolderName: bankValues.accountHolderName.trim(),
-            }
-          : undefined,
-      })
-      setOpen(false)
-      resetForm()
-    } catch (cause) {
-      setSubmitError(cause instanceof Error ? cause.message : 'Coba kirim pengaduan lagi.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const showDescriptionError = Boolean((submitted || touched.description) && descriptionError)
-  const descriptionDescribedBy = showDescriptionError
-    ? `${id}-description-hint ${id}-description-error`
-    : `${id}-description-hint`
 
   return (
     <Dialog
@@ -208,59 +185,97 @@ export function OrderComplaintDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form noValidate onSubmit={handleSubmit} className='flex flex-col gap-4'>
+        <form
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            void form.handleSubmit()
+          }}
+          className='flex flex-col gap-4'
+        >
           <FieldGroup>
             {!cancellation && (
-              <Field>
-                <FieldLabel htmlFor={id + '-type'}>Jenis masalah</FieldLabel>
-                <Select name='type' value={type} onValueChange={handleTypeChange}>
-                  <SelectTrigger id={id + '-type'} className='w-full'>
-                    <SelectValue>{complaintTypeLabels[type]}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {reportTypes.map((value) => (
-                        <SelectItem value={value} key={value}>
-                          {complaintTypeLabels[value]}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
+              <form.Field name='type'>
+                {(field) => (
+                  <Field>
+                    <FieldLabel htmlFor={id + '-type'}>Jenis masalah</FieldLabel>
+                    <Select
+                      name={field.name}
+                      value={field.state.value}
+                      onValueChange={(nextType) => {
+                        if (!nextType) return
+                        field.handleChange(nextType)
+                        if (
+                          nextType === 'weight_discrepancy' &&
+                          !form.state.values.description.trim() &&
+                          order.weightDiscrepancyNote
+                        ) {
+                          form.setFieldValue('description', order.weightDiscrepancyNote)
+                        }
+                      }}
+                    >
+                      <SelectTrigger id={id + '-type'} className='w-full'>
+                        <SelectValue>{complaintTypeLabels[field.state.value]}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {reportTypes.map((value) => (
+                            <SelectItem value={value} key={value}>
+                              {complaintTypeLabels[value]}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
+              </form.Field>
             )}
 
-            <Field data-invalid={showDescriptionError || undefined}>
-              <FieldLabel htmlFor={id + '-description'}>
-                {cancellation ? 'Alasan pembatalan' : 'Kronologi masalah'}
-              </FieldLabel>
-              <FieldDescription id={id + '-description-hint'}>
-                Minimal 5 karakter, maksimal 2.000 karakter.
-              </FieldDescription>
-              <Textarea
-                ref={descriptionRef}
-                id={id + '-description'}
-                name='description'
-                maxLength={2000}
-                rows={3}
-                value={description}
-                placeholder={
-                  cancellation
-                    ? 'Jelaskan alasan pembatalan pesanan Anda'
-                    : 'Jelaskan kondisi hasil panen atau kendala saat pengambilan'
-                }
-                aria-invalid={showDescriptionError ? 'true' : 'false'}
-                aria-describedby={descriptionDescribedBy}
-                onBlur={() => setTouched((prev) => ({ ...prev, description: true }))}
-                onChange={(event) => setDescription(event.target.value)}
-              />
-              {showDescriptionError && (
-                <FieldError
-                  id={id + '-description-error'}
-                  errors={[{ message: descriptionError as string }]}
-                />
-              )}
-            </Field>
+            <form.Field
+              name='description'
+              validators={{
+                onChange: ({ value }) =>
+                  validateComplaintDescription(value, cancellation) ?? undefined,
+              }}
+            >
+              {(field) => {
+                const errors = getFieldErrorMessages(field.state.meta.errors)
+                const isInvalid = field.state.meta.isTouched && errors.length > 0
+                const descriptionDescribedBy = isInvalid
+                  ? `${id}-description-hint ${id}-description-error`
+                  : `${id}-description-hint`
+                return (
+                  <Field data-invalid={isInvalid || undefined}>
+                    <FieldLabel htmlFor={id + '-description'}>
+                      {cancellation ? 'Alasan pembatalan' : 'Kronologi masalah'}
+                    </FieldLabel>
+                    <FieldDescription id={id + '-description-hint'}>
+                      Minimal 5 karakter, maksimal 2.000 karakter.
+                    </FieldDescription>
+                    <Textarea
+                      ref={descriptionRef}
+                      id={id + '-description'}
+                      name={field.name}
+                      maxLength={2000}
+                      rows={3}
+                      value={field.state.value}
+                      placeholder={
+                        cancellation
+                          ? 'Jelaskan alasan pembatalan pesanan Anda'
+                          : 'Jelaskan kondisi hasil panen atau kendala saat pengambilan'
+                      }
+                      aria-invalid={isInvalid ? 'true' : 'false'}
+                      aria-describedby={descriptionDescribedBy}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.target.value)}
+                    />
+                    {isInvalid && <FieldError id={id + '-description-error'} errors={errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
 
             {!cancellation && (
               <ComplaintPhotoField
@@ -270,53 +285,73 @@ export function OrderComplaintDialog({
               />
             )}
 
-            {needsAccount && (
-              <FieldSet>
-                <FieldLegend>Rekening pengembalian dana</FieldLegend>
-                <FieldDescription>
-                  Digunakan administrator untuk transfer manual apabila pengembalian disetujui.
-                </FieldDescription>
-                <FieldGroup>
-                  {bankFields.map(({ name, label, placeholder, max }) => {
-                    const fieldError = bankErrors[name]
-                    const showFieldError = Boolean((submitted || touched[name]) && fieldError)
-                    const fieldId = `${id}-${name}`
-                    return (
-                      <Field key={name} data-invalid={showFieldError || undefined}>
-                        <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
-                        <Input
-                          ref={(node) => {
-                            bankInputRefs.current[name] = node
-                          }}
-                          id={fieldId}
+            <form.Subscribe selector={(state) => state.values.type}>
+              {(selectedType) => {
+                const needsAccount =
+                  cancellation ||
+                  selectedType === 'pickup_failure' ||
+                  (selectedType === 'weight_discrepancy' &&
+                    (order.confirmedWeightKg ?? 0) < order.quantityKg)
+
+                if (!needsAccount) return null
+
+                return (
+                  <FieldSet>
+                    <FieldLegend>Rekening pengembalian dana</FieldLegend>
+                    <FieldDescription>
+                      Digunakan administrator untuk transfer manual apabila pengembalian disetujui.
+                    </FieldDescription>
+                    <FieldGroup>
+                      {bankFields.map(({ name, label, placeholder, max }) => (
+                        <form.Field
+                          key={name}
                           name={name}
-                          maxLength={max}
-                          placeholder={placeholder}
-                          inputMode={name === 'accountNumber' ? 'numeric' : undefined}
-                          value={bankValues[name]}
-                          aria-invalid={showFieldError ? 'true' : 'false'}
-                          aria-describedby={showFieldError ? `${fieldId}-error` : undefined}
-                          onBlur={() => setTouched((prev) => ({ ...prev, [name]: true }))}
-                          onChange={(event) => {
-                            const nextValue =
-                              name === 'accountNumber'
-                                ? event.target.value.replace(/\D/g, '')
-                                : event.target.value
-                            setBankValues((prev) => ({ ...prev, [name]: nextValue }))
+                          validators={{
+                            onChange: ({ value }) =>
+                              validateRefundBankField(name, value) ?? undefined,
                           }}
-                        />
-                        {showFieldError && (
-                          <FieldError
-                            id={`${fieldId}-error`}
-                            errors={[{ message: fieldError as string }]}
-                          />
-                        )}
-                      </Field>
-                    )
-                  })}
-                </FieldGroup>
-              </FieldSet>
-            )}
+                        >
+                          {(field) => {
+                            const errors = getFieldErrorMessages(field.state.meta.errors)
+                            const isInvalid = field.state.meta.isTouched && errors.length > 0
+                            const fieldId = `${id}-${name}`
+                            return (
+                              <Field data-invalid={isInvalid || undefined}>
+                                <FieldLabel htmlFor={fieldId}>{label}</FieldLabel>
+                                <Input
+                                  ref={(node) => {
+                                    bankInputRefs.current[name] = node
+                                  }}
+                                  id={fieldId}
+                                  name={field.name}
+                                  maxLength={max}
+                                  placeholder={placeholder}
+                                  inputMode={name === 'accountNumber' ? 'numeric' : undefined}
+                                  value={field.state.value}
+                                  aria-invalid={isInvalid ? 'true' : 'false'}
+                                  aria-describedby={isInvalid ? `${fieldId}-error` : undefined}
+                                  onBlur={field.handleBlur}
+                                  onChange={(event) => {
+                                    const nextValue =
+                                      name === 'accountNumber'
+                                        ? event.target.value.replace(/\D/g, '')
+                                        : event.target.value
+                                    field.handleChange(nextValue)
+                                  }}
+                                />
+                                {isInvalid && (
+                                  <FieldError id={`${fieldId}-error`} errors={errors} />
+                                )}
+                              </Field>
+                            )
+                          }}
+                        </form.Field>
+                      ))}
+                    </FieldGroup>
+                  </FieldSet>
+                )
+              }}
+            </form.Subscribe>
           </FieldGroup>
 
           {submitError && (

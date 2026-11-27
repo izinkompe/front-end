@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useForm } from '@tanstack/react-form'
 import { AlertCircle, CheckCircle2, Clock, Lock, MapPin, ShieldCheck, Truck } from 'lucide-react'
+import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
 import {
   formatPlainRupiah,
   formatPricePerKg,
@@ -73,70 +74,71 @@ export function OfferReservationForm({
   const defaultSlotId = availableSlots[0]?.id ?? ''
   const presets = getWeightPresetsKg(offer.availableStockKg)
 
-  const [weightText, setWeightText] = useState(() => {
+  const initialWeightText = (() => {
     if (offer.availableStockKg >= 5) return '5'
     if (offer.availableStockKg >= 1) return '1'
     return offer.availableStockKg > 0 ? String(offer.availableStockKg) : ''
-  })
-  const [selectedSlotId, setSelectedSlotId] = useState(defaultSlotId)
-  const [notes, setNotes] = useState('')
-  const [weightTouched, setWeightTouched] = useState(false)
-  const [slotTouched, setSlotTouched] = useState(false)
-
-  const activeSlotId = availableSlots.some((slot) => slot.id === selectedSlotId)
-    ? selectedSlotId
-    : defaultSlotId
-
-  const parsedWeightKg = parseWeightInputKg(weightText)
-  const weightError = validateOrderWeightKg(parsedWeightKg, offer.availableStockKg)
-  const slotError =
-    availableSlots.length > 0 && !activeSlotId ? 'Pilih salah satu jadwal pengambilan.' : null
+  })()
 
   const isOfferClosed = isExpired || offer.status !== 'active' || offer.availableStockKg <= 0
   const isNonBuyerUser = Boolean(currentUser && currentUser.role !== 'buyer')
   const priceSummary = getDynamicPriceSummary(offer.pricePerKg, offer.dynamicPriceRule)
 
-  const estimatedTotal =
-    parsedWeightKg !== null && !weightError ? Math.round(parsedWeightKg * offer.pricePerKg) : null
+  const form = useForm({
+    defaultValues: {
+      weightText: initialWeightText,
+      selectedSlotId: defaultSlotId,
+      notes: '',
+    },
+    onSubmit: async ({ value }) => {
+      if (isOfferClosed) return
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setWeightTouched(true)
-    setSlotTouched(true)
+      if (!currentUser) {
+        onRequireAuth()
+        return
+      }
 
-    if (isOfferClosed) return
+      if (currentUser.role !== 'buyer') {
+        return
+      }
 
-    if (!currentUser) {
-      onRequireAuth()
-      return
-    }
+      const parsedWeightKg = parseWeightInputKg(value.weightText)
+      const weightError = validateOrderWeightKg(parsedWeightKg, offer.availableStockKg)
+      const activeSlotId = availableSlots.some((slot) => slot.id === value.selectedSlotId)
+        ? value.selectedSlotId
+        : defaultSlotId
+      const slotError =
+        availableSlots.length > 0 && !activeSlotId ? 'Pilih salah satu jadwal pengambilan.' : null
 
-    if (currentUser.role !== 'buyer') {
-      return
-    }
+      if (weightError || parsedWeightKg === null || slotError || !activeSlotId) {
+        return
+      }
 
-    if (weightError || parsedWeightKg === null || slotError || !activeSlotId) {
-      return
-    }
-
-    router.push(
-      buildCheckoutHref({
-        offerId: offer.id,
-        quantityKg: parsedWeightKg,
-        slotId: activeSlotId,
-        notes: notes.trim() || undefined,
-        pricePerKg: offer.pricePerKg,
-      })
-    )
-  }
+      router.push(
+        buildCheckoutHref({
+          offerId: offer.id,
+          quantityKg: parsedWeightKg,
+          slotId: activeSlotId,
+          notes: value.notes.trim() || undefined,
+          pricePerKg: offer.pricePerKg,
+        })
+      )
+    },
+  })
 
   const weightInputId = `${idPrefix}-weight`
   const notesInputId = `${idPrefix}-notes`
-  const showWeightError = weightTouched && Boolean(weightError)
-  const showSlotError = slotTouched && Boolean(slotError)
 
   return (
-    <form noValidate onSubmit={handleSubmit} className='flex flex-col gap-4'>
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        void form.handleSubmit()
+      }}
+      className='flex flex-col gap-4'
+    >
       <div className='flex items-baseline justify-between gap-3'>
         <div className='flex flex-col gap-0.5'>
           {priceSummary.hasDropped && priceSummary.originalPriceFormatted && (
@@ -193,136 +195,199 @@ export function OfferReservationForm({
           )}
 
           <FieldGroup className='gap-4'>
-            <Field data-invalid={showWeightError || undefined}>
-              <FieldLabel htmlFor={weightInputId}>Berat pesanan (kg)</FieldLabel>
-              <InputGroup>
-                <InputGroupInput
-                  id={weightInputId}
-                  type='text'
-                  inputMode='decimal'
-                  placeholder='Contoh: 5'
-                  value={weightText}
-                  onBlur={() => setWeightTouched(true)}
-                  onChange={(event) => setWeightText(event.target.value)}
-                  aria-invalid={showWeightError || undefined}
-                />
-                <InputGroupAddon align='inline-end'>
-                  <InputGroupText>kg</InputGroupText>
-                </InputGroupAddon>
-              </InputGroup>
+            <form.Field
+              name='weightText'
+              validators={{
+                onChange: ({ value }) =>
+                  validateOrderWeightKg(parseWeightInputKg(value), offer.availableStockKg) ??
+                  undefined,
+              }}
+            >
+              {(field) => {
+                const parsedWeightKg = parseWeightInputKg(field.state.value)
+                const errors = getFieldErrorMessages(field.state.meta.errors)
+                const isInvalid = field.state.meta.isTouched && errors.length > 0
+                return (
+                  <Field data-invalid={isInvalid || undefined}>
+                    <FieldLabel htmlFor={weightInputId}>Berat pesanan (kg)</FieldLabel>
+                    <InputGroup>
+                      <InputGroupInput
+                        id={weightInputId}
+                        name={field.name}
+                        type='text'
+                        inputMode='decimal'
+                        placeholder='Contoh: 5'
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(event) => field.handleChange(event.target.value)}
+                        aria-invalid={isInvalid || undefined}
+                      />
+                      <InputGroupAddon align='inline-end'>
+                        <InputGroupText>kg</InputGroupText>
+                      </InputGroupAddon>
+                    </InputGroup>
 
-              {presets.length > 0 && (
-                <div className='flex flex-wrap items-center gap-1.5 pt-1'>
-                  {presets.map((preset) => (
-                    <Button
-                      key={preset}
-                      type='button'
-                      variant={parsedWeightKg === preset ? 'secondary' : 'outline'}
-                      size='xs'
-                      onClick={() => {
-                        setWeightText(String(preset))
-                        setWeightTouched(true)
-                      }}
-                      className='rounded-full tabular-nums'
-                    >
-                      {formatWeightKg(preset)}
-                    </Button>
-                  ))}
-                </div>
-              )}
+                    {presets.length > 0 && (
+                      <div className='flex flex-wrap items-center gap-1.5 pt-1'>
+                        {presets.map((preset) => (
+                          <Button
+                            key={preset}
+                            type='button'
+                            variant={parsedWeightKg === preset ? 'secondary' : 'outline'}
+                            size='xs'
+                            onClick={() => field.handleChange(String(preset))}
+                            className='rounded-full tabular-nums'
+                          >
+                            {formatWeightKg(preset)}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
 
-              {showWeightError ? (
-                <FieldError errors={[{ message: weightError as string }]} />
-              ) : (
-                <FieldDescription>
-                  Ketelitian hingga 0,001 kg, maks. {formatWeightKg(offer.availableStockKg)}.
-                </FieldDescription>
-              )}
-            </Field>
+                    {isInvalid ? (
+                      <FieldError errors={errors} />
+                    ) : (
+                      <FieldDescription>
+                        Ketelitian hingga 0,001 kg, maks. {formatWeightKg(offer.availableStockKg)}.
+                      </FieldDescription>
+                    )}
+                  </Field>
+                )
+              }}
+            </form.Field>
 
-            <OfferPortionHelper
-              quantityKg={weightError ? null : parsedWeightKg}
-              pricePerKg={offer.pricePerKg}
-            />
+            <form.Subscribe selector={(state) => state.values.weightText}>
+              {(weightText) => {
+                const parsedWeightKg = parseWeightInputKg(weightText)
+                const weightError = validateOrderWeightKg(parsedWeightKg, offer.availableStockKg)
+                return (
+                  <OfferPortionHelper
+                    quantityKg={weightError ? null : parsedWeightKg}
+                    pricePerKg={offer.pricePerKg}
+                  />
+                )
+              }}
+            </form.Subscribe>
 
-            <Field data-invalid={showSlotError || undefined}>
-              <FieldLabel>Jadwal pengambilan</FieldLabel>
-              {availableSlots.length === 0 ? (
-                <p className='text-sm text-destructive'>Belum ada slot pengambilan tersedia.</p>
-              ) : availableSlots.length <= 5 ? (
-                <ToggleGroup
-                  variant='outline'
-                  spacing={2}
-                  value={activeSlotId ? [activeSlotId] : []}
-                  onValueChange={(nextValues) => {
-                    if (nextValues[0]) {
-                      setSelectedSlotId(nextValues[0])
-                      setSlotTouched(true)
-                    }
-                  }}
-                  aria-label='Pilih jadwal pengambilan'
-                  className='flex w-full flex-col items-stretch gap-2'
-                >
-                  {availableSlots.map((slot) => (
-                    <ToggleGroupItem
-                      key={slot.id}
-                      value={slot.id}
-                      className='min-h-11 w-full justify-start rounded-lg border border-border bg-background px-3.5 py-2 text-left text-sm font-medium text-foreground tabular-nums aria-pressed:border-primary aria-pressed:bg-primary/8 aria-pressed:text-foreground'
-                    >
-                      {formatPickupSlotLabel(slot)}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              ) : (
-                <Select
-                  value={activeSlotId}
-                  onValueChange={(value) => {
-                    if (value) {
-                      setSelectedSlotId(value)
-                      setSlotTouched(true)
-                    }
-                  }}
-                >
-                  <SelectTrigger className='w-full'>
-                    <SelectValue placeholder='Pilih slot pengambilan' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {availableSlots.map((slot) => (
-                        <SelectItem key={slot.id} value={slot.id}>
-                          {formatPickupSlotLabel(slot)}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              )}
-              {showSlotError && <FieldError errors={[{ message: slotError as string }]} />}
-            </Field>
+            <form.Field
+              name='selectedSlotId'
+              validators={{
+                onChange: ({ value }) => {
+                  const active = availableSlots.some((slot) => slot.id === value)
+                    ? value
+                    : defaultSlotId
+                  return availableSlots.length > 0 && !active
+                    ? 'Pilih salah satu jadwal pengambilan.'
+                    : undefined
+                },
+              }}
+            >
+              {(field) => {
+                const activeSlotId = availableSlots.some((slot) => slot.id === field.state.value)
+                  ? field.state.value
+                  : defaultSlotId
+                const errors = getFieldErrorMessages(field.state.meta.errors)
+                const isInvalid = field.state.meta.isTouched && errors.length > 0
+                return (
+                  <Field data-invalid={isInvalid || undefined}>
+                    <FieldLabel>Jadwal pengambilan</FieldLabel>
+                    {availableSlots.length === 0 ? (
+                      <p className='text-sm text-destructive'>
+                        Belum ada slot pengambilan tersedia.
+                      </p>
+                    ) : availableSlots.length <= 5 ? (
+                      <ToggleGroup
+                        variant='outline'
+                        spacing={2}
+                        value={activeSlotId ? [activeSlotId] : []}
+                        onValueChange={(nextValues) => {
+                          if (nextValues[0]) {
+                            field.handleChange(nextValues[0])
+                          }
+                        }}
+                        aria-label='Pilih jadwal pengambilan'
+                        className='flex w-full flex-col items-stretch gap-2'
+                      >
+                        {availableSlots.map((slot) => (
+                          <ToggleGroupItem
+                            key={slot.id}
+                            value={slot.id}
+                            className='min-h-11 w-full justify-start rounded-lg border border-border bg-background px-3.5 py-2 text-left text-sm font-medium text-foreground tabular-nums aria-pressed:border-primary aria-pressed:bg-primary/8 aria-pressed:text-foreground'
+                          >
+                            {formatPickupSlotLabel(slot)}
+                          </ToggleGroupItem>
+                        ))}
+                      </ToggleGroup>
+                    ) : (
+                      <Select
+                        value={activeSlotId}
+                        onValueChange={(value) => {
+                          if (value) {
+                            field.handleChange(value)
+                          }
+                        }}
+                      >
+                        <SelectTrigger className='w-full'>
+                          <SelectValue placeholder='Pilih slot pengambilan' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {availableSlots.map((slot) => (
+                              <SelectItem key={slot.id} value={slot.id}>
+                                {formatPickupSlotLabel(slot)}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    )}
+                    {isInvalid && <FieldError errors={errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
 
             <details className='group'>
               <summary className='cursor-pointer text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground'>
                 Tambah catatan pengambilan (opsional)
               </summary>
-              <Field className='mt-2.5'>
-                <FieldLabel htmlFor={notesInputId}>Catatan pengambilan</FieldLabel>
-                <Textarea
-                  id={notesInputId}
-                  rows={2}
-                  placeholder='Misal: bawa keranjang atau datang awal slot'
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                />
-              </Field>
+              <form.Field name='notes'>
+                {(field) => (
+                  <Field className='mt-2.5'>
+                    <FieldLabel htmlFor={notesInputId}>Catatan pengambilan</FieldLabel>
+                    <Textarea
+                      id={notesInputId}
+                      name={field.name}
+                      rows={2}
+                      placeholder='Misal: bawa keranjang atau datang awal slot'
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => field.handleChange(event.target.value)}
+                    />
+                  </Field>
+                )}
+              </form.Field>
             </details>
           </FieldGroup>
 
-          <div className='flex items-baseline justify-between gap-2 rounded-xl bg-muted/60 px-4 py-2.5'>
-            <span className='text-sm font-medium text-muted-foreground'>Estimasi total</span>
-            <span className='text-lg font-bold text-foreground tabular-nums'>
-              {estimatedTotal !== null ? formatPlainRupiah(estimatedTotal) : '—'}
-            </span>
-          </div>
+          <form.Subscribe selector={(state) => state.values.weightText}>
+            {(weightText) => {
+              const parsedWeightKg = parseWeightInputKg(weightText)
+              const weightError = validateOrderWeightKg(parsedWeightKg, offer.availableStockKg)
+              const estimatedTotal =
+                parsedWeightKg !== null && !weightError
+                  ? Math.round(parsedWeightKg * offer.pricePerKg)
+                  : null
+              return (
+                <div className='flex items-baseline justify-between gap-2 rounded-xl bg-muted/60 px-4 py-2.5'>
+                  <span className='text-sm font-medium text-muted-foreground'>Estimasi total</span>
+                  <span className='text-lg font-bold text-foreground tabular-nums'>
+                    {estimatedTotal !== null ? formatPlainRupiah(estimatedTotal) : '—'}
+                  </span>
+                </div>
+              )
+            }}
+          </form.Subscribe>
 
           <Button
             type='submit'
