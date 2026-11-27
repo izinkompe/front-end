@@ -220,25 +220,25 @@ export function BuyerHeroSearch() {
         value={[mode]}
         onValueChange={handleModeChange}
         aria-label='Mode pencarian panen'
-        className='relative z-10 -mb-6 max-w-full flex-nowrap overflow-x-auto rounded-full border border-border/80 bg-card p-1.5 shadow-md'
+        className='scroll-strip relative z-10 -mb-6 max-w-full flex-nowrap rounded-full border border-border/80 bg-card p-1.5 shadow-md'
       >
         <ToggleGroupItem
           value='katalog'
-          className='min-h-10 shrink-0 whitespace-nowrap rounded-full px-3 text-xs font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary sm:px-4 sm:text-sm dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
+          className='min-h-10 shrink-0 rounded-full px-3 text-sm font-medium whitespace-nowrap text-foreground/75 pointer-coarse:min-h-11 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary sm:px-4 dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <Search data-icon='inline-start' aria-hidden='true' />
           <span>Cari panen</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value='peta'
-          className='min-h-10 shrink-0 whitespace-nowrap rounded-full px-3 text-xs font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary sm:px-4 sm:text-sm dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
+          className='min-h-10 shrink-0 rounded-full px-3 text-sm font-medium whitespace-nowrap text-foreground/75 pointer-coarse:min-h-11 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary sm:px-4 dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <MapPin data-icon='inline-start' aria-hidden='true' />
           <span>Peta radius</span>
         </ToggleGroupItem>
         <ToggleGroupItem
           value='segera-ditutup'
-          className='min-h-10 shrink-0 whitespace-nowrap rounded-full px-3 text-xs font-medium text-foreground/75 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary sm:px-4 sm:text-sm dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
+          className='min-h-10 shrink-0 rounded-full px-3 text-sm font-medium whitespace-nowrap text-foreground/75 pointer-coarse:min-h-11 hover:bg-muted hover:text-foreground aria-pressed:bg-primary/12 aria-pressed:font-semibold aria-pressed:text-primary sm:px-4 dark:aria-pressed:bg-primary/25 dark:aria-pressed:text-primary-foreground'
         >
           <Clock data-icon='inline-start' aria-hidden='true' />
           <span>Segera ditutup</span>

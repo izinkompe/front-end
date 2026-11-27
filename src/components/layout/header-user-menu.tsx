@@ -43,7 +43,10 @@ export function HeaderUserMenu({
           <Button
             variant='ghost'
             size='icon'
-            className={cn('size-10 rounded-full p-0', isTransparent && transparentIconClass)}
+            className={cn(
+              'touch-target size-10 rounded-full p-0',
+              isTransparent && transparentIconClass
+            )}
             aria-label={`Menu akun ${user.name}`}
           />
         }
@@ -53,29 +56,39 @@ export function HeaderUserMenu({
           <AvatarFallback>{getUserInitials(user.name)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align='end' sideOffset={8} className='w-60'>
+      <DropdownMenuContent
+        align='end'
+        sideOffset={8}
+        collisionPadding={12}
+        className='w-64 max-w-[calc(100vw-1.5rem)]'
+      >
         <DropdownMenuGroup>
-          <DropdownMenuLabel className='flex flex-col gap-0.5 py-1.5'>
+          <DropdownMenuLabel className='flex flex-col gap-1.5 py-2'>
             <span className='truncate text-sm font-semibold text-foreground'>{user.name}</span>
-            <span className='truncate text-xs font-normal text-muted-foreground'>{user.email}</span>
+            <span className='truncate text-meta font-normal text-muted-foreground'>
+              {user.email}
+            </span>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem render={<Link href='/akun' />}>
-            <ShoppingBag aria-hidden='true' />
+          <DropdownMenuItem className='min-h-11 sm:min-h-9' render={<Link href='/akun' />}>
+            <ShoppingBag className='icon-sm' aria-hidden='true' />
             <span>Pesanan Saya</span>
           </DropdownMenuItem>
-          <DropdownMenuItem render={<Link href='/akun/profil' />}>
-            <User aria-hidden='true' />
+          <DropdownMenuItem className='min-h-11 sm:min-h-9' render={<Link href='/akun/profil' />}>
+            <User className='icon-sm' aria-hidden='true' />
             <span>Data Profil</span>
           </DropdownMenuItem>
-          <DropdownMenuItem render={<Link href='/akun/alamat' />}>
-            <MapPin aria-hidden='true' />
+          <DropdownMenuItem className='min-h-11 sm:min-h-9' render={<Link href='/akun/alamat' />}>
+            <MapPin className='icon-sm' aria-hidden='true' />
             <span>Alamat Tersimpan</span>
           </DropdownMenuItem>
-          <DropdownMenuItem render={<Link href='/akun/pengaturan' />}>
-            <Settings aria-hidden='true' />
+          <DropdownMenuItem
+            className='min-h-11 sm:min-h-9'
+            render={<Link href='/akun/pengaturan' />}
+          >
+            <Settings className='icon-sm' aria-hidden='true' />
             <span>Pengaturan</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -83,8 +96,8 @@ export function HeaderUserMenu({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem render={<Link href='/dashboard' />}>
-                <LayoutDashboard aria-hidden='true' />
+              <DropdownMenuItem className='min-h-11 sm:min-h-9' render={<Link href='/dashboard' />}>
+                <LayoutDashboard className='icon-sm' aria-hidden='true' />
                 <span>Dashboard Mitra</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -94,6 +107,7 @@ export function HeaderUserMenu({
         <DropdownMenuGroup>
           <DropdownMenuItem
             variant='destructive'
+            className='min-h-11 sm:min-h-9'
             onClick={async () => {
               await logoutMutation.mutateAsync()
               if (pathname.startsWith('/akun') || pathname.startsWith('/dashboard')) {
@@ -101,7 +115,7 @@ export function HeaderUserMenu({
               }
             }}
           >
-            <LogOut aria-hidden='true' />
+            <LogOut className='icon-sm' aria-hidden='true' />
             <span>Keluar</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>

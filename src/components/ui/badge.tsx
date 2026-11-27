@@ -4,7 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from 'cn'
 
 const badgeVariants = cva(
-  'group/badge inline-flex min-h-7 w-fit shrink-0 items-center justify-center gap-1.5 rounded-4xl border border-transparent px-3 py-1 text-xs leading-snug font-medium transition-all sm:text-sm focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3.5!',
+  'group/badge inline-flex min-h-7 w-fit shrink-0 items-center justify-center gap-1.5 rounded-4xl border border-transparent px-3 py-1 text-sm leading-snug font-medium transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg:not([class*="size-"]):not([class*="icon-"])]:size-(--icon-xs)',
   {
     variants: {
       variant: {

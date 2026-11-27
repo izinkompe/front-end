@@ -1,6 +1,7 @@
 'use client'
 
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { AlertCircle, Lock } from 'lucide-react'
 import { formatPricePerKg, formatWeightKg } from '@/components/home/offer-card-helpers'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -36,7 +37,12 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { ApiError } from '@/lib/api/errors'
 import { useCreateOrder } from '@/hooks/api/use-orders'
-import { hasOfferPriceChanged, validateCheckoutContact } from '@/lib/data/checkout-helpers'
+import {
+  hasOfferPriceChanged,
+  readCheckoutDraft,
+  updateCheckoutDraft,
+  validateCheckoutContact,
+} from '@/lib/data/checkout-helpers'
 import {
   formatPickupSlotLabel,
   getWeightPresetsKg,
@@ -92,9 +98,6 @@ export function CheckoutReservationForm({
 
   const presets = getWeightPresetsKg(offer.availableStockKg)
 
-  const [notes, setNotes] = useState(initialNotes)
-  const [contactName, setContactName] = useState(() => currentUser?.name ?? '')
-  const [contactPhone, setContactPhone] = useState(() => currentUser?.phone ?? '')
   const [selectedAddressId, setSelectedAddressId] = useState(
     () =>
       currentUser?.addresses?.find((addr) => addr.isDefault)?.id ??
@@ -103,7 +106,6 @@ export function CheckoutReservationForm({
   )
   const [customBuyerAddress, setCustomBuyerAddress] = useState<OrderBuyerAddress | null>(null)
   const [acknowledgedPrice, setAcknowledgedPrice] = useState<number | null>(null)
-  const [priceConfirmed, setPriceConfirmed] = useState(false)
 
   const [weightTouched, setWeightTouched] = useState(false)
   const [slotTouched, setSlotTouched] = useState(false)
@@ -111,10 +113,6 @@ export function CheckoutReservationForm({
   const [phoneTouched, setPhoneTouched] = useState(false)
   const [submitAttempted, setSubmitAttempted] = useState(false)
 
-  const effectiveContactName = nameTouched ? contactName : contactName || currentUser?.name || ''
-  const effectiveContactPhone = phoneTouched
-    ? contactPhone
-    : contactPhone || currentUser?.phone || ''
   const buyerAddresses = currentUser?.addresses ?? []
   const resolvedAddressId = buyerAddresses.some((addr) => addr.id === selectedAddressId)
     ? selectedAddressId
@@ -134,85 +132,133 @@ export function CheckoutReservationForm({
   const weightError = validateOrderWeightKg(parsedWeightKg, offer.availableStockKg)
   const slotError =
     availableSlots.length > 0 && !activeSlotId ? 'Pilih salah satu jadwal pengambilan.' : null
-  const contactErrors = validateCheckoutContact({
-    contactName: effectiveContactName,
-    contactPhone: effectiveContactPhone,
-  })
 
   const isNonBuyerUser = Boolean(currentUser && currentUser.role !== 'buyer')
   const priceChangedFromDetail =
     hasOfferPriceChanged(expectedPricePerKg, offer.pricePerKg) &&
     acknowledgedPrice !== offer.pricePerKg
 
-  const showWeightError = (weightTouched || submitAttempted) && Boolean(weightError)
-  const showSlotError = (slotTouched || submitAttempted) && Boolean(slotError)
-  const showNameError = (nameTouched || submitAttempted) && Boolean(contactErrors.contactName)
-  const showPhoneError = (phoneTouched || submitAttempted) && Boolean(contactErrors.contactPhone)
-  const showPriceAckError = submitAttempted && priceChangedFromDetail && !priceConfirmed
+  const form = useForm({
+    defaultValues: {
+      notes: initialNotes,
+      contactName: currentUser?.name ?? '',
+      contactPhone: currentUser?.phone ?? '',
+      priceConfirmed: false,
+    },
+    onSubmit: async ({ value }) => {
+      setSubmitAttempted(true)
+      setWeightTouched(true)
+      setSlotTouched(true)
+      setNameTouched(true)
+      setPhoneTouched(true)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitAttempted(true)
-    setWeightTouched(true)
-    setSlotTouched(true)
-    setNameTouched(true)
-    setPhoneTouched(true)
+      if (isOfferUnavailable) return
 
-    if (isOfferUnavailable) return
+      if (!currentUser) {
+        onRequireAuth()
+        return
+      }
 
-    if (!currentUser) {
-      onRequireAuth()
-      return
-    }
+      if (currentUser.role !== 'buyer') return
 
-    if (currentUser.role !== 'buyer') return
+      if (weightError || parsedWeightKg === null) {
+        weightInputRef.current?.focus()
+        return
+      }
 
-    if (weightError || parsedWeightKg === null) {
-      weightInputRef.current?.focus()
-      return
-    }
+      if (slotError || !activeSlotId) {
+        return
+      }
 
-    if (slotError || !activeSlotId) {
-      return
-    }
-
-    if (contactErrors.contactName) {
-      contactNameRef.current?.focus()
-      return
-    }
-
-    if (contactErrors.contactPhone) {
-      contactPhoneRef.current?.focus()
-      return
-    }
-
-    if (priceChangedFromDetail && !priceConfirmed) {
-      return
-    }
-
-    try {
-      const created = await createOrderMutation.mutateAsync({
-        offerId: offer.id,
-        quantityKg: parsedWeightKg,
-        scheduleSlotId: activeSlotId,
-        notes: notes.trim() || undefined,
-        contactName: effectiveContactName.trim(),
-        contactPhone: effectiveContactPhone.trim(),
-        buyerAddress: activeBuyerAddress,
-        acceptedPricePerKg: offer.pricePerKg,
+      const resolvedContactName = nameTouched
+        ? value.contactName
+        : value.contactName || currentUser?.name || ''
+      const resolvedContactPhone = phoneTouched
+        ? value.contactPhone
+        : value.contactPhone || currentUser?.phone || ''
+      const contactErrors = validateCheckoutContact({
+        contactName: resolvedContactName,
+        contactPhone: resolvedContactPhone,
       })
 
-      onOrderCreated(created)
-    } catch (error) {
-      if (error instanceof ApiError && error.code === 'PRICE_CHANGED') {
-        setPriceConfirmed(false)
-        setAcknowledgedPrice(null)
+      if (contactErrors.contactName) {
+        contactNameRef.current?.focus()
+        return
       }
+
+      if (contactErrors.contactPhone) {
+        contactPhoneRef.current?.focus()
+        return
+      }
+
+      if (priceChangedFromDetail && !value.priceConfirmed) {
+        return
+      }
+
+      try {
+        const created = await createOrderMutation.mutateAsync({
+          offerId: offer.id,
+          quantityKg: parsedWeightKg,
+          scheduleSlotId: activeSlotId,
+          notes: value.notes.trim() || undefined,
+          contactName: resolvedContactName.trim(),
+          contactPhone: resolvedContactPhone.trim(),
+          buyerAddress: activeBuyerAddress,
+          acceptedPricePerKg: offer.pricePerKg,
+        })
+
+        onOrderCreated(created)
+      } catch (error) {
+        if (error instanceof ApiError && error.code === 'PRICE_CHANGED') {
+          form.setFieldValue('priceConfirmed', false)
+          setAcknowledgedPrice(null)
+        }
+      }
+    },
+  })
+
+  const showWeightError = (weightTouched || submitAttempted) && Boolean(weightError)
+  const showSlotError = (slotTouched || submitAttempted) && Boolean(slotError)
+
+  useEffect(() => {
+    let active = true
+    queueMicrotask(() => {
+      if (!active) return
+      const draft = readCheckoutDraft(offer.id)
+      if (!draft) return
+      if (draft.selectedAddressId !== undefined) {
+        setSelectedAddressId(draft.selectedAddressId)
+      }
+      if (draft.customBuyerAddress !== undefined) {
+        setCustomBuyerAddress(draft.customBuyerAddress)
+      }
+      if (draft.notes !== undefined) {
+        form.setFieldValue('notes', draft.notes)
+      }
+      if (draft.contactName !== undefined) {
+        setNameTouched(true)
+        form.setFieldValue('contactName', draft.contactName)
+      }
+      if (draft.contactPhone !== undefined) {
+        setPhoneTouched(true)
+        form.setFieldValue('contactPhone', draft.contactPhone)
+      }
+    })
+    return () => {
+      active = false
     }
-  }
+  }, [form, offer.id])
 
   return (
-    <form noValidate onSubmit={handleSubmit} className='flex flex-col gap-6'>
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        void form.handleSubmit()
+      }}
+      className='flex flex-col gap-6'
+    >
       {isOfferUnavailable && (
         <Alert variant='destructive'>
           <Lock aria-hidden='true' />
@@ -249,28 +295,38 @@ export function CheckoutReservationForm({
               sesuai jadwal dinamis.
             </span>
 
-            <Field orientation='horizontal' data-invalid={showPriceAckError || undefined}>
-              <Checkbox
-                id='checkout-price-ack'
-                checked={priceConfirmed}
-                onCheckedChange={(checked) => {
-                  const accepted = Boolean(checked)
-                  setPriceConfirmed(accepted)
-                  if (accepted) {
-                    setAcknowledgedPrice(offer.pricePerKg)
-                  }
-                }}
-              />
-              <FieldLabel htmlFor='checkout-price-ack' className='text-sm font-medium'>
-                Saya menyetujui harga terbaru {formatPricePerKg(offer.pricePerKg)}
-              </FieldLabel>
-            </Field>
+            <form.Field name='priceConfirmed'>
+              {(field) => {
+                const showPriceAckError =
+                  submitAttempted && priceChangedFromDetail && !field.state.value
+                return (
+                  <>
+                    <Field orientation='horizontal' data-invalid={showPriceAckError || undefined}>
+                      <Checkbox
+                        id='checkout-price-ack'
+                        checked={field.state.value}
+                        onCheckedChange={(checked) => {
+                          const accepted = Boolean(checked)
+                          field.handleChange(accepted)
+                          if (accepted) {
+                            setAcknowledgedPrice(offer.pricePerKg)
+                          }
+                        }}
+                      />
+                      <FieldLabel htmlFor='checkout-price-ack' className='text-sm font-medium'>
+                        Saya menyetujui harga terbaru {formatPricePerKg(offer.pricePerKg)}
+                      </FieldLabel>
+                    </Field>
 
-            {showPriceAckError && (
-              <FieldError
-                errors={[{ message: 'Centang persetujuan harga terbaru untuk lanjut.' }]}
-              />
-            )}
+                    {showPriceAckError && (
+                      <FieldError
+                        errors={[{ message: 'Centang persetujuan harga terbaru untuk lanjut.' }]}
+                      />
+                    )}
+                  </>
+                )
+              }}
+            </form.Field>
           </AlertDescription>
         </Alert>
       )}
@@ -407,40 +463,77 @@ export function CheckoutReservationForm({
               {showSlotError && <FieldError errors={[{ message: slotError as string }]} />}
             </FieldSet>
 
-            <Field>
-              <FieldLabel htmlFor='checkout-notes'>Catatan untuk petani (opsional)</FieldLabel>
-              <Textarea
-                id='checkout-notes'
-                name='notes'
-                rows={2}
-                placeholder='Misal: membawa keranjang sendiri atau datang di awal jam slot'
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-              />
-            </Field>
+            <form.Field name='notes'>
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor='checkout-notes'>Catatan untuk petani (opsional)</FieldLabel>
+                  <Textarea
+                    id='checkout-notes'
+                    name={field.name}
+                    rows={2}
+                    placeholder='Misal: membawa keranjang sendiri atau datang di awal jam slot'
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(event) => {
+                      const nextNotes = event.target.value
+                      field.handleChange(nextNotes)
+                      updateCheckoutDraft(offer.id, { notes: nextNotes })
+                    }}
+                  />
+                </Field>
+              )}
+            </form.Field>
           </FieldGroup>
         </CardContent>
       </Card>
 
-      <CheckoutContactCard
-        contactName={effectiveContactName}
-        contactPhone={effectiveContactPhone}
-        contactNameRef={contactNameRef}
-        contactPhoneRef={contactPhoneRef}
-        contactErrors={contactErrors}
-        showNameError={showNameError}
-        showPhoneError={showPhoneError}
-        onNameBlur={() => setNameTouched(true)}
-        onPhoneBlur={() => setPhoneTouched(true)}
-        onNameChange={(value) => {
-          setNameTouched(true)
-          setContactName(value)
+      <form.Subscribe
+        selector={(state) => ({
+          contactName: state.values.contactName,
+          contactPhone: state.values.contactPhone,
+        })}
+      >
+        {({ contactName, contactPhone }) => {
+          const effectiveContactName = nameTouched
+            ? contactName
+            : contactName || currentUser?.name || ''
+          const effectiveContactPhone = phoneTouched
+            ? contactPhone
+            : contactPhone || currentUser?.phone || ''
+          const contactErrors = validateCheckoutContact({
+            contactName: effectiveContactName,
+            contactPhone: effectiveContactPhone,
+          })
+          const showNameError =
+            (nameTouched || submitAttempted) && Boolean(contactErrors.contactName)
+          const showPhoneError =
+            (phoneTouched || submitAttempted) && Boolean(contactErrors.contactPhone)
+
+          return (
+            <CheckoutContactCard
+              contactName={effectiveContactName}
+              contactPhone={effectiveContactPhone}
+              contactNameRef={contactNameRef}
+              contactPhoneRef={contactPhoneRef}
+              contactErrors={contactErrors}
+              showNameError={showNameError}
+              showPhoneError={showPhoneError}
+              onNameBlur={() => setNameTouched(true)}
+              onPhoneBlur={() => setPhoneTouched(true)}
+              onNameChange={(value) => {
+                setNameTouched(true)
+                form.setFieldValue('contactName', value)
+                updateCheckoutDraft(offer.id, { contactName: value })
+              }}
+              onPhoneChange={(value) => {
+                setPhoneTouched(true)
+                form.setFieldValue('contactPhone', value)
+                updateCheckoutDraft(offer.id, { contactPhone: value })
+              }}
+            />
+          )
         }}
-        onPhoneChange={(value) => {
-          setPhoneTouched(true)
-          setContactPhone(value)
-        }}
-      />
+      </form.Subscribe>
 
       <CheckoutBuyerAddressCard
         isLoggedIn={Boolean(currentUser)}
@@ -448,8 +541,14 @@ export function CheckoutReservationForm({
         addresses={buyerAddresses}
         selectedAddressId={resolvedAddressId}
         customDraftAddress={customBuyerAddress}
-        onSelectAddressId={setSelectedAddressId}
-        onSelectCustomAddress={setCustomBuyerAddress}
+        onSelectAddressId={(nextId) => {
+          setSelectedAddressId(nextId)
+          updateCheckoutDraft(offer.id, { selectedAddressId: nextId })
+        }}
+        onSelectCustomAddress={(nextAddress) => {
+          setCustomBuyerAddress(nextAddress)
+          updateCheckoutDraft(offer.id, { customBuyerAddress: nextAddress })
+        }}
         onRequireAuth={onRequireAuth}
       />
 

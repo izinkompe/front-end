@@ -15,7 +15,6 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group'
-import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { FarmerAuthShell } from '@/components/auth/farmer/farmer-auth-shell'
 import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
@@ -49,9 +48,7 @@ export function AdminLoginForm() {
     <FarmerAuthShell width='narrow'>
       <div className='flex flex-col gap-6 pt-2'>
         <div className='flex flex-col gap-2 text-center'>
-          <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
-            Masuk Admin Operasional
-          </h1>
+          <h1 className='type-h1 font-semibold text-foreground'>Masuk Admin Operasional</h1>
           <p className='text-base leading-relaxed text-muted-foreground'>
             Gunakan akun admin PanganTani untuk verifikasi petani, moderasi, dan audit distribusi.
           </p>
@@ -153,9 +150,7 @@ export function AdminLoginForm() {
           </form.Subscribe>
         </form>
 
-        <Separator />
-
-        <div className='flex flex-col items-center gap-1 text-center text-base text-muted-foreground'>
+        <div className='flex flex-col items-center gap-1 pt-2 text-center text-base text-muted-foreground'>
           <p>Ingin masuk sebagai petani mitra?</p>
           <Link
             href='/masuk-petani'

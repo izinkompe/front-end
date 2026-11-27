@@ -163,7 +163,7 @@ export function HeroSearchCombobox({
           )}
         >
           <InputGroupAddon align='inline-start'>
-            <Search className='size-4 shrink-0 text-muted-foreground' aria-hidden='true' />
+            <Search className='icon-md text-muted-foreground' aria-hidden='true' />
           </InputGroupAddon>
           <InputGroupInput
             type='search'
@@ -192,7 +192,7 @@ export function HeroSearchCombobox({
             className='text-foreground placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden'
           />
           {query.length > 0 && (
-            <InputGroupAddon align='inline-end' className='pr-3'>
+            <InputGroupAddon align='inline-end' className='pr-1.5'>
               <button
                 type='button'
                 onClick={() => {
@@ -201,9 +201,9 @@ export function HeroSearchCombobox({
                   setActiveIndex(-1)
                 }}
                 aria-label='Hapus kata kunci pencarian'
-                className='inline-flex items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
+                className='inline-flex touch-target items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
               >
-                <X className='size-4 shrink-0' aria-hidden='true' />
+                <X className='icon-sm' aria-hidden='true' />
               </button>
             </InputGroupAddon>
           )}
@@ -214,7 +214,7 @@ export function HeroSearchCombobox({
             id={listboxId}
             role='listbox'
             aria-label='Saran jenis komoditas dan penawaran PanganTani'
-            className='text-left text-popover-foreground'
+            className='max-h-[min(22rem,55dvh)] overflow-y-auto text-left text-popover-foreground'
           >
             <button
               id={`${listboxId}-option-0`}

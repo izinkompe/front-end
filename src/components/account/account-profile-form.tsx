@@ -1,8 +1,10 @@
 'use client'
 
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import Link from 'next/link'
+import { useForm } from '@tanstack/react-form'
 import { Camera, CheckCircle2, Trash2 } from 'lucide-react'
+import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -20,7 +22,11 @@ import {
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
-export function AccountProfileForm() {
+interface AccountProfileFormProps {
+  onVerificationClick?: () => void
+}
+
+export function AccountProfileForm({ onVerificationClick }: AccountProfileFormProps = {}) {
   const { data: currentUser } = useCurrentUser()
   const updateProfileMutation = useUpdateProfile()
 
@@ -28,14 +34,42 @@ export function AccountProfileForm() {
   const nameInputRef = useRef<HTMLInputElement | null>(null)
   const phoneInputRef = useRef<HTMLInputElement | null>(null)
 
-  const [name, setName] = useState(currentUser?.name ?? '')
-  const [organization, setOrganization] = useState(currentUser?.organization ?? '')
-  const [phone, setPhone] = useState(currentUser?.phone ?? '')
   const [avatarDraft, setAvatarDraft] = useState<string | null | undefined>(undefined)
   const [avatarError, setAvatarError] = useState<string | null>(null)
-  const [touched, setTouched] = useState({ name: false, phone: false, organization: false })
-  const [submitAttempted, setSubmitAttempted] = useState(false)
   const [savedNotice, setSavedNotice] = useState(false)
+
+  const form = useForm({
+    defaultValues: {
+      name: currentUser?.name ?? '',
+      organization: currentUser?.organization ?? '',
+      phone: currentUser?.phone ?? '',
+    },
+    onSubmit: async ({ value }) => {
+      setSavedNotice(false)
+      const errors = validateProfileFormInput(value)
+      if (errors.name) {
+        nameInputRef.current?.focus()
+        return
+      }
+      if (errors.phone) {
+        phoneInputRef.current?.focus()
+        return
+      }
+      if (errors.organization) {
+        return
+      }
+
+      await updateProfileMutation.mutateAsync({
+        name: value.name.trim(),
+        organization: value.organization.trim(),
+        phone: value.phone.trim().replace(/[\s-]/g, ''),
+        avatarUrl: avatarDraft,
+      })
+
+      setAvatarDraft(undefined)
+      setSavedNotice(true)
+    },
+  })
 
   if (!currentUser) {
     return null
@@ -43,11 +77,6 @@ export function AccountProfileForm() {
 
   const effectiveAvatar =
     avatarDraft === undefined ? isSafeAvatarUrl(currentUser.avatarUrl) : avatarDraft
-
-  const errors = validateProfileFormInput({ name, phone, organization })
-  const showNameError = (touched.name || submitAttempted) && Boolean(errors.name)
-  const showPhoneError = (touched.phone || submitAttempted) && Boolean(errors.phone)
-  const showOrgError = (touched.organization || submitAttempted) && Boolean(errors.organization)
 
   function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -79,40 +108,18 @@ export function AccountProfileForm() {
     reader.readAsDataURL(file)
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitAttempted(true)
-    setTouched({ name: true, phone: true, organization: true })
-    setSavedNotice(false)
-
-    if (errors.name) {
-      nameInputRef.current?.focus()
-      return
-    }
-    if (errors.phone) {
-      phoneInputRef.current?.focus()
-      return
-    }
-    if (errors.organization) {
-      return
-    }
-
-    await updateProfileMutation.mutateAsync({
-      name: name.trim(),
-      organization: organization.trim(),
-      phone: phone.trim().replace(/[\s-]/g, ''),
-      avatarUrl: avatarDraft,
-    })
-
-    setAvatarDraft(undefined)
-    setSavedNotice(true)
-  }
-
   const orgLabel =
     currentUser.role === 'farmer' ? 'Nama kebun atau kelompok tani' : 'Nama usaha atau organisasi'
 
   return (
-    <form noValidate onSubmit={handleSubmit}>
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        void form.handleSubmit()
+      }}
+    >
       <Card>
         <CardHeader>
           <CardTitle>Data Profil</CardTitle>
@@ -135,14 +142,18 @@ export function AccountProfileForm() {
           )}
 
           <div className='flex flex-wrap items-center gap-4'>
-            <Avatar className='size-20'>
-              {effectiveAvatar && (
-                <AvatarImage src={effectiveAvatar} alt={name || currentUser.name} />
+            <form.Subscribe selector={(state) => state.values.name}>
+              {(nameValue) => (
+                <Avatar className='size-20'>
+                  {effectiveAvatar && (
+                    <AvatarImage src={effectiveAvatar} alt={nameValue || currentUser.name} />
+                  )}
+                  <AvatarFallback className='text-lg'>
+                    {getUserInitials(nameValue || currentUser.name)}
+                  </AvatarFallback>
+                </Avatar>
               )}
-              <AvatarFallback className='text-lg'>
-                {getUserInitials(name || currentUser.name)}
-              </AvatarFallback>
-            </Avatar>
+            </form.Subscribe>
 
             <div className='flex flex-col gap-2'>
               <div className='flex flex-wrap items-center gap-2'>
@@ -189,85 +200,118 @@ export function AccountProfileForm() {
           </div>
 
           <FieldGroup>
-            <Field data-invalid={showNameError || undefined}>
-              <FieldLabel htmlFor='profile-name'>Nama lengkap</FieldLabel>
-              <Input
-                ref={nameInputRef}
-                id='profile-name'
-                name='name'
-                type='text'
-                autoComplete='name'
-                required
-                value={name}
-                onBlur={() => setTouched((prev) => ({ ...prev, name: true }))}
-                onChange={(event) => {
-                  setName(event.target.value)
-                  setSavedNotice(false)
-                }}
-                aria-invalid={showNameError}
-                aria-describedby={showNameError ? 'profile-name-error' : undefined}
-              />
-              {showNameError && (
-                <FieldError id='profile-name-error' errors={[{ message: errors.name as string }]} />
-              )}
-            </Field>
+            <form.Field
+              name='name'
+              validators={{
+                onChange: ({ value }) =>
+                  validateProfileFormInput({ name: value, phone: '', organization: '' }).name ??
+                  undefined,
+              }}
+            >
+              {(field) => {
+                const errors = getFieldErrorMessages(field.state.meta.errors)
+                const isInvalid = field.state.meta.isTouched && errors.length > 0
+                return (
+                  <Field data-invalid={isInvalid || undefined}>
+                    <FieldLabel htmlFor='profile-name'>Nama lengkap</FieldLabel>
+                    <Input
+                      ref={nameInputRef}
+                      id='profile-name'
+                      name={field.name}
+                      type='text'
+                      autoComplete='name'
+                      required
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => {
+                        field.handleChange(event.target.value)
+                        setSavedNotice(false)
+                      }}
+                      aria-invalid={isInvalid}
+                      aria-describedby={isInvalid ? 'profile-name-error' : undefined}
+                    />
+                    {isInvalid && <FieldError id='profile-name-error' errors={errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
 
-            <Field data-invalid={showOrgError || undefined}>
-              <FieldLabel htmlFor='profile-organization'>{orgLabel}</FieldLabel>
-              <Input
-                id='profile-organization'
-                name='organization'
-                type='text'
-                autoComplete='organization'
-                placeholder='Contoh: Dapur Umum Yayasan Kasih'
-                value={organization}
-                onBlur={() => setTouched((prev) => ({ ...prev, organization: true }))}
-                onChange={(event) => {
-                  setOrganization(event.target.value)
-                  setSavedNotice(false)
-                }}
-                aria-invalid={showOrgError}
-                aria-describedby={showOrgError ? 'profile-org-error' : undefined}
-              />
-              {showOrgError && (
-                <FieldError
-                  id='profile-org-error'
-                  errors={[{ message: errors.organization as string }]}
-                />
-              )}
-            </Field>
+            <form.Field
+              name='organization'
+              validators={{
+                onChange: ({ value }) =>
+                  validateProfileFormInput({ name: 'Valid Name', phone: '', organization: value })
+                    .organization ?? undefined,
+              }}
+            >
+              {(field) => {
+                const errors = getFieldErrorMessages(field.state.meta.errors)
+                const isInvalid = field.state.meta.isTouched && errors.length > 0
+                return (
+                  <Field data-invalid={isInvalid || undefined}>
+                    <FieldLabel htmlFor='profile-organization'>{orgLabel}</FieldLabel>
+                    <Input
+                      id='profile-organization'
+                      name={field.name}
+                      type='text'
+                      autoComplete='organization'
+                      placeholder='Contoh: Dapur Umum Yayasan Kasih'
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => {
+                        field.handleChange(event.target.value)
+                        setSavedNotice(false)
+                      }}
+                      aria-invalid={isInvalid}
+                      aria-describedby={isInvalid ? 'profile-org-error' : undefined}
+                    />
+                    {isInvalid && <FieldError id='profile-org-error' errors={errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
 
-            <Field data-invalid={showPhoneError || undefined}>
-              <FieldLabel htmlFor='profile-phone'>Nomor WhatsApp</FieldLabel>
-              <FieldDescription id='profile-phone-hint'>
-                Format 08xxxxxxxxxx, dipakai untuk koordinasi pengambilan panen.
-              </FieldDescription>
-              <Input
-                ref={phoneInputRef}
-                id='profile-phone'
-                name='phone'
-                type='tel'
-                inputMode='tel'
-                autoComplete='tel'
-                placeholder='081234567890'
-                value={phone}
-                onBlur={() => setTouched((prev) => ({ ...prev, phone: true }))}
-                onChange={(event) => {
-                  setPhone(event.target.value)
-                  setSavedNotice(false)
-                }}
-                aria-invalid={showPhoneError}
-                aria-describedby={
-                  showPhoneError ? 'profile-phone-hint profile-phone-error' : 'profile-phone-hint'
-                }
-              />
-              {showPhoneError && (
-                <FieldError
-                  id='profile-phone-error'
-                  errors={[{ message: errors.phone as string }]}
-                />
-              )}
-            </Field>
+            <form.Field
+              name='phone'
+              validators={{
+                onChange: ({ value }) =>
+                  validateProfileFormInput({ name: 'Valid Name', phone: value, organization: '' })
+                    .phone ?? undefined,
+              }}
+            >
+              {(field) => {
+                const errors = getFieldErrorMessages(field.state.meta.errors)
+                const isInvalid = field.state.meta.isTouched && errors.length > 0
+                return (
+                  <Field data-invalid={isInvalid || undefined}>
+                    <FieldLabel htmlFor='profile-phone'>Nomor WhatsApp</FieldLabel>
+                    <FieldDescription id='profile-phone-hint'>
+                      Format 08xxxxxxxxxx, dipakai untuk koordinasi pengambilan panen.
+                    </FieldDescription>
+                    <Input
+                      ref={phoneInputRef}
+                      id='profile-phone'
+                      name={field.name}
+                      type='tel'
+                      inputMode='tel'
+                      autoComplete='tel'
+                      placeholder='081234567890'
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(event) => {
+                        field.handleChange(event.target.value)
+                        setSavedNotice(false)
+                      }}
+                      aria-invalid={isInvalid}
+                      aria-describedby={
+                        isInvalid ? 'profile-phone-hint profile-phone-error' : 'profile-phone-hint'
+                      }
+                    />
+                    {isInvalid && <FieldError id='profile-phone-error' errors={errors} />}
+                  </Field>
+                )
+              }}
+            </form.Field>
 
             <Field data-disabled>
               <FieldLabel htmlFor='profile-email'>Alamat email</FieldLabel>
@@ -281,9 +325,19 @@ export function AccountProfileForm() {
               />
               <FieldDescription id='profile-email-note'>
                 Status verifikasi kontak dapat dicek di{' '}
-                <Link href='/akun/verifikasi' className='underline underline-offset-4'>
-                  Kontak &amp; Verifikasi
-                </Link>
+                {onVerificationClick ? (
+                  <button
+                    type='button'
+                    onClick={onVerificationClick}
+                    className='underline underline-offset-4'
+                  >
+                    Kontak &amp; Verifikasi
+                  </button>
+                ) : (
+                  <Link href='/akun/verifikasi' className='underline underline-offset-4'>
+                    Kontak &amp; Verifikasi
+                  </Link>
+                )}
                 .
               </FieldDescription>
             </Field>
@@ -291,10 +345,20 @@ export function AccountProfileForm() {
         </CardContent>
 
         <CardFooter className='justify-end'>
-          <Button type='submit' disabled={updateProfileMutation.isPending}>
-            {updateProfileMutation.isPending && <Spinner data-icon='inline-start' />}
-            <span>{updateProfileMutation.isPending ? 'Menyimpan...' : 'Simpan perubahan'}</span>
-          </Button>
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) => (
+              <Button type='submit' disabled={isSubmitting || updateProfileMutation.isPending}>
+                {(isSubmitting || updateProfileMutation.isPending) && (
+                  <Spinner data-icon='inline-start' />
+                )}
+                <span>
+                  {isSubmitting || updateProfileMutation.isPending
+                    ? 'Menyimpan...'
+                    : 'Simpan perubahan'}
+                </span>
+              </Button>
+            )}
+          </form.Subscribe>
         </CardFooter>
       </Card>
     </form>

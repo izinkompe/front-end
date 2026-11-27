@@ -9,6 +9,7 @@ import {
   NeedRequestSchema,
   type NeedRequest,
   type CreateNeedRequest,
+  type FarmerNeedResponseRequest,
   type UpdateNeedStatus,
 } from '@/types/api/needs-board'
 
@@ -44,6 +45,62 @@ export function useUpdateNeedStatus() {
         method: 'PATCH',
         body: JSON.stringify({ status }),
       }),
+    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.needsBoard.all }),
+  })
+}
+
+export function useCreateNeedResponse(needId: string) {
+  const client = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: FarmerNeedResponseRequest) =>
+      apiClient<NeedRequest>(
+        '/api/needs-board/' + encodeURIComponent(needId) + '/responses',
+        NeedRequestSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        }
+      ),
+    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.needsBoard.all }),
+  })
+}
+
+export function useUpdateNeedResponse(needId: string, responseId: string) {
+  const client = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: FarmerNeedResponseRequest) =>
+      apiClient<NeedRequest>(
+        '/api/needs-board/' +
+          encodeURIComponent(needId) +
+          '/responses/' +
+          encodeURIComponent(responseId),
+        NeedRequestSchema,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(payload),
+        }
+      ),
+    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.needsBoard.all }),
+  })
+}
+
+export function useDeleteNeedResponse(needId: string) {
+  const client = useQueryClient()
+
+  return useMutation({
+    mutationFn: (responseId: string) =>
+      apiClient<NeedRequest>(
+        '/api/needs-board/' +
+          encodeURIComponent(needId) +
+          '/responses/' +
+          encodeURIComponent(responseId),
+        NeedRequestSchema,
+        {
+          method: 'DELETE',
+        }
+      ),
     onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.needsBoard.all }),
   })
 }

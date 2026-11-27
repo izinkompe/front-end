@@ -32,7 +32,6 @@ import {
 } from '@/components/home/offer-card-helpers'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { buildFarmerStoreHref } from '@/lib/data/farmer-store-helpers'
 import { cn } from '@/lib/utils'
 import type { CommodityCondition, Offer } from '@/types/api/offers'
@@ -412,8 +411,7 @@ export function CatalogOfferCard({
           </div>
         </div>
 
-        <div className='flex flex-col gap-3'>
-          <Separator />
+        <div className='pt-2'>
           <footer className='flex items-center justify-between gap-2'>
             <Link
               href={farmerHref}

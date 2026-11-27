@@ -391,3 +391,50 @@ export function buildOrderTimelineSteps(
     },
   ]
 }
+
+export interface CheckoutDraft {
+  weightText?: string
+  selectedSlotId?: string
+  selectedAddressId?: string
+  customBuyerAddress?: Order['buyerAddress'] | null
+  notes?: string
+  contactName?: string
+  contactPhone?: string
+}
+
+const CHECKOUT_DRAFT_STORAGE_PREFIX = 'pangantani.checkout.draft.v1.'
+
+export function readCheckoutDraft(offerId: string): CheckoutDraft | null {
+  if (typeof window === 'undefined' || !offerId) return null
+  try {
+    const raw = window.sessionStorage.getItem(`${CHECKOUT_DRAFT_STORAGE_PREFIX}${offerId}`)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as unknown
+    if (!parsed || typeof parsed !== 'object') return null
+    return parsed as CheckoutDraft
+  } catch {
+    return null
+  }
+}
+
+export function updateCheckoutDraft(offerId: string, patch: Partial<CheckoutDraft>): void {
+  if (typeof window === 'undefined' || !offerId) return
+  try {
+    const current = readCheckoutDraft(offerId) ?? {}
+    window.sessionStorage.setItem(
+      `${CHECKOUT_DRAFT_STORAGE_PREFIX}${offerId}`,
+      JSON.stringify({ ...current, ...patch })
+    )
+  } catch {
+    return
+  }
+}
+
+export function clearCheckoutDraft(offerId: string): void {
+  if (typeof window === 'undefined' || !offerId) return
+  try {
+    window.sessionStorage.removeItem(`${CHECKOUT_DRAFT_STORAGE_PREFIX}${offerId}`)
+  } catch {
+    return
+  }
+}

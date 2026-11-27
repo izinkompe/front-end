@@ -37,7 +37,15 @@ const ACTIVE_ORDER_STATUSES: ReadonlySet<OrderStatus> = new Set([
   'disputed',
 ])
 
-const HISTORY_ORDER_STATUSES: ReadonlySet<OrderStatus> = new Set(['completed', 'cancelled'])
+const HISTORY_ORDER_STATUSES: ReadonlySet<OrderStatus> = new Set([
+  'pending_payment',
+  'payment_submitted',
+  'processing',
+  'ready_for_pickup',
+  'disputed',
+  'completed',
+  'cancelled',
+])
 
 const shortDateFormatter = new Intl.DateTimeFormat('id-ID', {
   day: 'numeric',

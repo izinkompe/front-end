@@ -91,6 +91,8 @@ export const commodityOptions: CommodityOption[] = [
   },
 ]
 
+export const OTHER_BANK_VALUE = 'OTHER'
+
 export const bankOptions = [
   { value: 'BRI', label: 'Bank BRI' },
   { value: 'BNI', label: 'Bank BNI' },
@@ -98,7 +100,33 @@ export const bankOptions = [
   { value: 'BCA', label: 'Bank BCA' },
   { value: 'BSI', label: 'Bank Syariah Indonesia (BSI)' },
   { value: 'BPD', label: 'Bank Daerah (BPD / Bank BJB / Bank Jateng / Bank Jatim)' },
+  { value: OTHER_BANK_VALUE, label: 'Lainnya (Others)' },
 ] as const
+
+const presetBankValues = new Set<string>(
+  bankOptions.map((option) => option.value).filter((value) => value !== OTHER_BANK_VALUE)
+)
+
+export function isPresetBankName(bankName: string): boolean {
+  return presetBankValues.has(bankName.trim())
+}
+
+export function isCustomBankName(bankName: string): boolean {
+  const trimmed = bankName.trim()
+  return trimmed.length > 0 && !isPresetBankName(trimmed)
+}
+
+export function getBankOptionLabel(value: string): string {
+  return bankOptions.find((option) => option.value === value)?.label ?? value
+}
+
+export function formatBankNameInput(value: string): string {
+  return value.replace(/^\s+/, '').replace(/\s{2,}/g, ' ')
+}
+
+export function normalizeBankName(value: string): string {
+  return value.replace(/\s+/g, ' ').trim()
+}
 
 export const ONBOARDING_TOTAL_STEPS = 6
 export const ONBOARDING_STORAGE_KEY = 'pangantani.farmer.onboarding.v2'

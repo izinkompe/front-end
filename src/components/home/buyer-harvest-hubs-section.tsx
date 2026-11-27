@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { useSelectedLocation } from '@/components/providers/location-provider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { buildProvinceMapHref, getNearbyHarvestHubs } from './home-discovery-helpers'
 import { formatStraightLineDistance } from './offer-card-helpers'
@@ -21,10 +20,7 @@ export function BuyerHarvestHubsSection() {
       <div className='mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-12 sm:px-6 sm:py-14 lg:px-8'>
         <div className='flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between'>
           <div className='flex flex-col gap-1.5'>
-            <h2
-              id='harvest-hubs-heading'
-              className='text-[clamp(1.5rem,1.25rem+0.9vw,2rem)] leading-tight font-bold text-foreground'
-            >
+            <h2 id='harvest-hubs-heading' className='type-h2 text-foreground'>
               Sentra panen terdekat
             </h2>
             <p className='max-w-[62ch] text-base leading-relaxed text-muted-foreground'>
@@ -89,8 +85,7 @@ export function BuyerHarvestHubsSection() {
                   <p className='text-sm leading-relaxed text-muted-foreground'>{hub.highlights}</p>
                 </div>
 
-                <div className='flex flex-col gap-3'>
-                  <Separator />
+                <div className='pt-2'>
                   <footer className='flex flex-wrap items-center justify-between gap-2'>
                     <span className='text-sm font-semibold text-foreground tabular-nums'>
                       {hub.count} penawaran aktif

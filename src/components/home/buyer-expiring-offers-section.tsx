@@ -221,10 +221,7 @@ export function BuyerExpiringOffersSection() {
         <div className='flex flex-col gap-4'>
           <div className='flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between'>
             <div className='flex flex-col gap-1.5'>
-              <h2
-                id='expiring-offers-heading'
-                className='text-[clamp(1.5rem,1.25rem+0.9vw,2rem)] leading-tight font-bold text-foreground'
-              >
+              <h2 id='expiring-offers-heading' className='type-h2 text-foreground'>
                 Penawaran segera ditutup hari ini
               </h2>
               <p className='max-w-[62ch] text-base leading-relaxed text-muted-foreground'>
@@ -253,7 +250,7 @@ export function BuyerExpiringOffersSection() {
               <ToggleGroupItem
                 key={option.value}
                 value={option.value}
-                className='min-h-10 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors pointer-coarse:min-h-11 hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:font-semibold aria-pressed:text-primary-foreground'
+                className='chip-toggle px-4 py-2'
               >
                 {option.label}
               </ToggleGroupItem>

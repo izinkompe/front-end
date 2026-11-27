@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import {
   BadgeCheck,
   Check,
@@ -16,14 +15,7 @@ import type { ShareButtonState } from '@/components/home/buyer-expiring-offer-ca
 import { formatWeightKg } from '@/components/home/offer-card-helpers'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+import { BreadcrumbTrail } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { getFarmInitials, getFarmerTypeLabel } from '@/lib/data/farmer-store-helpers'
@@ -56,21 +48,14 @@ export function FarmerStoreHeader({
 
   return (
     <div className='flex flex-col gap-4'>
-      <Breadcrumb aria-label='Navigasi halaman'>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink render={<Link href='/' />}>Beranda</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink render={<Link href='/pasar' />}>Pasar</BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{farmer.farmName}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <BreadcrumbTrail
+        ariaLabel='Navigasi halaman'
+        items={[
+          { label: 'Beranda', href: '/' },
+          { label: 'Pasar', href: '/pasar' },
+          { label: farmer.farmName },
+        ]}
+      />
 
       <section
         aria-label='Profil toko petani'
@@ -104,9 +89,7 @@ export function FarmerStoreHeader({
                   </Badge>
                 </div>
 
-                <h1 className='text-[clamp(1.375rem,1.1rem+0.9vw,1.875rem)] leading-tight font-bold text-foreground'>
-                  {farmer.farmName}
-                </h1>
+                <h1 className='type-h1 text-foreground'>{farmer.farmName}</h1>
 
                 <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground'>
                   {showOwnerSubtitle && <span>Dikelola {farmer.farmerDisplayName}</span>}

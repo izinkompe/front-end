@@ -189,3 +189,57 @@ mockOrdersData.push({
   createdAt: getRelativeTimestamp(-5 * 60 * 1000),
   updatedAt: getRelativeTimestamp(-5 * 60 * 1000),
 })
+
+mockOrdersData.push({
+  ...mockOrdersData[0],
+  id: 'ord-demo-006',
+  offerId: 'off-003',
+  commodityName: 'Mangga Harum Manis Matang Pohon',
+  quantityKg: 10,
+  pricePerKg: 12500,
+  totalPrice: 125000,
+  scheduleSlot: {
+    id: 'slot-4',
+    date: todayDate,
+    startTime: '13:00',
+    endTime: '16:00',
+    isAvailable: true,
+  },
+  status: 'processing',
+  paymentDeadline: getRelativeTimestamp(-1 * HOUR_MS),
+  createdAt: getRelativeTimestamp(-3 * HOUR_MS),
+  updatedAt: getRelativeTimestamp(-30 * 60 * 1000),
+})
+
+mockOrdersData.push({
+  ...mockOrdersData[0],
+  id: 'ord-demo-007',
+  offerId: 'off-001',
+  commodityName: 'Tomat Ceri Hidroponik',
+  quantityKg: 8,
+  pricePerKg: 14000,
+  totalPrice: 112000,
+  status: 'cancelled',
+  paymentProofUrl: undefined,
+  paymentNotes: undefined,
+  paymentSubmittedAt: undefined,
+  createdAt: getRelativeTimestamp(-8 * HOUR_MS),
+  updatedAt: getRelativeTimestamp(-2 * HOUR_MS),
+})
+
+mockOrdersData.push({
+  ...mockOrdersData[0],
+  id: 'ord-demo-008',
+  offerId: 'off-001',
+  commodityName: 'Tomat Ceri Hidroponik',
+  quantityKg: 20,
+  confirmedWeightKg: 18.5,
+  pricePerKg: 14000,
+  totalPrice: 280000,
+  status: 'disputed',
+  weightDiscrepancyNote:
+    'Berat diterima 18,5 kg dari pesanan 20 kg saat serah terima di pos sortir.',
+  receiptConfirmedAt: getRelativeTimestamp(-3 * HOUR_MS),
+  createdAt: getRelativeTimestamp(-12 * HOUR_MS),
+  updatedAt: getRelativeTimestamp(-2 * HOUR_MS),
+})

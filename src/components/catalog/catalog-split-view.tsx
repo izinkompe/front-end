@@ -136,14 +136,14 @@ export function CatalogSplitView({
         <Dialog open={hasMap && mobileMapOpen} onOpenChange={setMobileMapOpen}>
           <DialogContent
             showCloseButton={false}
-            className='fixed inset-0 top-0 left-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 bg-background p-0 lg:hidden'
+            className='fixed inset-0! top-0! left-0! flex h-dvh! max-h-dvh! w-dvw! max-w-none! translate-x-0! translate-y-0! flex-col gap-0 rounded-none border-0 bg-background p-0 lg:hidden'
           >
             <div className='flex items-center justify-between gap-3 border-b border-border bg-background px-4 py-3'>
               <div className='min-w-0'>
                 <DialogTitle className='text-base font-bold text-foreground'>
                   Peta radius panen
                 </DialogTitle>
-                <DialogDescription className='truncate text-xs text-muted-foreground tabular-nums'>
+                <DialogDescription className='truncate text-sm text-muted-foreground tabular-nums'>
                   {mapItems.length} penawaran tersedia • pilih pin atau atur radius
                 </DialogDescription>
               </div>
@@ -177,8 +177,8 @@ export function CatalogSplitView({
               />
             </div>
 
-            <div className='flex items-center justify-between gap-2 border-t border-border bg-background px-4 py-3'>
-              <p className='text-xs text-muted-foreground'>
+            <div className='sticky-bar-safe flex items-center justify-between gap-2 border-t border-border bg-background px-4 pt-3'>
+              <p className='text-sm text-muted-foreground'>
                 {selectedOfferId
                   ? 'Penawaran dipilih. Lihat di daftar atau buka detailnya.'
                   : 'Ketuk pin atau klaster pada peta untuk memilih panen.'}
@@ -265,7 +265,7 @@ export function CatalogSplitView({
       {hasMap && (
         <aside
           aria-label='Peta radius penawaran panen'
-          className='hidden lg:sticky lg:top-[6.875rem] lg:block lg:h-[calc(100dvh-6.875rem)]'
+          className='hidden transition-[top,height] duration-300 ease-out motion-reduce:transition-none lg:sticky lg:top-(--header-offset,0px) lg:block lg:h-[calc(100dvh-var(--header-offset,0px))]'
         >
           <CatalogRadiusMap
             items={mapItems}

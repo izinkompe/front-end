@@ -2,9 +2,7 @@
 
 import Link from 'next/link'
 import {
-  ArrowLeft,
   Check,
-  ChevronRight,
   Clock,
   Flame,
   Heart,
@@ -27,6 +25,7 @@ import {
   type OfferCountdownState,
 } from '@/components/home/offer-card-helpers'
 import { Badge } from '@/components/ui/badge'
+import { BreadcrumbTrail } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { getCategoryMeta, normalizeCategorySlug } from '@/lib/data/categories'
 import { buildFarmerStoreHref } from '@/lib/data/farmer-store-helpers'
@@ -49,64 +48,14 @@ export function OfferDetailBreadcrumb({ offer }: OfferDetailBreadcrumbProps) {
   const categorySlug = normalizeCategorySlug(offer.category)
   const categoryMeta = categorySlug ? getCategoryMeta(categorySlug) : null
 
-  return (
-    <div className='flex flex-wrap items-center justify-between gap-2'>
-      <nav aria-label='Breadcrumb'>
-        <ol className='flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground'>
-          <li>
-            <Link
-              href='/'
-              className='rounded-sm py-1 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
-            >
-              Beranda
-            </Link>
-          </li>
-          <li aria-hidden='true' className='flex items-center'>
-            <ChevronRight className='size-4' />
-          </li>
-          <li>
-            <Link
-              href='/pasar'
-              className='rounded-sm py-1 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
-            >
-              Pasar
-            </Link>
-          </li>
-          {categoryMeta && (
-            <>
-              <li aria-hidden='true' className='flex items-center'>
-                <ChevronRight className='size-4' />
-              </li>
-              <li>
-                <Link
-                  href={categoryMeta.href}
-                  className='rounded-sm py-1 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
-                >
-                  {categoryMeta.label}
-                </Link>
-              </li>
-            </>
-          )}
-          <li aria-hidden='true' className='flex items-center'>
-            <ChevronRight className='size-4' />
-          </li>
-          <li>
-            <span aria-current='page' className='font-medium text-foreground'>
-              {offer.commodityName}
-            </span>
-          </li>
-        </ol>
-      </nav>
+  const items = [
+    { label: 'Beranda', href: '/' },
+    { label: 'Pasar', href: '/pasar' },
+    ...(categoryMeta ? [{ label: categoryMeta.label, href: categoryMeta.href }] : []),
+    { label: offer.commodityName },
+  ]
 
-      <Link
-        href='/pasar'
-        className='inline-flex min-h-10 items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
-      >
-        <ArrowLeft className='size-4' aria-hidden='true' />
-        <span>Kembali ke katalog</span>
-      </Link>
-    </div>
-  )
+  return <BreadcrumbTrail items={items} />
 }
 
 interface OfferDetailHeaderProps {
@@ -173,9 +122,7 @@ export function OfferDetailHeader({
       </div>
 
       <div className='flex flex-col gap-2'>
-        <h1 className='text-[clamp(1.5rem,1.2rem+1.1vw,2rem)] leading-tight font-bold text-foreground'>
-          {offer.commodityName}
-        </h1>
+        <h1 className='type-h1 text-foreground'>{offer.commodityName}</h1>
 
         <div className='flex flex-wrap items-baseline gap-x-3 gap-y-1'>
           <p

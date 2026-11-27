@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { AlertCircle, BarChart3, ClipboardCheck, ShieldCheck, Users } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,6 +15,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDistributionStats } from '@/hooks/api/use-admin'
 import type { User } from '@/types/api/auth'
+import { DashboardPageHeader } from './dashboard-page-header'
 
 interface AdminOverviewProps {
   user?: User | null
@@ -23,31 +24,23 @@ interface AdminOverviewProps {
 const ADMIN_MODULES = [
   {
     title: 'Verifikasi Petani',
-    description: 'Tinjau dokumen identitas, alamat lahan, dan status kelayakan petani.',
     href: '/dashboard/admin/verifikasi',
     actionLabel: 'Buka antrean verifikasi',
-    icon: ShieldCheck,
   },
   {
     title: 'Moderasi Penawaran',
-    description: 'Periksa kewajaran harga, batas waktu panen, dan laporan kualitas.',
     href: '/dashboard/admin/moderasi',
     actionLabel: 'Buka moderasi',
-    icon: ClipboardCheck,
   },
   {
     title: 'Statistik Distribusi',
-    description: 'Pantau volume pangan terselamatkan dan estimasi pengurangan emisi karbon.',
     href: '/dashboard/admin/statistik',
     actionLabel: 'Lihat statistik',
-    icon: BarChart3,
   },
   {
     title: 'Pengguna & Akses',
-    description: 'Kelola akun pembeli, petani, admin, dan kebijakan peran RBAC.',
     href: '/dashboard/admin/pengguna',
     actionLabel: 'Kelola pengguna',
-    icon: Users,
   },
 ] as const
 
@@ -57,17 +50,15 @@ export function AdminOverview({ user }: AdminOverviewProps) {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex flex-col gap-1'>
-          <h1 className='font-heading text-2xl font-semibold text-foreground'>
-            Operasional PanganTani
-          </h1>
-          <p className='text-base text-muted-foreground'>Masuk sebagai {displayName}</p>
-        </div>
-        <Button nativeButton={false} render={<Link href='/dashboard/admin/verifikasi' />}>
-          Tinjau verifikasi
-        </Button>
-      </div>
+      <DashboardPageHeader
+        title='Operasional PanganTani'
+        subtitle={`Masuk sebagai ${displayName}`}
+        actions={
+          <Button nativeButton={false} render={<Link href='/dashboard/admin/verifikasi' />}>
+            Tinjau verifikasi
+          </Button>
+        }
+      />
 
       {isError && (
         <Alert variant='destructive'>
@@ -88,74 +79,61 @@ export function AdminOverview({ user }: AdminOverviewProps) {
       ) : (
         stats && (
           <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-            <Card>
+            <Card className='min-w-0'>
               <CardHeader className='pb-2'>
                 <CardDescription>Pangan terselamatkan</CardDescription>
-                <CardTitle className='font-mono text-2xl tabular-nums'>
+                <CardTitle className='type-kpi font-mono tabular-nums'>
                   {stats.totalRescuedFoodKg.toLocaleString('id-ID')} kg
                 </CardTitle>
               </CardHeader>
-              <CardContent className='text-xs text-muted-foreground'>
+              <CardContent className='text-meta text-muted-foreground'>
                 Total distribusi {stats.totalDistributedWeightKg.toLocaleString('id-ID')} kg
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className='pb-2'>
+            <Card className='min-w-0'>
+              <CardHeader>
                 <CardDescription>Pengurangan emisi karbon</CardDescription>
-                <CardTitle className='font-mono text-2xl tabular-nums'>
+                <CardTitle className='type-kpi font-mono tabular-nums'>
                   {stats.totalCarbonSavedKgCo2e.toLocaleString('id-ID')} kg CO2e
                 </CardTitle>
               </CardHeader>
-              <CardContent className='text-xs text-muted-foreground'>
-                Berdasarkan transaksi selesai
-              </CardContent>
             </Card>
-            <Card>
+            <Card className='min-w-0'>
               <CardHeader className='pb-2'>
                 <CardDescription>Petani aktif</CardDescription>
-                <CardTitle className='font-mono text-2xl tabular-nums'>
+                <CardTitle className='type-kpi font-mono tabular-nums'>
                   {stats.activeFarmersCount.toLocaleString('id-ID')}
                 </CardTitle>
               </CardHeader>
-              <CardContent className='text-xs text-muted-foreground'>
+              <CardContent className='text-meta text-muted-foreground'>
                 {stats.activeBuyersCount.toLocaleString('id-ID')} pembeli terdaftar
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className='pb-2'>
+            <Card className='min-w-0'>
+              <CardHeader>
                 <CardDescription>Transaksi selesai</CardDescription>
-                <CardTitle className='font-mono text-2xl tabular-nums'>
+                <CardTitle className='type-kpi font-mono tabular-nums'>
                   {stats.totalCompletedTransactions.toLocaleString('id-ID')}
                 </CardTitle>
               </CardHeader>
-              <CardContent className='text-xs text-muted-foreground'>
-                Pengambilan mandiri terverifikasi
-              </CardContent>
             </Card>
           </div>
         )
       )}
 
       <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
-        {ADMIN_MODULES.map((item) => {
-          const Icon = item.icon
-          return (
-            <Card key={item.href}>
-              <CardHeader>
-                <div className='flex items-center gap-2'>
-                  <Icon className='size-5 text-primary' aria-hidden='true' />
-                  <CardTitle>{item.title}</CardTitle>
-                </div>
-                <CardDescription>{item.description}</CardDescription>
-              </CardHeader>
-              <CardFooter>
-                <Button variant='outline' nativeButton={false} render={<Link href={item.href} />}>
-                  {item.actionLabel}
-                </Button>
-              </CardFooter>
-            </Card>
-          )
-        })}
+        {ADMIN_MODULES.map((item) => (
+          <Card key={item.href} className='min-w-0'>
+            <CardHeader>
+              <CardTitle>{item.title}</CardTitle>
+            </CardHeader>
+            <CardFooter>
+              <Button variant='outline' nativeButton={false} render={<Link href={item.href} />}>
+                {item.actionLabel}
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
       </div>
     </div>
   )

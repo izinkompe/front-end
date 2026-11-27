@@ -1,4 +1,5 @@
 import { ApiError } from '../errors'
+import { createUniqueId } from '@/lib/utils'
 import { usersCollection } from './collections/users'
 import {
   BuyerRegisterRequestSchema,
@@ -54,7 +55,8 @@ export async function handleBuyerAuthRoute({
       const credential = passwords.get(user.id)
       const matches = credential
         ? credential.digest === (await hashPassword(result.data.password, credential.salt))
-        : user.id === 'usr-pb-01' && result.data.password === 'password123'
+        : (user.id === 'usr-pb-01' || user.id === 'usr-pb-02') &&
+          result.data.password === 'password123'
       if (matches) return { user }
     }
     throw new ApiError(401, 'Email atau kata sandi tidak sesuai', 'UNAUTHORIZED')
@@ -70,7 +72,7 @@ export async function handleBuyerAuthRoute({
 
     const now = new Date().toISOString()
     const user: User = {
-      id: 'usr-pb-' + crypto.randomUUID(),
+      id: createUniqueId('usr-pb-'),
       name,
       email,
       phone: '',

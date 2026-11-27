@@ -23,11 +23,11 @@ export function BuyerHeroSection() {
           <div className='mx-auto flex max-w-3xl flex-col items-center gap-2.5 text-center'>
             <h1
               id='buyer-hero-heading'
-              className='text-[clamp(1.625rem,1.25rem+1.6vw,2.625rem)] leading-tight font-normal text-white drop-shadow-xs'
+              className='type-display font-normal text-white drop-shadow-xs'
             >
               Halo, <span className='font-bold'>mau cari panen apa hari ini?</span>
             </h1>
-            <p className='max-w-[60ch] text-sm leading-relaxed text-white sm:text-lg'>
+            <p className='type-lead max-w-[60ch] text-white'>
               Beli hasil panen surplus langsung dari petani sekitar Anda, harga per kilogram dan
               ambil mandiri.
             </p>

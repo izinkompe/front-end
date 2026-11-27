@@ -20,8 +20,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
+import { useCurrentUser } from '@/hooks/api/use-auth'
 import { useUpdateNeedStatus } from '@/hooks/api/use-needs-board'
 import { useOfferDetail } from '@/hooks/api/use-offers'
 import {
@@ -157,6 +157,8 @@ export function NeedDetailPanel({
   isOwner: boolean
   closeHref?: string
 }) {
+  const { data: currentUser } = useCurrentUser()
+  const isFarmer = currentUser?.role === 'farmer'
   const isActive = isActiveNeed(need)
   const fulfilledKg = need.fulfilledQuantityKg ?? 0
   const progressPercent =
@@ -178,7 +180,7 @@ export function NeedDetailPanel({
             <Button
               variant='ghost'
               size='icon'
-              className='size-8 shrink-0'
+              className='shrink-0'
               aria-label='Tutup detail permintaan'
               nativeButton={false}
               render={<Link href={closeHref} scroll={false} />}
@@ -194,22 +196,22 @@ export function NeedDetailPanel({
       <CardContent className='flex flex-col gap-5'>
         <dl className='grid gap-3 text-sm sm:grid-cols-2'>
           <div className='flex flex-col gap-0.5'>
-            <dt className='text-xs text-muted-foreground'>Berat dibutuhkan</dt>
+            <dt className='text-sm text-muted-foreground'>Berat dibutuhkan</dt>
             <dd className='font-semibold text-foreground tabular-nums'>
               {formatWeightKg(need.neededQuantityKg)}
             </dd>
           </div>
           <div className='flex flex-col gap-0.5'>
-            <dt className='text-xs text-muted-foreground'>Wilayah pengambilan</dt>
+            <dt className='text-sm text-muted-foreground'>Wilayah pengambilan</dt>
             <dd className='text-foreground'>{need.targetArea}</dd>
           </div>
           <div className='flex flex-col gap-0.5'>
-            <dt className='text-xs text-muted-foreground'>Tanggal dibutuhkan</dt>
+            <dt className='text-sm text-muted-foreground'>Tanggal dibutuhkan</dt>
             <dd className='text-foreground tabular-nums'>{formatNeedDate(need.targetDate)}</dd>
           </div>
           {need.maxPricePerKg !== undefined && (
             <div className='flex flex-col gap-0.5'>
-              <dt className='text-xs text-muted-foreground'>Harga maksimum per kg</dt>
+              <dt className='text-sm text-muted-foreground'>Harga maksimum per kg</dt>
               <dd className='font-medium text-foreground tabular-nums'>
                 {formatPlainRupiah(need.maxPricePerKg)}
               </dd>
@@ -218,7 +220,7 @@ export function NeedDetailPanel({
         </dl>
 
         {fulfilledKg > 0 && (
-          <div className='flex flex-col gap-1.5 rounded-md border border-border bg-muted/30 p-3 text-xs'>
+          <div className='flex flex-col gap-1.5 rounded-md border border-border bg-muted/30 p-3 text-sm'>
             <div className='flex items-center justify-between gap-2 tabular-nums'>
               <span className='font-medium text-foreground'>
                 Terpenuhi {formatWeightKg(fulfilledKg)}
@@ -242,9 +244,7 @@ export function NeedDetailPanel({
           </div>
         )}
 
-        <Separator />
-
-        <section className='flex flex-col gap-3'>
+        <section className='flex flex-col gap-3 pt-2'>
           <h3 className='font-semibold text-foreground'>
             Tanggapan petani ({need.responses?.length ?? 0})
           </h3>
@@ -288,7 +288,15 @@ export function NeedDetailPanel({
               variant='outline'
               className='self-start'
               nativeButton={false}
-              render={<Link href='/masuk-petani' />}
+              render={
+                <Link
+                  href={
+                    isFarmer
+                      ? `/dashboard/papan-kebutuhan?request=${encodeURIComponent(need.id)}`
+                      : '/masuk-petani'
+                  }
+                />
+              }
             >
               Tanggapi sebagai petani
             </Button>

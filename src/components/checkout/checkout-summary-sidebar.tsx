@@ -7,7 +7,6 @@ import {
 } from '@/components/home/offer-card-helpers'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { isSafeOfferPhotoUrl } from '@/lib/data/offer-detail-helpers'
 
 interface CheckoutSummarySidebarProps {
@@ -59,6 +58,8 @@ export function CheckoutSummarySidebar({
                 alt={commodityName}
                 fill
                 sizes='64px'
+                loading='eager'
+                fetchPriority='high'
                 className='object-cover'
               />
             ) : (
@@ -73,9 +74,7 @@ export function CheckoutSummarySidebar({
           </div>
         </div>
 
-        <Separator />
-
-        <dl className='flex flex-col gap-2.5 text-sm'>
+        <dl className='flex flex-col gap-2.5 pt-1 text-sm'>
           {orderId && (
             <div className='flex items-baseline justify-between gap-2'>
               <dt className='text-muted-foreground'>ID pesanan</dt>
@@ -103,18 +102,14 @@ export function CheckoutSummarySidebar({
           </div>
         </dl>
 
-        <Separator />
-
-        <div className='flex items-baseline justify-between gap-2'>
+        <div className='flex items-baseline justify-between gap-2 pt-2'>
           <span className='text-base font-semibold text-foreground'>Total tagihan</span>
           <span className='text-xl font-bold text-primary tabular-nums'>
             {totalPrice !== null ? formatPlainRupiah(totalPrice) : '—'}
           </span>
         </div>
 
-        <Separator />
-
-        <div className='flex flex-col gap-3 text-sm'>
+        <div className='flex flex-col gap-3 pt-2 text-sm'>
           {scheduleLabel && (
             <div className='flex items-start gap-2.5'>
               <CalendarClock className='mt-0.5 size-4 shrink-0 text-primary' aria-hidden='true' />

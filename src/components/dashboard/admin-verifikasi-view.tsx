@@ -16,8 +16,9 @@ import {
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useAdminFarmers, useVerifyAdminFarmer } from '@/hooks/api/use-admin'
+import { DashboardFilterSelect } from './dashboard-filter-select'
+import { DashboardPageHeader } from './dashboard-page-header'
 
 export function AdminVerifikasiView() {
   const { data: farmers = [], isLoading, isError } = useAdminFarmers()
@@ -32,30 +33,24 @@ export function AdminVerifikasiView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex flex-col gap-1'>
-          <h1 className='font-heading text-2xl font-semibold text-foreground'>Verifikasi Petani</h1>
-          <p className='text-base text-muted-foreground'>
-            Tinjau profil usaha, wilayah lahan, dan status kelayakan mitra petani.
-          </p>
-        </div>
-
-        <ToggleGroup
-          value={[filter]}
-          onValueChange={(values) => {
-            const next = values[0] as 'all' | 'pending' | 'verified' | undefined
-            if (next) setFilter(next)
-          }}
-          variant='outline'
-          size='sm'
-        >
-          <ToggleGroupItem value='all'>Semua ({farmers.length})</ToggleGroupItem>
-          <ToggleGroupItem value='pending'>
-            Menunggu ({farmers.filter((item) => !item.isVerifiedFarmer).length})
-          </ToggleGroupItem>
-          <ToggleGroupItem value='verified'>Terverifikasi</ToggleGroupItem>
-        </ToggleGroup>
-      </div>
+      <DashboardPageHeader
+        title='Verifikasi Petani'
+        actions={
+          <DashboardFilterSelect
+            ariaLabel='Filter status verifikasi petani'
+            value={filter}
+            onValueChange={setFilter}
+            options={[
+              { value: 'all', label: `Semua status (${farmers.length})` },
+              {
+                value: 'pending',
+                label: `Menunggu (${farmers.filter((item) => !item.isVerifiedFarmer).length})`,
+              },
+              { value: 'verified', label: 'Terverifikasi' },
+            ]}
+          />
+        }
+      />
 
       {isError && (
         <Alert variant='destructive'>
@@ -70,7 +65,7 @@ export function AdminVerifikasiView() {
           <Skeleton className='h-48 w-full' />
         </div>
       ) : filtered.length === 0 ? (
-        <Empty className='border border-border bg-card'>
+        <Empty className='bg-card'>
           <EmptyHeader>
             <EmptyTitle>Tidak ada data petani</EmptyTitle>
             <EmptyDescription>
@@ -81,12 +76,12 @@ export function AdminVerifikasiView() {
       ) : (
         <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
           {filtered.map((farmer) => (
-            <Card key={farmer.id}>
+            <Card key={farmer.id} className='min-w-0'>
               <CardHeader>
                 <div className='flex items-start justify-between gap-2'>
-                  <div className='flex flex-col gap-1'>
+                  <div className='flex min-w-0 flex-col gap-1'>
                     <CardTitle>{farmer.organization || farmer.name}</CardTitle>
-                    <CardDescription>
+                    <CardDescription className='break-words'>
                       {farmer.name} · {farmer.email}
                     </CardDescription>
                   </div>
@@ -95,8 +90,8 @@ export function AdminVerifikasiView() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className='grid grid-cols-2 gap-3 text-sm'>
-                <div>
+              <CardContent className='grid grid-cols-1 gap-3 text-sm sm:grid-cols-2'>
+                <div className='min-w-0'>
                   <p className='text-muted-foreground'>Wilayah</p>
                   <p className='font-medium text-foreground'>{farmer.areaName || '-'}</p>
                 </div>

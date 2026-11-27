@@ -8,6 +8,7 @@ export type Permission =
   | 'farmer:farms:manage'
   | 'farmer:offers:manage'
   | 'farmer:orders:manage'
+  | 'farmer:needs:manage'
   | 'admin:overview'
   | 'admin:farmers:verify'
   | 'admin:offers:moderate'
@@ -29,6 +30,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<Permission>> = {
     'farmer:farms:manage',
     'farmer:offers:manage',
     'farmer:orders:manage',
+    'farmer:needs:manage',
   ]),
   admin: new Set<Permission>([
     'dashboard:access',
@@ -47,10 +49,12 @@ interface RoutePolicy {
 
 const DASHBOARD_ROUTE_POLICIES: ReadonlyArray<RoutePolicy> = [
   { prefix: '/dashboard/admin', roles: ['admin'] },
+  { prefix: '/dashboard/profil', roles: ['farmer', 'admin'] },
   { prefix: '/dashboard/toko', roles: ['farmer'] },
   { prefix: '/dashboard/kebun', roles: ['farmer'] },
   { prefix: '/dashboard/penawaran', roles: ['farmer'] },
   { prefix: '/dashboard/pesanan', roles: ['farmer'] },
+  { prefix: '/dashboard/papan-kebutuhan', roles: ['farmer'] },
 ]
 
 export function isAuthRelaxed(): boolean {

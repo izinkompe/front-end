@@ -33,8 +33,8 @@ export function InfoPageShell({
       </Breadcrumb>
 
       <header className='flex flex-col gap-1.5'>
-        <h1 className='text-2xl font-bold sm:text-3xl'>{title}</h1>
-        {description && <p className='text-sm text-muted-foreground'>{description}</p>}
+        <h1 className='type-h1 text-foreground'>{title}</h1>
+        {description && <p className='text-meta text-muted-foreground'>{description}</p>}
       </header>
 
       <div className='flex flex-col gap-6 text-base leading-relaxed'>{children}</div>
@@ -53,7 +53,7 @@ export function InfoSection({
 }) {
   return (
     <section id={id} className='flex flex-col gap-2 border-t border-border pt-5'>
-      <h2 className='text-lg font-semibold text-foreground'>{title}</h2>
+      <h2 className='type-h3 text-foreground'>{title}</h2>
       {children}
     </section>
   )

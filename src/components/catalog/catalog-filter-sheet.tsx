@@ -1,8 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { id } from 'date-fns/locale'
-import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react'
 import {
   categoryFilterOptions,
   deadlineOptions,
@@ -13,8 +11,8 @@ import {
   type BuyerRadiusOption,
 } from '@/components/home/hero-search-params'
 import { Button } from '@/components/ui/button'
-import { Calendar } from '@/components/ui/calendar'
 import { Checkbox } from '@/components/ui/checkbox'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
 import {
   InputGroup,
@@ -22,7 +20,6 @@ import {
   InputGroupInput,
   InputGroupText,
 } from '@/components/ui/input-group'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
@@ -32,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
+import { CommoditySearchInput } from '@/components/shared/commodity-search-input'
 import {
   Sheet,
   SheetContent,
@@ -49,6 +46,11 @@ import {
   clearAllCatalogFilters,
   type CatalogFilterState,
 } from '@/lib/data/catalog-filters'
+import {
+  catalogSortOptions,
+  type CatalogSortOption,
+  type CatalogViewMode,
+} from '@/lib/data/catalog-params'
 import type { CommodityCondition } from '@/types/api/offers'
 
 interface CatalogFilterSheetProps {
@@ -88,7 +90,6 @@ function FilterSheetBody({
   const [maxPriceText, setMaxPriceText] = useState(
     initialState.maxPrice !== null ? String(initialState.maxPrice) : ''
   )
-  const [calendarOpen, setCalendarOpen] = useState(false)
   const [today] = useState<Date>(() => getTodayStart())
 
   const selectedDate = parseIsoDate(draft.pickupDate)
@@ -105,6 +106,9 @@ function FilterSheetBody({
   const deadlineLabel =
     deadlineOptions.find((item) => item.value === draft.deadlineWindow)?.label ??
     'Semua batas waktu'
+  const sortLabel =
+    catalogSortOptions.find((item) => item.value === draft.sort)?.label ?? 'Terdekat'
+  const viewLabel = draft.view === 'grid' ? 'Grid' : 'Baris penuh'
 
   const categoryLabel =
     categoryFilterOptions.find((item) => item.value === draft.category)?.label ?? 'Semua kategori'
@@ -154,6 +158,71 @@ function FilterSheetBody({
       <ScrollArea className='min-h-0 flex-1 overscroll-contain'>
         <div className='px-5 py-5'>
           <FieldGroup className='gap-6'>
+            <Field>
+              <FieldLabel htmlFor='filter-search-query'>Cari komoditas atau wilayah</FieldLabel>
+              <CommoditySearchInput
+                id='filter-search-query'
+                value={draft.q}
+                onChange={(nextQuery) => setDraft((prev) => ({ ...prev, q: nextQuery }))}
+                placeholder='Cari tomat, buncis, mangga...'
+                ariaLabel='Cari nama komoditas atau wilayah'
+                className='min-h-11'
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor='filter-sort'>Urutkan penawaran</FieldLabel>
+              <Select
+                value={draft.sort}
+                onValueChange={(value) => {
+                  if (
+                    value === 'nearest' ||
+                    value === 'expiring' ||
+                    value === 'price_asc' ||
+                    value === 'stock_desc' ||
+                    value === 'newest'
+                  ) {
+                    setDraft((prev) => ({ ...prev, sort: value as CatalogSortOption }))
+                  }
+                }}
+              >
+                <SelectTrigger id='filter-sort' className='w-full'>
+                  <SelectValue>{sortLabel}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {catalogSortOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field className='hidden sm:flex'>
+              <FieldLabel htmlFor='filter-view'>Tata letak kartu</FieldLabel>
+              <Select
+                value={draft.view}
+                onValueChange={(value) => {
+                  if (value === 'row' || value === 'grid') {
+                    setDraft((prev) => ({ ...prev, view: value as CatalogViewMode }))
+                  }
+                }}
+              >
+                <SelectTrigger id='filter-view' className='w-full'>
+                  <SelectValue>{viewLabel}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value='row'>Baris penuh</SelectItem>
+                    <SelectItem value='grid'>Grid</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </Field>
+
             {!fixedCategory && (
               <Field>
                 <FieldLabel htmlFor='filter-category'>Kategori komoditas</FieldLabel>
@@ -348,68 +417,26 @@ function FilterSheetBody({
 
             <Field>
               <FieldLabel htmlFor='filter-pickup-date'>Tanggal jadwal ambil mandiri</FieldLabel>
-              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
-                <PopoverTrigger
-                  render={
-                    <Button
-                      id='filter-pickup-date'
-                      type='button'
-                      variant='outline'
-                      className='w-full justify-between font-normal'
-                    />
-                  }
-                >
-                  <span className='flex min-w-0 items-center gap-2'>
-                    <CalendarIcon data-icon='inline-start' aria-hidden='true' />
-                    <span className='truncate'>{pickupDateLabel}</span>
-                  </span>
-                  <ChevronDown aria-hidden='true' className='size-4 text-muted-foreground' />
-                </PopoverTrigger>
-                <PopoverContent align='start' className='w-auto min-w-80 gap-0 p-0'>
-                  <Calendar
-                    mode='single'
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      setDraft((prev) => ({
-                        ...prev,
-                        pickupDate: date ? formatPickupDateIso(date) : null,
-                      }))
-                      setCalendarOpen(false)
-                    }}
-                    defaultMonth={selectedDate ?? today}
-                    disabled={{ before: today }}
-                    locale={id}
-                    className='w-full'
-                    classNames={{ root: 'w-full' }}
-                  />
-                  <Separator />
-                  <div className='flex items-center justify-between gap-2 p-2.5'>
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => {
-                        setDraft((prev) => ({ ...prev, pickupDate: formatPickupDateIso(today) }))
-                        setCalendarOpen(false)
-                      }}
-                    >
-                      Hari ini
-                    </Button>
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='sm'
-                      disabled={!draft.pickupDate}
-                      onClick={() => {
-                        setDraft((prev) => ({ ...prev, pickupDate: null }))
-                        setCalendarOpen(false)
-                      }}
-                    >
-                      Semua jadwal
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <DatePicker
+                id='filter-pickup-date'
+                value={selectedDate}
+                onValueChange={(date) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    pickupDate: date ? formatPickupDateIso(date) : null,
+                  }))
+                }
+                defaultMonth={selectedDate ?? today}
+                disabled={{ before: today }}
+                displayValue={pickupDateLabel}
+                showTodayAction
+                onToday={() =>
+                  setDraft((prev) => ({ ...prev, pickupDate: formatPickupDateIso(today) }))
+                }
+                showClearAction
+                clearLabel='Semua jadwal'
+                onClear={() => setDraft((prev) => ({ ...prev, pickupDate: null }))}
+              />
             </Field>
 
             <Field orientation='horizontal' className='items-center gap-3'>
@@ -428,9 +455,7 @@ function FilterSheetBody({
         </div>
       </ScrollArea>
 
-      <Separator />
-
-      <SheetFooter className='flex-row gap-3 bg-background p-4'>
+      <SheetFooter className='sticky-bar-safe flex-row gap-3 bg-background px-4 pt-4'>
         <Button type='button' variant='outline' className='flex-1' onClick={handleReset}>
           Atur ulang
         </Button>
@@ -451,7 +476,10 @@ export function CatalogFilterSheet({
 }: CatalogFilterSheetProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side='left' className='flex h-svh w-full flex-col gap-0 p-0 sm:max-w-md'>
+      <SheetContent
+        side='left'
+        className='flex h-dvh w-full! max-w-full! flex-col gap-0 p-0 sm:max-w-md!'
+      >
         <SheetHeader className='border-b border-border px-5 py-4 pr-12'>
           <SheetTitle>Semua filter</SheetTitle>
           <SheetDescription>

@@ -46,13 +46,14 @@ export function RelaxedAuthBanner({ activeRole, onPreviewRoleChange }: RelaxedAu
           akses antar peran, dan wajib diperketat lewat NEXT_PUBLIC_AUTH_RELAXED=false saat API
           siap.
         </span>
-        <div className='flex shrink-0 items-center gap-2'>
-          <span className='text-xs font-medium text-foreground'>Simulasi peran:</span>
+        <div className='flex flex-wrap items-center gap-2'>
+          <span className='text-meta font-medium text-foreground'>Simulasi peran:</span>
           <ToggleGroup
             value={[activeRole]}
             onValueChange={handleRoleChange}
             variant='outline'
             size='sm'
+            className='flex-wrap'
             aria-label='Pilih peran pratinjau dashboard'
           >
             <ToggleGroupItem value='farmer' disabled={switchPreviewRole.isPending}>

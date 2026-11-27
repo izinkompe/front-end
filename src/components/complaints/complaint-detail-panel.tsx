@@ -1,15 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { useId, useRef, useState, type FormEvent } from 'react'
+import { useId, useRef, useState } from 'react'
+import { useForm } from '@tanstack/react-form'
 import { Download } from 'lucide-react'
+import { getFieldErrorMessages } from '@/components/auth/farmer/farmer-form-helpers'
 import { formatPlainRupiah } from '@/components/home/offer-card-helpers'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { useReplyComplaint } from '@/hooks/api/use-complaints'
@@ -34,56 +35,50 @@ export function ComplaintDetailPanel({
 }) {
   const id = useId()
   const reply = useReplyComplaint(report.id)
-  const [message, setMessage] = useState('')
   const [files, setFiles] = useState<File[]>([])
-  const [touched, setTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const messageRef = useRef<HTMLTextAreaElement | null>(null)
 
   const proofUrl = isSafeProofImageUrl(report.refundProofUrl)
-  const trimmedMessage = message.trim()
-  const messageError =
-    trimmedMessage.length === 0
-      ? 'Tuliskan balasan klarifikasi terlebih dahulu.'
-      : trimmedMessage.length > 2000
-        ? 'Balasan maksimal 2.000 karakter.'
-        : null
   const filesError = validateComplaintFiles(files)
-  const showMessageError = Boolean((submitted || touched) && messageError)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (submitting) return
-    setSubmitted(true)
-    setSubmitError('')
+  const form = useForm({
+    defaultValues: {
+      message: '',
+    },
+    onSubmit: async ({ value }) => {
+      if (submitting) return
+      setSubmitted(true)
+      setSubmitError('')
 
-    if (messageError) {
-      messageRef.current?.focus()
-      return
-    }
-    if (filesError) {
-      return
-    }
+      const trimmedMessage = value.message.trim()
+      if (trimmedMessage.length === 0 || trimmedMessage.length > 2000) {
+        messageRef.current?.focus()
+        return
+      }
+      if (filesError) {
+        return
+      }
 
-    setSubmitting(true)
-    try {
-      const attachments = await readComplaintPhotos(files)
-      await reply.mutateAsync({
-        message: trimmedMessage,
-        attachments: attachments.length ? attachments : undefined,
-      })
-      setMessage('')
-      setFiles([])
-      setTouched(false)
-      setSubmitted(false)
-    } catch (cause) {
-      setSubmitError(cause instanceof Error ? cause.message : 'Coba kirim balasan lagi.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
+      setSubmitting(true)
+      try {
+        const attachments = await readComplaintPhotos(files)
+        await reply.mutateAsync({
+          message: trimmedMessage,
+          attachments: attachments.length ? attachments : undefined,
+        })
+        form.reset()
+        setFiles([])
+        setSubmitted(false)
+      } catch (cause) {
+        setSubmitError(cause instanceof Error ? cause.message : 'Coba kirim balasan lagi.')
+      } finally {
+        setSubmitting(false)
+      }
+    },
+  })
 
   return (
     <Card>
@@ -107,154 +102,165 @@ export function ComplaintDetailPanel({
         </CardDescription>
       </CardHeader>
 
-      <CardContent className='flex flex-col gap-4 text-sm'>
+      <CardContent className='flex flex-col gap-5 text-sm'>
         <p className='wrap-anywhere whitespace-pre-wrap text-foreground'>{report.description}</p>
         <ComplaintPhotos photos={report.evidencePhotos} />
 
         {report.adminResolution && (
-          <>
-            <Separator />
-            <section className='flex flex-col gap-1.5'>
-              <h3 className='font-semibold text-foreground'>Keputusan administrator</h3>
-              <p className='wrap-anywhere whitespace-pre-wrap text-foreground'>
-                {report.adminResolution}
+          <section className='flex flex-col gap-1.5 pt-1'>
+            <h3 className='font-semibold text-foreground'>Keputusan administrator</h3>
+            <p className='wrap-anywhere whitespace-pre-wrap text-foreground'>
+              {report.adminResolution}
+            </p>
+            {report.resolvedAt && (
+              <p className='text-xs text-muted-foreground tabular-nums'>
+                {formatDateTimeId(report.resolvedAt)}
               </p>
-              {report.resolvedAt && (
-                <p className='text-xs text-muted-foreground tabular-nums'>
-                  {formatDateTimeId(report.resolvedAt)}
-                </p>
-              )}
-            </section>
-          </>
+            )}
+          </section>
         )}
 
         {(report.refundStatus || report.refundBankAccount) && (
-          <>
-            <Separator />
-            <section className='flex flex-col gap-2.5'>
-              <h3 className='font-semibold text-foreground'>Pengembalian dana</h3>
-              <dl className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
+          <section className='flex flex-col gap-2.5 pt-1'>
+            <h3 className='font-semibold text-foreground'>Pengembalian dana</h3>
+            <dl className='grid grid-cols-1 gap-2 sm:grid-cols-2'>
+              <div className='flex flex-col gap-0.5'>
+                <dt className='text-sm text-muted-foreground'>Status transfer</dt>
+                <dd className='font-medium text-foreground'>
+                  {report.refundStatus
+                    ? refundStatusLabels[report.refundStatus]
+                    : 'Menunggu keputusan administrator'}
+                </dd>
+              </div>
+              {report.refundAmount !== undefined && (
                 <div className='flex flex-col gap-0.5'>
-                  <dt className='text-xs text-muted-foreground'>Status transfer</dt>
-                  <dd className='font-medium text-foreground'>
-                    {report.refundStatus
-                      ? refundStatusLabels[report.refundStatus]
-                      : 'Menunggu keputusan administrator'}
+                  <dt className='text-sm text-muted-foreground'>Nominal pengembalian</dt>
+                  <dd className='font-semibold text-primary tabular-nums'>
+                    {formatPlainRupiah(report.refundAmount)}
                   </dd>
                 </div>
-                {report.refundAmount !== undefined && (
+              )}
+              {report.refundBankAccount && (
+                <>
                   <div className='flex flex-col gap-0.5'>
-                    <dt className='text-xs text-muted-foreground'>Nominal pengembalian</dt>
-                    <dd className='font-semibold text-primary tabular-nums'>
-                      {formatPlainRupiah(report.refundAmount)}
+                    <dt className='text-sm text-muted-foreground'>Rekening tujuan</dt>
+                    <dd className='font-medium text-foreground'>
+                      {report.refundBankAccount.bankName} ({report.refundBankAccount.accountNumber})
                     </dd>
                   </div>
-                )}
-                {report.refundBankAccount && (
-                  <>
-                    <div className='flex flex-col gap-0.5'>
-                      <dt className='text-xs text-muted-foreground'>Rekening tujuan</dt>
-                      <dd className='font-medium text-foreground'>
-                        {report.refundBankAccount.bankName} (
-                        {report.refundBankAccount.accountNumber})
-                      </dd>
-                    </div>
-                    <div className='flex flex-col gap-0.5'>
-                      <dt className='text-xs text-muted-foreground'>Atas nama</dt>
-                      <dd className='font-medium text-foreground'>
-                        {report.refundBankAccount.accountHolderName}
-                      </dd>
-                    </div>
-                  </>
-                )}
-              </dl>
-              {proofUrl && (
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='w-fit'
-                  nativeButton={false}
-                  render={<a href={proofUrl} download='bukti-pengembalian' />}
-                >
-                  <Download data-icon='inline-start' aria-hidden='true' />
-                  <span>Unduh bukti pengembalian</span>
-                </Button>
+                  <div className='flex flex-col gap-0.5'>
+                    <dt className='text-sm text-muted-foreground'>Atas nama</dt>
+                    <dd className='font-medium text-foreground'>
+                      {report.refundBankAccount.accountHolderName}
+                    </dd>
+                  </div>
+                </>
               )}
-            </section>
-          </>
+            </dl>
+            {proofUrl && (
+              <Button
+                variant='outline'
+                size='sm'
+                className='w-fit'
+                nativeButton={false}
+                render={<a href={proofUrl} download='bukti-pengembalian' />}
+              >
+                <Download data-icon='inline-start' aria-hidden='true' />
+                <span>Unduh bukti pengembalian</span>
+              </Button>
+            )}
+          </section>
         )}
 
         {!!report.clarificationMessages?.length && (
-          <>
-            <Separator />
-            <section className='flex flex-col gap-3'>
-              <h3 className='font-semibold text-foreground'>Klarifikasi</h3>
-              <ol className='flex flex-col gap-3'>
-                {report.clarificationMessages.map((entry) => (
-                  <li key={entry.id} className='flex flex-col gap-1.5 rounded-md bg-muted p-3'>
-                    <div className='flex flex-wrap items-baseline justify-between gap-2'>
-                      <p className='font-semibold text-foreground'>
-                        {entry.senderRole === 'buyer' ? 'Anda' : entry.senderName}
-                      </p>
-                      <p className='text-xs text-muted-foreground tabular-nums'>
-                        {formatDateTimeId(entry.createdAt)}
-                      </p>
-                    </div>
-                    <p className='wrap-anywhere whitespace-pre-wrap text-foreground'>
-                      {entry.message}
+          <section className='flex flex-col gap-3 pt-1'>
+            <h3 className='font-semibold text-foreground'>Klarifikasi</h3>
+            <ol className='flex flex-col gap-3'>
+              {report.clarificationMessages.map((entry) => (
+                <li key={entry.id} className='flex flex-col gap-1.5 rounded-md bg-muted p-3'>
+                  <div className='flex flex-wrap items-baseline justify-between gap-2'>
+                    <p className='font-semibold text-foreground'>
+                      {entry.senderRole === 'buyer' ? 'Anda' : entry.senderName}
                     </p>
-                    <ComplaintPhotos photos={entry.attachments} />
-                  </li>
-                ))}
-              </ol>
-            </section>
-          </>
+                    <p className='text-sm text-muted-foreground tabular-nums'>
+                      {formatDateTimeId(entry.createdAt)}
+                    </p>
+                  </div>
+                  <p className='wrap-anywhere whitespace-pre-wrap text-foreground'>
+                    {entry.message}
+                  </p>
+                  <ComplaintPhotos photos={entry.attachments} />
+                </li>
+              ))}
+            </ol>
+          </section>
         )}
 
         {report.status === 'in_investigation' && (
-          <>
-            <Separator />
-            <form noValidate onSubmit={handleSubmit} className='flex flex-col gap-3'>
-              <FieldGroup>
-                <Field data-invalid={showMessageError || undefined}>
-                  <FieldLabel htmlFor={id}>Balasan klarifikasi</FieldLabel>
-                  <FieldDescription id={id + '-hint'}>
-                    Tambahkan penjelasan atau bukti tambahan untuk administrator.
-                  </FieldDescription>
-                  <Textarea
-                    ref={messageRef}
-                    id={id}
-                    name='message'
-                    maxLength={2000}
-                    rows={3}
-                    value={message}
-                    placeholder='Tulis balasan klarifikasi Anda'
-                    aria-invalid={showMessageError ? 'true' : 'false'}
-                    aria-describedby={showMessageError ? `${id}-hint ${id}-error` : `${id}-hint`}
-                    onBlur={() => setTouched(true)}
-                    onChange={(event) => setMessage(event.target.value)}
-                  />
-                  {showMessageError && (
-                    <FieldError id={id + '-error'} errors={[{ message: messageError as string }]} />
-                  )}
-                </Field>
-                <ComplaintPhotoField
-                  files={files}
-                  onFilesChange={setFiles}
-                  externalError={submitted ? filesError : null}
-                />
-              </FieldGroup>
-              {submitError && (
-                <Alert variant='destructive'>
-                  <AlertDescription>{submitError}</AlertDescription>
-                </Alert>
-              )}
-              <Button type='submit' disabled={submitting} className='self-start'>
-                {submitting && <Spinner data-icon='inline-start' />}
-                <span>Kirim balasan</span>
-              </Button>
-            </form>
-          </>
+          <form
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              void form.handleSubmit()
+            }}
+            className='flex flex-col gap-3 pt-1'
+          >
+            <FieldGroup>
+              <form.Field
+                name='message'
+                validators={{
+                  onChange: ({ value }) => {
+                    const trimmed = value.trim()
+                    if (trimmed.length === 0) return 'Tuliskan balasan klarifikasi terlebih dahulu.'
+                    if (trimmed.length > 2000) return 'Balasan maksimal 2.000 karakter.'
+                    return undefined
+                  },
+                }}
+              >
+                {(field) => {
+                  const errors = getFieldErrorMessages(field.state.meta.errors)
+                  const isInvalid = field.state.meta.isTouched && errors.length > 0
+                  return (
+                    <Field data-invalid={isInvalid || undefined}>
+                      <FieldLabel htmlFor={id}>Balasan klarifikasi</FieldLabel>
+                      <FieldDescription id={id + '-hint'}>
+                        Tambahkan penjelasan atau bukti tambahan untuk administrator.
+                      </FieldDescription>
+                      <Textarea
+                        ref={messageRef}
+                        id={id}
+                        name={field.name}
+                        maxLength={2000}
+                        rows={3}
+                        value={field.state.value}
+                        placeholder='Tulis balasan klarifikasi Anda'
+                        aria-invalid={isInvalid ? 'true' : 'false'}
+                        aria-describedby={isInvalid ? `${id}-hint ${id}-error` : `${id}-hint`}
+                        onBlur={field.handleBlur}
+                        onChange={(event) => field.handleChange(event.target.value)}
+                      />
+                      {isInvalid && <FieldError id={id + '-error'} errors={errors} />}
+                    </Field>
+                  )
+                }}
+              </form.Field>
+              <ComplaintPhotoField
+                files={files}
+                onFilesChange={setFiles}
+                externalError={submitted ? filesError : null}
+              />
+            </FieldGroup>
+            {submitError && (
+              <Alert variant='destructive'>
+                <AlertDescription>{submitError}</AlertDescription>
+              </Alert>
+            )}
+            <Button type='submit' disabled={submitting} className='self-start'>
+              {submitting && <Spinner data-icon='inline-start' />}
+              <span>Kirim balasan</span>
+            </Button>
+          </form>
         )}
       </CardContent>
     </Card>

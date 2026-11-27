@@ -19,7 +19,7 @@ export function OfferStickyBars({
   onOpenMobileSheet,
 }: OfferStickyBarsProps) {
   return (
-    <div className='fixed inset-x-0 bottom-0 z-30 bg-background/95 px-4 py-3 shadow-[0_-4px_16px_rgb(0_0_0/0.08)] backdrop-blur-sm lg:hidden'>
+    <div className='sticky-bar-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-4 pt-3 shadow-[0_-4px_16px_rgb(0_0_0/0.08)] backdrop-blur-sm lg:hidden'>
       <div className='mx-auto flex max-w-7xl items-center justify-between gap-3'>
         <div className='min-w-0'>
           <p
@@ -30,7 +30,7 @@ export function OfferStickyBars({
           >
             {formatPricePerKg(offer.pricePerKg)}
           </p>
-          <p className='truncate text-xs text-muted-foreground tabular-nums'>
+          <p className='truncate text-sm text-muted-foreground tabular-nums'>
             {offer.availableStockKg > 0
               ? `Sisa ${formatWeightKg(offer.availableStockKg)}`
               : 'Stok habis'}

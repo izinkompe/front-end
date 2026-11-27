@@ -42,6 +42,7 @@ export const OrderSchema = z.object({
   buyerId: z.string(),
   farmerId: z.string(),
   farmerName: z.string().optional(),
+  farmId: z.string().optional(),
   offerId: z.string(),
   commodityName: z.string(),
   commodityPhotoUrl: z.string().optional(),
@@ -57,6 +58,9 @@ export const OrderSchema = z.object({
   confirmedWeightKg: z.number().nonnegative().optional(),
   receiptConfirmedAt: z.string().optional(),
   weightDiscrepancyNote: z.string().optional(),
+  restockDecision: z.enum(['restocked', 'discarded']).optional(),
+  restockDecidedAt: z.string().optional(),
+  restockNote: z.string().optional(),
   pickupLocation: OrderPickupLocationSchema,
   buyerContactName: z.string().optional(),
   buyerContactPhone: z.string().optional(),
@@ -95,3 +99,17 @@ export const CreateOrderRequestSchema = z.object({
   acceptedPricePerKg: z.number().positive().optional(),
 })
 export type CreateOrderRequest = z.infer<typeof CreateOrderRequestSchema>
+
+export const FarmerProposeScheduleRequestSchema = z.object({
+  date: z.iso.date('Pilih tanggal pengambilan yang valid'),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Format jam mulai HH:MM'),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/, 'Format jam selesai HH:MM'),
+  reason: z.string().trim().min(5, 'Tuliskan alasan perubahan jadwal').max(300),
+})
+export type FarmerProposeScheduleRequest = z.infer<typeof FarmerProposeScheduleRequestSchema>
+
+export const FarmerRestockDecisionRequestSchema = z.object({
+  decision: z.enum(['restocked', 'discarded']),
+  note: z.string().trim().max(240).optional(),
+})
+export type FarmerRestockDecisionRequest = z.infer<typeof FarmerRestockDecisionRequestSchema>

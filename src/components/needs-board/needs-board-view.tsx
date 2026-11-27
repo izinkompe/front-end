@@ -120,7 +120,7 @@ export function NeedsBoardView() {
     <div className='mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8'>
       <header className='flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between'>
         <div className='flex flex-col gap-1'>
-          <h1 className='text-2xl font-bold sm:text-3xl'>Papan Kebutuhan Pangan</h1>
+          <h1 className='type-h1 text-foreground'>Papan Kebutuhan Pangan</h1>
           <p className='text-base text-muted-foreground'>
             Publikasikan kebutuhan bahan pangan Anda agar petani terdekat dapat menawarkan panennya.
           </p>
@@ -299,7 +299,7 @@ export function NeedsBoardView() {
 
                           {fulfilledKg > 0 && (
                             <div className='flex flex-col gap-1'>
-                              <div className='flex items-center justify-between text-xs text-muted-foreground tabular-nums'>
+                              <div className='flex items-center justify-between text-sm text-muted-foreground tabular-nums'>
                                 <span>Terpenuhi {formatWeightKg(fulfilledKg)}</span>
                                 <span>{progress}%</span>
                               </div>
@@ -307,17 +307,17 @@ export function NeedsBoardView() {
                             </div>
                           )}
 
-                          <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground'>
+                          <div className='flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground'>
                             <span className='inline-flex items-center gap-1'>
-                              <MapPin className='size-3.5 shrink-0' aria-hidden='true' />
+                              <MapPin className='icon-sm' aria-hidden='true' />
                               <span>{need.targetArea}</span>
                             </span>
                             <span className='inline-flex items-center gap-1 tabular-nums'>
-                              <Calendar className='size-3.5 shrink-0' aria-hidden='true' />
+                              <Calendar className='icon-sm' aria-hidden='true' />
                               <span>{formatNeedDate(need.targetDate)}</span>
                             </span>
                             <span className='inline-flex items-center gap-1 tabular-nums'>
-                              <MessageSquare className='size-3.5 shrink-0' aria-hidden='true' />
+                              <MessageSquare className='icon-sm' aria-hidden='true' />
                               <span>{responseCount} tanggapan</span>
                             </span>
                           </div>

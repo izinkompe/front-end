@@ -14,15 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldTitle,
-} from '@/components/ui/field'
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Spinner } from '@/components/ui/spinner'
@@ -155,8 +147,8 @@ export function CheckoutBuyerAddressCard({
 
   return (
     <Card>
-      <CardHeader className='flex flex-row items-start justify-between gap-3'>
-        <div className='flex flex-col gap-1'>
+      <CardHeader className='flex flex-col items-start justify-between gap-3 sm:flex-row'>
+        <div className='flex min-w-0 flex-col gap-1'>
           <CardTitle>Alamat pembeli</CardTitle>
           <CardDescription>
             {organizationName
@@ -165,7 +157,13 @@ export function CheckoutBuyerAddressCard({
           </CardDescription>
         </div>
 
-        <Button type='button' variant='outline' size='sm' onClick={openNewDialog}>
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          onClick={openNewDialog}
+          className='shrink-0'
+        >
           <Plus data-icon='inline-start' aria-hidden='true' />
           <span>Tambah alamat</span>
         </Button>
@@ -212,37 +210,36 @@ export function CheckoutBuyerAddressCard({
               return (
                 <div
                   key={address.id}
-                  className='flex items-start justify-between gap-2 rounded-lg border border-border p-3 transition-colors has-data-checked:border-primary/40 has-data-checked:bg-primary/5'
+                  className='flex flex-col gap-2 rounded-lg border border-border p-3.5 transition-colors has-data-checked:border-primary/40 has-data-checked:bg-primary/5'
                 >
-                  <FieldLabel
-                    htmlFor={radioId}
-                    className='flex-1 cursor-pointer border-0 p-0 hover:bg-transparent has-data-checked:bg-transparent'
-                  >
-                    <Field orientation='horizontal'>
-                      <RadioGroupItem id={radioId} value={address.id} />
-                      <FieldContent>
-                        <FieldTitle className='flex flex-wrap items-center gap-2 text-sm font-semibold'>
+                  <div className='flex items-start justify-between gap-2'>
+                    <label
+                      htmlFor={radioId}
+                      className='flex min-w-0 flex-1 cursor-pointer items-start gap-3'
+                    >
+                      <RadioGroupItem id={radioId} value={address.id} className='mt-0.5 shrink-0' />
+                      <span className='flex min-w-0 flex-1 flex-col gap-1'>
+                        <span className='flex flex-wrap items-center gap-2 text-sm font-semibold text-foreground'>
                           <span>{address.label}</span>
                           {address.isDefault && <Badge variant='secondary'>Utama</Badge>}
-                        </FieldTitle>
-                        <FieldDescription className='text-sm text-foreground'>
-                          {address.fullAddress}
-                        </FieldDescription>
-                        <FieldDescription className='text-xs'>{address.areaName}</FieldDescription>
-                      </FieldContent>
-                    </Field>
-                  </FieldLabel>
+                        </span>
+                        <span className='text-sm text-foreground'>{address.fullAddress}</span>
+                        <span className='text-xs text-muted-foreground'>{address.areaName}</span>
+                      </span>
+                    </label>
 
-                  <Button
-                    type='button'
-                    variant='ghost'
-                    size='xs'
-                    onClick={() => openEditDialog(address)}
-                    aria-label={`Ubah alamat ${address.label}`}
-                  >
-                    <Pencil data-icon='inline-start' aria-hidden='true' />
-                    <span>Ubah</span>
-                  </Button>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='xs'
+                      onClick={() => openEditDialog(address)}
+                      aria-label={`Ubah alamat ${address.label}`}
+                      className='shrink-0'
+                    >
+                      <Pencil data-icon='inline-start' aria-hidden='true' />
+                      <span>Ubah</span>
+                    </Button>
+                  </div>
                 </div>
               )
             })}

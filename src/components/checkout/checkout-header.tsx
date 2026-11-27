@@ -2,11 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, CircleHelp, Sprout, User } from 'lucide-react'
+import { ArrowLeft, CircleHelp, User } from 'lucide-react'
 import { BuyerAuthDialog } from '@/components/auth/buyer-auth-dialog'
+import { BrandLogo } from '@/components/shared/brand-logo'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useCurrentUser } from '@/hooks/api/use-auth'
+import { useHydrated } from '@/hooks/use-hydrated'
 
 interface CheckoutHeaderProps {
   backHref: string
@@ -21,7 +24,8 @@ function getUserInitials(name: string) {
 }
 
 export function CheckoutHeader({ backHref, backLabel }: CheckoutHeaderProps) {
-  const { data: currentUser } = useCurrentUser()
+  const isHydrated = useHydrated()
+  const { data: currentUser, isPending: isAuthPending } = useCurrentUser()
   const [authOpen, setAuthOpen] = useState(false)
 
   return (
@@ -42,18 +46,7 @@ export function CheckoutHeader({ backHref, backLabel }: CheckoutHeaderProps) {
 
           <span className='h-5 w-px bg-border' aria-hidden='true' />
 
-          <Link
-            href='/'
-            aria-label='PanganTani - Beranda'
-            className='inline-flex min-h-11 items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-          >
-            <span className='flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground'>
-              <Sprout className='size-4.5' aria-hidden='true' />
-            </span>
-            <span className='text-base font-bold tracking-tight text-foreground sm:text-lg'>
-              PanganTani
-            </span>
-          </Link>
+          <BrandLogo size='sm' wordmarkClassName='hidden sm:inline' />
         </div>
 
         <div className='flex shrink-0 items-center gap-2'>
@@ -62,8 +55,10 @@ export function CheckoutHeader({ backHref, backLabel }: CheckoutHeaderProps) {
             <span>Bantuan</span>
           </Button>
 
-          {currentUser ? (
-            <div className='flex items-center gap-2 rounded-full border border-border bg-muted/40 py-1 pr-3 pl-1'>
+          {!isHydrated || (isAuthPending && !currentUser) ? (
+            <Skeleton className='h-9 w-24 rounded-full' aria-hidden='true' />
+          ) : currentUser ? (
+            <div className='flex items-center gap-2 rounded-full border border-border bg-muted/40 p-1 sm:pr-3'>
               <Avatar className='size-7'>
                 {currentUser.avatarUrl && (
                   <AvatarImage src={currentUser.avatarUrl} alt={currentUser.name} />

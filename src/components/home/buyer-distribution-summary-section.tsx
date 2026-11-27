@@ -52,10 +52,7 @@ export function BuyerDistributionSummarySection() {
       <div className='mx-auto grid w-full max-w-7xl grid-cols-1 gap-10 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-12 lg:gap-12 lg:px-8'>
         <div className='flex flex-col justify-between gap-6 lg:col-span-5'>
           <div className='flex flex-col gap-3'>
-            <h2
-              id='distribution-summary-heading'
-              className='text-[clamp(1.5rem,1.25rem+0.9vw,2rem)] leading-tight font-bold text-foreground'
-            >
+            <h2 id='distribution-summary-heading' className='type-h2 text-foreground'>
               Pangan tersalurkan
             </h2>
 
@@ -81,7 +78,7 @@ export function BuyerDistributionSummarySection() {
               </Alert>
             ) : (
               <div className='flex flex-col gap-3'>
-                <p className='text-[clamp(2.5rem,1.9rem+2.2vw,3.75rem)] leading-[1.1] font-bold text-primary tabular-nums'>
+                <p className='type-kpi text-primary'>
                   {formatWeightKg(stats.totalDistributedWeightKg)}
                 </p>
                 <p className='max-w-[56ch] text-base leading-relaxed text-foreground tabular-nums'>

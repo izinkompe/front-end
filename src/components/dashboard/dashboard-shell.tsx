@@ -48,14 +48,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (!hydrated || isLoading) {
     return (
-      <div className='flex min-h-screen flex-col gap-4 p-6'>
-        <Skeleton className='h-12 w-full' />
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
-          <Skeleton className='h-32 w-full' />
-          <Skeleton className='h-32 w-full' />
-          <Skeleton className='h-32 w-full' />
+      <>
+        <div className='flex min-h-screen flex-col gap-4 p-6'>
+          <Skeleton className='h-12 w-full' />
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+            <Skeleton className='h-32 w-full' />
+            <Skeleton className='h-32 w-full' />
+            <Skeleton className='h-32 w-full' />
+          </div>
         </div>
-      </div>
+        <div className='hidden' aria-hidden='true'>
+          {children}
+        </div>
+      </>
     )
   }
 
@@ -74,7 +79,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (activeRole === 'buyer' && !isPathAllowed) {
     return (
-      <div className='mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-4 p-4 sm:p-6'>
+      <div className='mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-4 p-4 sm:p-6'>
         <RelaxedAuthBanner
           activeRole={activeRole}
           onPreviewRoleChange={(next) => setPreviewRoleOverride(next)}
@@ -87,8 +92,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider>
       <SidebarProvider>
+        <a href='#konten-utama' className='skip-link'>
+          Lewati ke konten utama
+        </a>
         <DashboardSidebar role={activeRole} userName={userName} organization={organization} />
-        <SidebarInset>
+        <SidebarInset className='min-w-0'>
           <DashboardHeader
             role={activeRole}
             userName={userName}
@@ -96,17 +104,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             avatarUrl={currentUser?.avatarUrl}
             isAuthenticatedSession={Boolean(currentUser)}
           />
-          <div className='flex flex-1 flex-col gap-6 p-4 sm:p-6'>
+          <div
+            data-dashboard-content='true'
+            className='flex min-w-0 flex-1 flex-col gap-5 p-3 sm:gap-6 sm:p-6'
+          >
             <RelaxedAuthBanner
               activeRole={activeRole}
               onPreviewRoleChange={(next) => setPreviewRoleOverride(next)}
             />
             {isPathAllowed ? (
-              <main id='konten-utama' tabIndex={-1} className='flex flex-1 flex-col gap-6'>
+              <main id='konten-utama' tabIndex={-1} className='flex min-w-0 flex-1 flex-col gap-6'>
                 {children}
               </main>
             ) : (
-              <main id='konten-utama' tabIndex={-1} className='flex flex-1 flex-col'>
+              <main id='konten-utama' tabIndex={-1} className='flex min-w-0 flex-1 flex-col'>
                 <DashboardAccessDenied roleLabel={getRoleLabel(activeRole)} homeHref='/' />
               </main>
             )}

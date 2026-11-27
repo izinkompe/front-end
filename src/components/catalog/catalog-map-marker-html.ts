@@ -45,8 +45,8 @@ export function buildClusterMapPillHtml(params: {
 
   const badgeClass =
     params.isSelected || params.isOpen
-      ? 'inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-[11px] font-bold text-primary'
-      : 'inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground'
+      ? 'inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary-foreground text-xs font-bold text-primary'
+      : 'inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground'
 
   return `<div style="transform: translate(-50%, calc(-100% - 10px));" class="w-max pointer-events-auto"><div class="${clusterClass}"><span class="${badgeClass}">${params.count}</span><span>${priceText}+</span></div></div>`
 }

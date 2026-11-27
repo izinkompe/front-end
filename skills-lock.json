@@ -91,6 +91,13 @@
       "sourceType": "github",
       "skillPath": "plugins/ui-design/skills/visual-design-foundations/SKILL.md",
       "computedHash": "ca2bebbf7c248e5e32356bc074bc899285243c5a169782f4e163346b758fa1c9"
+    },
+    "web-component-design": {
+      "source": "wshobson/agents",
+      "commit": "c96b5f6552dba32e4492307493ee613581430715",
+      "sourceType": "github",
+      "skillPath": "plugins/ui-design/skills/web-component-design/SKILL.md",
+      "computedHash": "94391577833fb07e17f03dc4438645a0e3bc056c883083467e8f723cd04cb260"
     }
   }
 }

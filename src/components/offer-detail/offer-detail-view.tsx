@@ -332,28 +332,30 @@ export function OfferDetailView({ offerId }: OfferDetailViewProps) {
       </div>
 
       <Sheet open={mobileReserveOpen} onOpenChange={setMobileReserveOpen}>
-        <SheetContent side='bottom' className='max-h-[90dvh] overflow-y-auto rounded-t-2xl p-5'>
-          <SheetHeader className='p-0 pr-10'>
+        <SheetContent side='bottom'>
+          <SheetHeader className='px-5 py-4 pr-14'>
             <SheetTitle>Reservasi {offer.commodityName}</SheetTitle>
             <SheetDescription>
               Pilih berat pesanan dan slot ambil mandiri di {offer.pickupAddressArea}.
             </SheetDescription>
           </SheetHeader>
 
-          <OfferReservationForm
-            offer={offer}
-            isExpired={isExpired}
-            currentUser={currentUser}
-            onRequireAuth={() => {
-              setMobileReserveOpen(false)
-              setAuthDialogOpen(true)
-            }}
-            onOrderCreated={(order) => {
-              setMobileReserveOpen(false)
-              setCreatedOrder(order)
-            }}
-            idPrefix='offer-order-mobile'
-          />
+          <div className='p-5'>
+            <OfferReservationForm
+              offer={offer}
+              isExpired={isExpired}
+              currentUser={currentUser}
+              onRequireAuth={() => {
+                setMobileReserveOpen(false)
+                setAuthDialogOpen(true)
+              }}
+              onOrderCreated={(order) => {
+                setMobileReserveOpen(false)
+                setCreatedOrder(order)
+              }}
+              idPrefix='offer-order-mobile'
+            />
+          </div>
         </SheetContent>
       </Sheet>
 

@@ -8,7 +8,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useOffers } from '@/hooks/api/use-offers'
@@ -120,8 +119,7 @@ function CategorySummaryCard({ category, offers, location }: CategorySummaryCard
         <p className='text-sm leading-relaxed text-muted-foreground'>{category.examples}</p>
       </CardHeader>
 
-      <CardContent className='flex flex-col gap-3'>
-        <Separator />
+      <CardContent className='flex flex-col gap-4 pt-1'>
         <dl className='flex flex-col gap-3 text-sm'>
           <div className='flex items-baseline justify-between gap-2'>
             <dt className='text-muted-foreground'>Stok siap ambil</dt>
@@ -212,10 +210,7 @@ export function BuyerCategoryShowcaseSection() {
         <div className='flex flex-col gap-4'>
           <div className='flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between'>
             <div className='flex flex-col gap-1.5'>
-              <h2
-                id='category-showcase-heading'
-                className='text-[clamp(1.5rem,1.25rem+0.9vw,2rem)] leading-tight font-bold text-foreground'
-              >
+              <h2 id='category-showcase-heading' className='type-h2 text-foreground'>
                 Panen per kategori
               </h2>
               <p className='max-w-[62ch] text-base leading-relaxed text-muted-foreground'>
@@ -243,7 +238,7 @@ export function BuyerCategoryShowcaseSection() {
               <ToggleGroupItem
                 key={category.slug}
                 value={category.slug}
-                className='min-h-10 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors pointer-coarse:min-h-11 hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:font-semibold aria-pressed:text-primary-foreground'
+                className='chip-toggle px-4 py-2'
               >
                 {category.label}
               </ToggleGroupItem>

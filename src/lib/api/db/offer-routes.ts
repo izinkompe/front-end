@@ -1,4 +1,5 @@
 import { ApiError } from '../errors'
+import { createUniqueId } from '@/lib/utils'
 import { offersCollection } from './collections/offers'
 import { usersCollection } from './collections/users'
 import { notificationsCollection } from './collections/notifications'
@@ -80,7 +81,7 @@ export function handleOfferWriteRoute({
   const now = new Date().toISOString()
   const offer: Offer = {
     ...data,
-    id: 'off-' + crypto.randomUUID(),
+    id: createUniqueId('off-'),
     farmerId: farmer.id,
     farmerName: farmer.name,
     createdAt: now,

@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Separator } from '@/components/ui/separator'
 import { FarmerAuthShell } from '@/components/auth/farmer/farmer-auth-shell'
 import {
   ONBOARDING_STORAGE_KEY,
   ONBOARDING_TOTAL_STEPS,
+  normalizeBankName,
 } from '@/components/auth/farmer/farmer-form-helpers'
 import { StepAccountInfo } from '@/components/auth/farmer/step-account-info'
 import { StepBankAccount } from '@/components/auth/farmer/step-bank-account'
@@ -308,7 +308,7 @@ export function FarmerOnboardingFlow({ resumeNotice = false }: { resumeNotice?: 
       longitude: step4.longitude,
       pickupNotes: step4.pickupNotes.trim(),
       bankAccount: {
-        bankName: step5.bankName,
+        bankName: normalizeBankName(step5.bankName),
         accountNumber: step5.accountNumber.trim(),
         accountHolderName: step5.accountHolderName.trim(),
       },
@@ -440,8 +440,7 @@ export function FarmerOnboardingFlow({ resumeNotice = false }: { resumeNotice?: 
         />
       )}
 
-      <div className='mx-auto flex w-full max-w-md flex-col gap-4 pt-2'>
-        <Separator />
+      <div className='mx-auto flex w-full max-w-md flex-col gap-4 pt-4'>
         <p className='text-center text-base text-muted-foreground'>
           Sudah pernah mendaftar sebagai petani?{' '}
           <Link

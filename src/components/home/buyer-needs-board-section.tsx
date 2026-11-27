@@ -7,7 +7,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress, ProgressLabel, ProgressValue } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useNeedsBoard } from '@/hooks/api/use-needs-board'
 import type { NeedRequest } from '@/types/api/needs-board'
@@ -119,8 +118,7 @@ function NeedRequestCard({ need }: NeedRequestCardProps) {
         </Progress>
       </div>
 
-      <div className='flex flex-col gap-3'>
-        <Separator />
+      <div className='pt-2'>
         <footer className='flex items-center justify-between gap-2 text-sm text-muted-foreground'>
           <span className='flex min-w-0 items-center gap-1.5'>
             <MapPin className='size-4 shrink-0' aria-hidden='true' />
@@ -151,10 +149,7 @@ export function BuyerNeedsBoardSection() {
       <div className='mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-12 lg:items-start lg:px-8'>
         <div className='flex flex-col gap-5 lg:col-span-4'>
           <div className='flex flex-col gap-2'>
-            <h2
-              id='needs-board-heading'
-              className='text-[clamp(1.5rem,1.25rem+0.9vw,2rem)] leading-tight font-bold text-foreground'
-            >
+            <h2 id='needs-board-heading' className='type-h2 text-foreground'>
               Papan Kebutuhan Pangan
             </h2>
             <p className='max-w-[60ch] text-base leading-relaxed text-muted-foreground'>

@@ -16,9 +16,10 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { useAdminOffers, useModerateAdminOffer } from '@/hooks/api/use-admin'
 import type { OfferStatus } from '@/types/api/offers'
+import { DashboardFilterSelect } from './dashboard-filter-select'
+import { DashboardPageHeader } from './dashboard-page-header'
 
 const STATUS_LABELS: Record<OfferStatus, string> = {
   active: 'Aktif',
@@ -37,31 +38,22 @@ export function AdminModerasiView() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex flex-col gap-1'>
-          <h1 className='font-heading text-2xl font-semibold text-foreground'>
-            Moderasi Penawaran
-          </h1>
-          <p className='text-base text-muted-foreground'>
-            Pantau penawaran aktif dari seluruh petani dan tutup penawaran yang bermasalah.
-          </p>
-        </div>
-
-        <ToggleGroup
-          value={[filter]}
-          onValueChange={(values) => {
-            const next = values[0] as 'all' | OfferStatus | undefined
-            if (next) setFilter(next)
-          }}
-          variant='outline'
-          size='sm'
-        >
-          <ToggleGroupItem value='all'>Semua ({offers.length})</ToggleGroupItem>
-          <ToggleGroupItem value='active'>Aktif</ToggleGroupItem>
-          <ToggleGroupItem value='closed'>Ditutup</ToggleGroupItem>
-          <ToggleGroupItem value='draft'>Draf</ToggleGroupItem>
-        </ToggleGroup>
-      </div>
+      <DashboardPageHeader
+        title='Moderasi Penawaran'
+        actions={
+          <DashboardFilterSelect
+            ariaLabel='Filter status penawaran'
+            value={filter}
+            onValueChange={setFilter}
+            options={[
+              { value: 'all', label: `Semua status (${offers.length})` },
+              { value: 'active', label: 'Aktif' },
+              { value: 'closed', label: 'Ditutup' },
+              { value: 'draft', label: 'Draf' },
+            ]}
+          />
+        }
+      />
 
       {isError && (
         <Alert variant='destructive'>
@@ -78,12 +70,12 @@ export function AdminModerasiView() {
       ) : (
         <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
           {filtered.map((offer) => (
-            <Card key={offer.id}>
+            <Card key={offer.id} className='min-w-0'>
               <CardHeader>
                 <div className='flex items-start justify-between gap-2'>
-                  <div className='flex flex-col gap-1'>
+                  <div className='flex min-w-0 flex-col gap-1'>
                     <CardTitle>{offer.commodityName}</CardTitle>
-                    <CardDescription>
+                    <CardDescription className='truncate'>
                       {offer.farmerName} · {offer.pickupAddressArea}
                     </CardDescription>
                   </div>
@@ -92,7 +84,7 @@ export function AdminModerasiView() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className='grid grid-cols-3 gap-3 text-sm'>
+              <CardContent className='grid grid-cols-1 gap-3 text-sm sm:grid-cols-3'>
                 <div>
                   <p className='text-muted-foreground'>Harga/kg</p>
                   <p className='font-mono font-medium text-foreground'>
@@ -117,7 +109,7 @@ export function AdminModerasiView() {
                   nativeButton={false}
                   render={<Link href={`/pasar/penawaran/${offer.id}`} />}
                 >
-                  Lihat publik
+                  Lihat di Pasar Panen
                 </Button>
                 {(offer.status === 'active' || offer.status === 'closed') && (
                   <Button

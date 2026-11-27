@@ -127,6 +127,22 @@ describe('Farmer auth and 6-step non-skippable onboarding schemas', () => {
 
     expect(
       FarmerStep5Schema.safeParse({
+        bankName: 'Bank CIMB Niaga',
+        accountNumber: '123401002345501',
+        accountHolderName: 'Budi Santoso',
+      }).success
+    ).toBe(true)
+
+    expect(
+      FarmerStep5Schema.safeParse({
+        bankName: 'A',
+        accountNumber: '123401002345501',
+        accountHolderName: 'Budi Santoso',
+      }).success
+    ).toBe(false)
+
+    expect(
+      FarmerStep5Schema.safeParse({
         bankName: 'BRI',
         accountNumber: '1234-abc',
         accountHolderName: 'Budi Santoso',

@@ -1,6 +1,7 @@
 import {
   BarChart3,
   ClipboardCheck,
+  ClipboardList,
   LayoutDashboard,
   Package,
   ShieldCheck,
@@ -11,6 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { hasPermission, type Permission } from '@/lib/auth/rbac'
+import type { BreadcrumbTrailItem } from '@/components/ui/breadcrumb'
 import type { UserRole } from '@/types/api/auth'
 
 export interface DashboardNavItem {
@@ -55,6 +57,12 @@ const FARMER_NAV_ITEMS: ReadonlyArray<DashboardNavItem> = [
     href: '/dashboard/pesanan',
     icon: ShoppingBasket,
     permission: 'farmer:orders:manage',
+  },
+  {
+    title: 'Papan Kebutuhan',
+    href: '/dashboard/papan-kebutuhan',
+    icon: ClipboardList,
+    permission: 'farmer:needs:manage',
   },
 ]
 
@@ -113,6 +121,9 @@ export function getDashboardPageTitle(pathname: string, role: UserRole | null | 
   if (pathname === '/dashboard/akses-ditolak') {
     return 'Akses ditolak'
   }
+  if (pathname === '/dashboard/profil') {
+    return 'Data Profil'
+  }
 
   const allItems = [...FARMER_NAV_ITEMS, ...ADMIN_NAV_ITEMS]
   const matched = allItems.find((item) => {
@@ -124,4 +135,59 @@ export function getDashboardPageTitle(pathname: string, role: UserRole | null | 
 
   if (matched) return matched.title
   return role === 'admin' ? 'Ringkasan Operasional' : 'Ringkasan'
+}
+
+export function getDashboardBreadcrumbs(
+  pathname: string,
+  role: UserRole | null | undefined
+): BreadcrumbTrailItem[] {
+  const root: BreadcrumbTrailItem = { label: 'Beranda', href: '/' }
+
+  if (pathname === '/dashboard') {
+    return [root, { label: 'Dashboard' }]
+  }
+
+  const dashboardRoot: BreadcrumbTrailItem = { label: 'Dashboard', href: '/dashboard' }
+
+  if (pathname === '/dashboard/akses-ditolak') {
+    return [root, dashboardRoot, { label: 'Akses ditolak' }]
+  }
+
+  if (pathname === '/dashboard/kebun/baru') {
+    return [
+      root,
+      dashboardRoot,
+      { label: 'Kebun Saya', href: '/dashboard/kebun' },
+      { label: 'Tambah Kebun' },
+    ]
+  }
+
+  if (pathname.startsWith('/dashboard/kebun/') && pathname !== '/dashboard/kebun') {
+    return [
+      root,
+      dashboardRoot,
+      { label: 'Kebun Saya', href: '/dashboard/kebun' },
+      { label: 'Edit Kebun' },
+    ]
+  }
+
+  if (pathname === '/dashboard/penawaran/baru') {
+    return [
+      root,
+      dashboardRoot,
+      { label: 'Penawaran Panen', href: '/dashboard/penawaran' },
+      { label: 'Tambah Penawaran' },
+    ]
+  }
+
+  if (pathname.startsWith('/dashboard/penawaran/') && pathname !== '/dashboard/penawaran') {
+    return [
+      root,
+      dashboardRoot,
+      { label: 'Penawaran Panen', href: '/dashboard/penawaran' },
+      { label: 'Edit Penawaran' },
+    ]
+  }
+
+  return [root, dashboardRoot, { label: getDashboardPageTitle(pathname, role) }]
 }

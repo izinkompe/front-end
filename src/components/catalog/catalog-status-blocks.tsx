@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { AlertCircle, ChevronRight, RefreshCw, X } from 'lucide-react'
+import { AlertCircle, RefreshCw, X } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { BreadcrumbTrail } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import type { MainCategoryMeta } from '@/lib/data/categories'
 import type { ActiveFilterChip, CatalogFilterState } from '@/lib/data/catalog-filters'
@@ -13,49 +14,15 @@ interface CatalogBreadcrumbProps {
 }
 
 export function CatalogBreadcrumb({ categoryMeta }: CatalogBreadcrumbProps) {
-  return (
-    <nav aria-label='Breadcrumb'>
-      <ol className='flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground'>
-        <li>
-          <Link
-            href='/'
-            className='rounded-sm py-1 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
-          >
-            Beranda
-          </Link>
-        </li>
-        <li aria-hidden='true' className='flex items-center'>
-          <ChevronRight className='size-4' />
-        </li>
-        <li>
-          {categoryMeta ? (
-            <Link
-              href='/pasar'
-              className='rounded-sm py-1 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
-            >
-              Pasar
-            </Link>
-          ) : (
-            <span aria-current='page' className='font-medium text-foreground'>
-              Pasar
-            </span>
-          )}
-        </li>
-        {categoryMeta && (
-          <>
-            <li aria-hidden='true' className='flex items-center'>
-              <ChevronRight className='size-4' />
-            </li>
-            <li>
-              <span aria-current='page' className='font-medium text-foreground'>
-                {categoryMeta.label}
-              </span>
-            </li>
-          </>
-        )}
-      </ol>
-    </nav>
-  )
+  const items = categoryMeta
+    ? [
+        { label: 'Beranda', href: '/' },
+        { label: 'Pasar', href: '/pasar' },
+        { label: categoryMeta.label },
+      ]
+    : [{ label: 'Beranda', href: '/' }, { label: 'Pasar' }]
+
+  return <BreadcrumbTrail items={items} />
 }
 
 interface CatalogActiveFilterChipsProps {

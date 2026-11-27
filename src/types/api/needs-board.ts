@@ -56,3 +56,20 @@ export type CreateNeedRequest = z.infer<typeof CreateNeedRequestSchema>
 
 export const UpdateNeedStatusSchema = z.object({ status: z.enum(['fulfilled', 'closed']) })
 export type UpdateNeedStatus = z.infer<typeof UpdateNeedStatusSchema>['status']
+
+export const FarmerNeedResponseRequestSchema = z.object({
+  offerId: z.string().trim().min(1, 'Pilih penawaran aktif milik Anda'),
+  offeredQuantityKg: z
+    .number()
+    .min(0.001, 'Berat minimal 0,001 kg')
+    .max(100_000, 'Berat maksimal 100.000 kg')
+    .multipleOf(0.001, 'Ketelitian berat maksimal 3 angka di belakang koma'),
+  offeredPricePerKg: z
+    .number()
+    .int('Harga per kg harus bilangan bulat')
+    .positive('Harga per kg harus lebih dari Rp 0')
+    .max(1_000_000_000, 'Harga melebihi batas wajar'),
+  availableDate: z.iso.date('Pilih tanggal siap diambil yang valid'),
+  message: z.string().trim().max(300, 'Pesan maksimal 300 karakter').optional(),
+})
+export type FarmerNeedResponseRequest = z.infer<typeof FarmerNeedResponseRequestSchema>

@@ -19,7 +19,41 @@ import { UserRoleSchema, type User } from '@/types/api/auth'
 import type { DistributionStats } from '@/types/api/admin'
 import { matchesOfferCategory } from '@/lib/data/categories'
 
-let sessionUserId: string | null = null
+const SESSION_USER_STORAGE_KEY = 'pangantani:session-user-id'
+let memorySessionUserId: string | null = null
+
+function getStoredSessionUserId(): string | null {
+  if (typeof window !== 'undefined') {
+    try {
+      const stored =
+        window.localStorage.getItem(SESSION_USER_STORAGE_KEY) ??
+        window.sessionStorage.getItem(SESSION_USER_STORAGE_KEY)
+      if (stored) {
+        memorySessionUserId = stored
+        return stored
+      }
+    } catch {
+      return memorySessionUserId
+    }
+  }
+  return memorySessionUserId
+}
+
+function setStoredSessionUserId(userId: string | null): void {
+  memorySessionUserId = userId
+  if (typeof window === 'undefined') return
+  try {
+    if (userId) {
+      window.localStorage.setItem(SESSION_USER_STORAGE_KEY, userId)
+      window.sessionStorage.setItem(SESSION_USER_STORAGE_KEY, userId)
+    } else {
+      window.localStorage.removeItem(SESSION_USER_STORAGE_KEY)
+      window.sessionStorage.removeItem(SESSION_USER_STORAGE_KEY)
+    }
+  } catch {
+    return
+  }
+}
 
 const FARMER_DEMO_PASSWORDS: Record<string, ReadonlyArray<string>> = {
   'joko@suburmakmur.id': ['PetaniJoko2026!', 'password123'],
@@ -54,8 +88,10 @@ function parseJsonBody<T = Record<string, unknown>>(body: unknown): T {
 
 export const tanstackDbAdapter = {
   async dispatch(endpoint: string, options: AdapterOptions = {}): Promise<unknown> {
-    const activeSessionUserId = sessionUserId
-    await delay(150 + Math.random() * 120)
+    const activeSessionUserId = getStoredSessionUserId()
+    if (endpoint !== '/api/auth/me') {
+      await delay(150 + Math.random() * 120)
+    }
     const method = (options.method || 'GET').toUpperCase()
 
     if (endpoint === '/api/auth/me') {
@@ -64,7 +100,7 @@ export const tanstackDbAdapter = {
       }
       const user = usersCollection.get(activeSessionUserId)
       if (!user) {
-        if (sessionUserId === activeSessionUserId) sessionUserId = null
+        if (getStoredSessionUserId() === activeSessionUserId) setStoredSessionUserId(null)
         return null
       }
       return user
@@ -82,7 +118,7 @@ export const tanstackDbAdapter = {
       usersCollection.update(buyerAuth.user.id, (draft) => {
         Object.assign(draft, preferences)
       })
-      sessionUserId = buyerAuth.user.id
+      setStoredSessionUserId(buyerAuth.user.id)
       return { token: 'dummy-token-' + Date.now(), user: usersCollection.get(buyerAuth.user.id) }
     }
     if (buyerAuth) return buyerAuth.data
@@ -112,7 +148,7 @@ export const tanstackDbAdapter = {
       if (!allowedPasswords || !allowedPasswords.includes(password)) {
         throw new ApiError(401, 'Email atau kata sandi petani tidak sesuai.', 'UNAUTHORIZED')
       }
-      sessionUserId = user.id
+      setStoredSessionUserId(user.id)
       return {
         token: 'dummy-token-' + Date.now(),
         user,
@@ -133,7 +169,7 @@ export const tanstackDbAdapter = {
       if (!expectedPassword || expectedPassword !== password) {
         throw new ApiError(401, 'Email atau kata sandi admin tidak sesuai.', 'UNAUTHORIZED')
       }
-      sessionUserId = user.id
+      setStoredSessionUserId(user.id)
       return {
         token: 'dummy-admin-token-' + Date.now(),
         user,
@@ -198,7 +234,7 @@ export const tanstackDbAdapter = {
         updatedAt: now,
       }
       usersCollection.insert(newFarmer)
-      sessionUserId = newFarmer.id
+      setStoredSessionUserId(newFarmer.id)
       return {
         token: 'dummy-token-' + Date.now(),
         user: newFarmer,
@@ -206,7 +242,7 @@ export const tanstackDbAdapter = {
     }
 
     if (endpoint === '/api/auth/logout' && method === 'POST') {
-      sessionUserId = null
+      setStoredSessionUserId(null)
       return { success: true }
     }
 
@@ -230,7 +266,7 @@ export const tanstackDbAdapter = {
       if (!targetUser) {
         throw new ApiError(404, 'Akun pratinjau untuk peran tersebut tidak ditemukan', 'NOT_FOUND')
       }
-      sessionUserId = targetUser.id
+      setStoredSessionUserId(targetUser.id)
       return { user: targetUser }
     }
 

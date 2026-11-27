@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { AlertCircle, Check, Clock, Lock, Share2, Sprout } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { buildFarmerStoreHref } from '@/lib/data/farmer-store-helpers'
 import { cn } from '@/lib/utils'
 import type { Offer } from '@/types/api/offers'
@@ -148,8 +147,7 @@ export function BuyerExpiringOfferCard({
         </div>
       </div>
 
-      <div className='mt-4 flex flex-col gap-3'>
-        <Separator />
+      <div className='mt-5 flex flex-col gap-3'>
         <footer className='flex items-center justify-between gap-2'>
           <div className='flex min-w-0 items-center gap-2 text-sm text-muted-foreground'>
             <Sprout className='size-4 shrink-0 text-primary' aria-hidden='true' />

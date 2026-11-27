@@ -1,5 +1,7 @@
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { DashboardShell } from '@/components/dashboard/dashboard-shell'
+import { Skeleton } from '@/components/ui/skeleton'
 import { buildNoIndexMetadata } from '@/lib/seo'
 
 export const metadata: Metadata = buildNoIndexMetadata({
@@ -12,5 +14,9 @@ export default function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  return <DashboardShell>{children}</DashboardShell>
+  return (
+    <Suspense fallback={<Skeleton className='min-h-dvh w-full' />}>
+      <DashboardShell>{children}</DashboardShell>
+    </Suspense>
+  )
 }

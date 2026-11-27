@@ -14,7 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
 import { formatOrderStatusLabel } from '@/lib/data/checkout-helpers'
 import { formatPickupSlotLabel } from '@/lib/data/offer-detail-helpers'
 import { buildPickupMapsHref, buildPickupSummaryText } from '@/lib/data/order-pickup-helpers'
@@ -100,7 +99,7 @@ export function OrderPickupPassDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className='flex flex-col gap-4 rounded-xl border border-border bg-muted/30 p-4 text-sm'>
+        <div className='flex flex-col gap-5 rounded-xl bg-muted/30 p-4 text-sm'>
           <div className='flex flex-col gap-1'>
             <span className='text-xs text-muted-foreground'>Komoditas</span>
             <p className='text-base font-semibold text-foreground'>{order.commodityName}</p>
@@ -108,8 +107,6 @@ export function OrderPickupPassDialog({
               {formatWeightKg(order.quantityKg)}
             </p>
           </div>
-
-          <Separator />
 
           <dl className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
             <div className='flex flex-col gap-0.5'>

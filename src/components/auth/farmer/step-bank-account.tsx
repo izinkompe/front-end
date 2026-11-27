@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { ArrowLeft, Landmark } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { bankOptions } from '@/components/auth/farmer/farmer-form-helpers'
+import {
+  OTHER_BANK_VALUE,
+  bankOptions,
+  formatBankNameInput,
+  getBankOptionLabel,
+  isCustomBankName,
+} from '@/components/auth/farmer/farmer-form-helpers'
 import type { FarmerStep5Values } from '@/types/api/auth'
 
 interface StepBankAccountProps {
@@ -31,6 +38,12 @@ export function StepBankAccount({
   onBack,
   onNext,
 }: StepBankAccountProps) {
+  const [isOtherBankSelected, setIsOtherBankSelected] = useState(() =>
+    isCustomBankName(values.bankName)
+  )
+  const isOtherSelected = isOtherBankSelected || isCustomBankName(values.bankName)
+  const selectValue = isOtherSelected ? OTHER_BANK_VALUE : values.bankName
+
   return (
     <form
       noValidate
@@ -41,7 +54,7 @@ export function StepBankAccount({
       className='flex flex-col gap-6'
     >
       <div className='flex flex-col gap-2 text-center'>
-        <h1 className='text-[clamp(1.5rem,1.25rem+1vw,2rem)] leading-tight font-semibold text-foreground'>
+        <h1 className='type-h1 font-semibold text-foreground'>
           Rekening penerima uang hasil penjualan
         </h1>
         <p className='text-base leading-relaxed text-muted-foreground'>
@@ -59,18 +72,29 @@ export function StepBankAccount({
       </Alert>
 
       <FieldGroup>
-        <Field data-invalid={Boolean(errors.bankName) || undefined}>
+        <Field data-invalid={(!isOtherSelected && Boolean(errors.bankName)) || undefined}>
           <FieldLabel htmlFor='farmer-bank-name'>Nama bank</FieldLabel>
           <Select
-            value={values.bankName}
-            onValueChange={(nextBank) => nextBank && onChange({ bankName: nextBank })}
+            value={selectValue}
+            onValueChange={(nextBank) => {
+              if (!nextBank) return
+              if (nextBank === OTHER_BANK_VALUE) {
+                setIsOtherBankSelected(true)
+                onChange({ bankName: isCustomBankName(values.bankName) ? values.bankName : '' })
+                return
+              }
+              setIsOtherBankSelected(false)
+              onChange({ bankName: nextBank })
+            }}
           >
             <SelectTrigger
               id='farmer-bank-name'
               className='w-full'
-              aria-invalid={Boolean(errors.bankName) || undefined}
+              aria-invalid={(!isOtherSelected && Boolean(errors.bankName)) || undefined}
             >
-              <SelectValue placeholder='Pilih nama bank Anda' />
+              <SelectValue placeholder='Pilih nama bank Anda'>
+                {selectValue ? getBankOptionLabel(selectValue) : undefined}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
@@ -82,8 +106,27 @@ export function StepBankAccount({
               </SelectGroup>
             </SelectContent>
           </Select>
-          {errors.bankName && <FieldError errors={[{ message: errors.bankName }]} />}
+          {!isOtherSelected && errors.bankName && (
+            <FieldError errors={[{ message: errors.bankName }]} />
+          )}
         </Field>
+
+        {isOtherSelected && (
+          <Field data-invalid={Boolean(errors.bankName) || undefined}>
+            <FieldLabel htmlFor='farmer-custom-bank-name'>Nama bank lainnya</FieldLabel>
+            <Input
+              id='farmer-custom-bank-name'
+              type='text'
+              placeholder='Contoh: Bank CIMB Niaga'
+              value={values.bankName}
+              onChange={(event) => onChange({ bankName: formatBankNameInput(event.target.value) })}
+              maxLength={60}
+              aria-invalid={Boolean(errors.bankName) || undefined}
+            />
+            <FieldDescription>Tulis nama bank sesuai buku tabungan Anda.</FieldDescription>
+            {errors.bankName && <FieldError errors={[{ message: errors.bankName }]} />}
+          </Field>
+        )}
 
         <Field data-invalid={Boolean(errors.accountNumber) || undefined}>
           <FieldLabel htmlFor='farmer-account-number'>Nomor rekening</FieldLabel>

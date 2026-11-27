@@ -37,14 +37,17 @@ describe('rbac policy', () => {
     expect(canAccessDashboardPath('farmer', '/dashboard')).toBe(true)
     expect(canAccessDashboardPath('farmer', '/dashboard/toko')).toBe(true)
     expect(canAccessDashboardPath('farmer', '/dashboard/kebun/123')).toBe(true)
+    expect(canAccessDashboardPath('farmer', '/dashboard/papan-kebutuhan')).toBe(true)
     expect(canAccessDashboardPath('farmer', '/dashboard/admin/verifikasi')).toBe(false)
 
     expect(canAccessDashboardPath('admin', '/dashboard')).toBe(true)
     expect(canAccessDashboardPath('admin', '/dashboard/admin/verifikasi')).toBe(true)
     expect(canAccessDashboardPath('admin', '/dashboard/admin/statistik')).toBe(true)
     expect(canAccessDashboardPath('admin', '/dashboard/toko')).toBe(false)
+    expect(canAccessDashboardPath('admin', '/dashboard/papan-kebutuhan')).toBe(false)
 
     expect(canAccessDashboardPath('buyer', '/dashboard')).toBe(false)
+    expect(canAccessDashboardPath('buyer', '/dashboard/papan-kebutuhan')).toBe(false)
     expect(canAccessDashboardPath('buyer', '/dashboard/akses-ditolak')).toBe(true)
     expect(canAccessDashboardPath('admin', '/dashboard/unknown-route')).toBe(false)
   })
