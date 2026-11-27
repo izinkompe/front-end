@@ -31,6 +31,7 @@ import {
   type VerifyPhoneRequest,
 } from '@/types/api/auth'
 import { useAuthStore } from '@/stores/use-auth-store'
+import { useCheckoutStore } from '@/stores/use-checkout-store'
 
 function syncAuthUserCache(queryClient: QueryClient, user: User | null) {
   setCachedAuthUser(user)
@@ -52,11 +53,11 @@ export function useCurrentUser() {
         setCachedAuthUser(user)
         useAuthStore.getState().setUser(user)
         if (!user) {
-          clearSessionRoleCookies()
+          void clearSessionRoleCookies()
         }
         return user
       } catch (error) {
-        clearSessionRoleCookies()
+        void clearSessionRoleCookies()
         useAuthStore.getState().setUser(null)
         if (error instanceof ApiError && (error.status === 401 || error.status === 404)) {
           return null
@@ -74,13 +75,19 @@ export function useLogin() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (credentials: LoginRequest) =>
-      apiClient<{ token?: string; user: User }>('/api/auth/login', AuthSessionResponseSchema, {
-        method: 'POST',
-        body: JSON.stringify(credentials),
-      }),
+    mutationFn: async (credentials: LoginRequest) => {
+      const data = await apiClient<{ token?: string; user: User }>(
+        '/api/auth/login',
+        AuthSessionResponseSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify(credentials),
+        }
+      )
+      await setSessionRoleCookies(data.user.role, data.token)
+      return data
+    },
     onSuccess: (data) => {
-      setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
     },
   })
@@ -90,17 +97,19 @@ export function useLoginFarmer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (credentials: LoginRequest) =>
-      apiClient<{ token?: string; user: User }>(
+    mutationFn: async (credentials: LoginRequest) => {
+      const data = await apiClient<{ token?: string; user: User }>(
         '/api/auth/login-farmer',
         AuthSessionResponseSchema,
         {
           method: 'POST',
           body: JSON.stringify(credentials),
         }
-      ),
+      )
+      await setSessionRoleCookies(data.user.role, data.token)
+      return data
+    },
     onSuccess: (data) => {
-      setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
     },
@@ -111,17 +120,19 @@ export function useLoginAdmin() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (credentials: LoginRequest) =>
-      apiClient<{ token?: string; user: User }>(
+    mutationFn: async (credentials: LoginRequest) => {
+      const data = await apiClient<{ token?: string; user: User }>(
         '/api/auth/login-admin',
         AuthSessionResponseSchema,
         {
           method: 'POST',
           body: JSON.stringify(credentials),
         }
-      ),
+      )
+      await setSessionRoleCookies(data.user.role, data.token)
+      return data
+    },
     onSuccess: (data) => {
-      setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats() })
     },
@@ -132,13 +143,22 @@ export function useRegisterBuyer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: BuyerRegisterRequest) =>
-      apiClient<{ token?: string; user: User }>('/api/auth/register', AuthSessionResponseSchema, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
+    mutationFn: async (payload: BuyerRegisterRequest) => {
+      const data = await apiClient<{ token?: string; user: User }>(
+        '/api/auth/register',
+        AuthSessionResponseSchema,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            ...payload,
+            password_confirmation: payload.password_confirmation ?? payload.password,
+          }),
+        }
+      )
+      await setSessionRoleCookies(data.user.role, data.token)
+      return data
+    },
     onSuccess: (data) => {
-      setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
     },
   })
@@ -148,17 +168,24 @@ export function useRegisterFarmer() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: FarmerRegisterRequest) =>
-      apiClient<{ token?: string; user: User }>(
+    mutationFn: async (payload: FarmerRegisterRequest) => {
+      const data = await apiClient<{ token?: string; user: User }>(
         '/api/auth/register-farmer',
         AuthSessionResponseSchema,
         {
           method: 'POST',
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            ...payload,
+            role: 'farmer',
+            organization: payload.farmName,
+            password_confirmation: payload.password,
+          }),
         }
-      ),
+      )
+      await setSessionRoleCookies(data.user.role, data.token)
+      return data
+    },
     onSuccess: (data) => {
-      setSessionRoleCookies(data.user.role, data.token)
       syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.verifications.farmerStatus })
     },
@@ -235,7 +262,8 @@ export function useLogout() {
         silentStatuses: [401],
       }),
     onSettled: () => {
-      clearSessionRoleCookies()
+      void clearSessionRoleCookies()
+      useCheckoutStore.getState().resetCheckoutAttempt()
       syncAuthUserCache(queryClient, null)
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all })
     },
@@ -246,7 +274,7 @@ export function useSwitchPreviewRole() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (role: UserRole) => {
+    mutationFn: async (role: UserRole) => {
       if (!isAuthRelaxed()) {
         throw new ApiError(
           403,
@@ -255,14 +283,19 @@ export function useSwitchPreviewRole() {
         )
       }
       const parsed = UserRoleSchema.parse(role)
-      return apiClient<{ user: User }>('/api/auth/preview-role', z.object({ user: UserSchema }), {
-        method: 'POST',
-        body: JSON.stringify({ role: parsed }),
-      })
+      const data = await apiClient<{ user: User }>(
+        '/api/auth/preview-role',
+        z.object({ user: UserSchema }),
+        {
+          method: 'POST',
+          body: JSON.stringify({ role: parsed }),
+        }
+      )
+      await setPreviewRoleCookie(data.user.role)
+      await setSessionRoleCookies(data.user.role, 'preview-session')
+      return data
     },
     onSuccess: (data) => {
-      setPreviewRoleCookie(data.user.role)
-      setSessionRoleCookies(data.user.role, 'preview-session')
       syncAuthUserCache(queryClient, data.user)
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.stats() })
     },

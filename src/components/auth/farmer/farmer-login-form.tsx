@@ -38,13 +38,17 @@ export function FarmerLoginForm() {
       onSubmit: LoginRequestSchema,
     },
     onSubmit: async ({ value }) => {
-      const response = await loginMutation.mutateAsync(value)
-      if (response.user.onboardingCompleted === false) {
-        router.push('/daftar-petani?lanjut=1')
+      try {
+        const response = await loginMutation.mutateAsync(value)
+        if (response.user.onboardingCompleted === false) {
+          router.push('/daftar-petani?lanjut=1')
+          return
+        }
+        router.push(nextPath)
+        router.refresh()
+      } catch {
         return
       }
-      router.push(nextPath)
-      router.refresh()
     },
   })
 
